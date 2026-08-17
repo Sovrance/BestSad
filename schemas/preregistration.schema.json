@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Pre-Registration v0.2",
+  "description": "Committed before the first evaluation run. Required for any confirmatory claim (spec 26.5).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experiment_id",
+    "preregistration_hash",
+    "timestamp_utc",
+    "primary_endpoint",
+    "conditions",
+    "seeds_per_condition",
+    "minimum_interesting_effect",
+    "multiple_comparison_control",
+    "stopping_rule",
+    "declared_outcome_interpretations"
+  ],
+  "properties": {
+    "experiment_id": {
+      "type": "string"
+    },
+    "preregistration_hash": {
+      "type": "string",
+      "description": "sha256 of the prereg document at commit"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "kernel_version": {
+      "type": "string"
+    },
+    "model_identity": {
+      "type": "object"
+    },
+    "evaluator_image_digest": {
+      "type": "string"
+    },
+    "analysis_code_revision": {
+      "type": "string"
+    },
+    "primary_endpoint": {
+      "type": "string",
+      "description": "Exactly one."
+    },
+    "secondary_endpoints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exploratory_endpoints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "$ref": "control_condition.schema.json"
+      }
+    },
+    "seeds_per_condition": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "power_analysis": {
+      "type": "object",
+      "required": [
+        "variance_source_run",
+        "target_power",
+        "alpha"
+      ],
+      "properties": {
+        "variance_source_run": {
+          "type": "string"
+        },
+        "target_power": {
+          "type": "number"
+        },
+        "alpha": {
+          "type": "number"
+        },
+        "framing": {
+          "enum": [
+            "superiority",
+            "non_inferiority",
+            "equivalence"
+          ]
+        },
+        "margin": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "powered": {
+          "type": "boolean"
+        }
+      }
+    },
+    "minimum_interesting_effect": {
+      "type": "object"
+    },
+    "multiple_comparison_control": {
+      "type": "object",
+      "required": [
+        "method",
+        "level",
+        "family"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "benjamini_hochberg",
+            "bonferroni",
+            "none_primary_only"
+          ]
+        },
+        "level": {
+          "type": "number"
+        },
+        "family": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "stopping_rule": {
+      "type": "string"
+    },
+    "exclusion_criteria": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "declared_outcome_interpretations": {
+      "type": "object",
+      "required": [
+        "positive",
+        "efficiency_only",
+        "null_result",
+        "h0_consistent"
+      ],
+      "properties": {
+        "positive": {
+          "type": "string"
+        },
+        "efficiency_only": {
+          "type": "string"
+        },
+        "null_result": {
+          "type": "string"
+        },
+        "h0_consistent": {
+          "type": "string"
+        }
+      }
+    },
+    "amendments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "date",
+          "amendment",
+          "rationale",
+          "post_data"
+        ],
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "amendment": {
+            "type": "string"
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "post_data": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

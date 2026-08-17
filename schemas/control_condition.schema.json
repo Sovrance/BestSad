@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Experimental Condition v0.2",
+  "description": "A condition in an experiment. Controls are first-class, not afterthoughts (spec 40).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "condition_id",
+    "role",
+    "genome_id",
+    "description"
+  ],
+  "properties": {
+    "condition_id": {
+      "type": "string",
+      "description": "e.g. A, D, F, I"
+    },
+    "role": {
+      "enum": [
+        "reference",
+        "treatment",
+        "lower_bound_control",
+        "confound_control",
+        "reference_class"
+      ],
+      "description": "Controls exist to falsify. A control defeating a treatment is a finding, not a bug."
+    },
+    "controls_confound": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "C1_compute",
+        "C2_compression",
+        "C3_scaffolding",
+        "C4_contamination",
+        null
+      ]
+    },
+    "genome_id": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "scaffolding": {
+      "type": "object",
+      "description": "Must be equalized across conditions; delivered budget is logged, not assumed.",
+      "properties": {
+        "grammar_description_tokens": {
+          "type": "integer"
+        },
+        "worked_example_count": {
+          "type": "integer"
+        },
+        "worked_example_difficulty": {
+          "type": "string"
+        },
+        "retry_policy": {
+          "type": "string"
+        },
+        "decoding_constraints": {
+          "type": "string"
+        }
+      }
+    },
+    "compute_allocation": {
+      "type": "object",
+      "properties": {
+        "matched_to_condition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inherited_evolution_compute_from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tolerance": {
+          "type": "number"
+        }
+      }
+    },
+    "residual_confound": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Quantified residual where control is imperfect. Undisclosed residuals are a protocol violation.",
+      "properties": {
+        "measure": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string"
+        }
+      }
+    },
+    "introduces_new_semantics": {
+      "type": "boolean"
+    },
+    "human_authored": {
+      "type": "boolean"
+    },
+    "author_blind_to_genomes": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Benchmark Manifest v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "benchmark_manifest_id",
+    "benchmark_class",
+    "generator_version",
+    "kernel_version",
+    "task_families",
+    "integrity_policy"
+  ],
+  "properties": {
+    "benchmark_manifest_id": {
+      "type": "string"
+    },
+    "benchmark_class": {
+      "enum": [
+        "frozen_hidden",
+        "evolving_curriculum",
+        "adversarial_integrity",
+        "public_supplementary"
+      ]
+    },
+    "generator_version": {
+      "type": "string"
+    },
+    "kernel_version": {
+      "type": "string"
+    },
+    "task_families": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "seed_commitment": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "family_holdouts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "integrity_policy": {
+      "type": "object"
+    },
+    "scoring_contract_version": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    }
+  }
+}

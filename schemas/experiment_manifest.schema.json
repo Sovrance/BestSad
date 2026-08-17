@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Experiment Manifest v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experiment_id",
+    "hypothesis_ids",
+    "kernel_version",
+    "benchmark_manifest_id",
+    "conditions",
+    "seeds",
+    "code_revision",
+    "environment_hash",
+    "primary_metric"
+  ],
+  "properties": {
+    "experiment_id": {
+      "type": "string"
+    },
+    "hypothesis_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "kernel_version": {
+      "type": "string"
+    },
+    "benchmark_manifest_id": {
+      "type": "string"
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "seeds": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "code_revision": {
+      "type": "string"
+    },
+    "environment_hash": {
+      "type": "string"
+    },
+    "model_id": {
+      "type": "string"
+    },
+    "model_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "primary_metric": {
+      "type": "string"
+    },
+    "secondary_metrics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "compute_budget": {
+      "type": "object"
+    },
+    "preregistered_thresholds": {
+      "type": "object"
+    },
+    "created_at": {
+      "type": "string"
+    }
+  }
+}

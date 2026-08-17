@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Per-Primitive Causal Attribution v0.2",
+  "description": "Per-primitive mediation results (spec 42). Null and negative primitives MUST be included.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "experiment_id",
+    "primitive_effects",
+    "concentration_test"
+  ],
+  "properties": {
+    "experiment_id": {
+      "type": "string"
+    },
+    "primitive_effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "primitive_id",
+          "direct_effect",
+          "indirect_effect"
+        ],
+        "properties": {
+          "primitive_id": {
+            "type": "string"
+          },
+          "semantic_hash": {
+            "type": "string"
+          },
+          "direct_effect": {
+            "type": "object",
+            "properties": {
+              "estimate": {
+                "type": "number"
+              },
+              "ci_low": {
+                "type": "number"
+              },
+              "ci_high": {
+                "type": "number"
+              }
+            }
+          },
+          "indirect_effect": {
+            "type": "object",
+            "properties": {
+              "estimate": {
+                "type": "number"
+              },
+              "ci_low": {
+                "type": "number"
+              },
+              "ci_high": {
+                "type": "number"
+              }
+            }
+          },
+          "paired_ablations": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "cross_family_reuse": {
+            "type": "number"
+          },
+          "shortcut_shaped": {
+            "type": "boolean",
+            "description": "High task-specific gain, low cross-family reuse (spec 22.2)"
+          },
+          "compression_shaped": {
+            "type": "boolean"
+          },
+          "semantic_gain_v2": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "concentration_test": {
+      "type": "object",
+      "required": [
+        "top1_share",
+        "top2_share",
+        "threshold",
+        "passed"
+      ],
+      "properties": {
+        "top1_share": {
+          "type": "number"
+        },
+        "top2_share": {
+          "type": "number"
+        },
+        "threshold": {
+          "type": "number",
+          "default": 0.8
+        },
+        "passed": {
+          "type": "boolean"
+        },
+        "verdict": {
+          "enum": [
+            "attributable",
+            "h0_consistent_concentrated_shortcut"
+          ]
+        }
+      }
+    }
+  }
+}

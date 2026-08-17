@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Compute Ledger Entry v0.2",
+  "description": "Total experimental compute accounting (spec 26.4, 26.6). Genome-evolution compute counts against the condition that produced the genome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "condition_id",
+    "seed",
+    "totals"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "condition_id": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "model_identity_hash": {
+      "type": "string"
+    },
+    "accelerator_type": {
+      "type": "string"
+    },
+    "components": {
+      "type": "object",
+      "properties": {
+        "model_input_tokens": {
+          "type": "integer"
+        },
+        "model_output_tokens": {
+          "type": "integer"
+        },
+        "search_compute": {
+          "type": "number"
+        },
+        "evolution_compute": {
+          "type": "number"
+        },
+        "compile_time_s": {
+          "type": "number"
+        },
+        "execution_time_s": {
+          "type": "number"
+        },
+        "verifier_time_s": {
+          "type": "number"
+        },
+        "candidate_evaluations": {
+          "type": "integer"
+        },
+        "wall_clock_s": {
+          "type": "number"
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "required": [
+        "total_experimental_compute"
+      ],
+      "properties": {
+        "total_experimental_compute": {
+          "type": "number"
+        },
+        "accounting_policy_id": {
+          "type": "string"
+        }
+      }
+    },
+    "paired_outcomes": {
+      "type": "object",
+      "description": "Reported as a pair. Emitting one without the other is a protocol violation (spec 21.6).",
+      "required": [
+        "compression_ratio",
+        "capability_delta"
+      ],
+      "properties": {
+        "compression_ratio": {
+          "type": "number"
+        },
+        "capability_delta": {
+          "type": "number"
+        }
+      }
+    },
+    "best_of_n_disclosure": {
+      "type": "object",
+      "properties": {
+        "n": {
+          "type": "integer"
+        },
+        "candidates_evaluated": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

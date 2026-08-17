@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bestsad.local/schema/language_genome/v0.1",
+  "title": "Bestsad Language Genome v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "genome_id",
+    "generation",
+    "kernel_version",
+    "primitive_ids",
+    "representation_policy",
+    "fitness_vector",
+    "environment_hash"
+  ],
+  "properties": {
+    "genome_id": {
+      "type": "string"
+    },
+    "parent_genome_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kernel_version": {
+      "type": "string"
+    },
+    "primitive_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "representation_policy": {
+      "type": "object"
+    },
+    "projection_policy": {
+      "type": "object"
+    },
+    "rewrite_strategy": {
+      "type": "object"
+    },
+    "compiler_strategy": {
+      "type": "object"
+    },
+    "tokenizer_adapter_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "model_adapter_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "benchmark_generation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "fitness_vector": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "novelty_vector": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "proof_artifact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lineage_events": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "environment_hash": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    }
+  }
+}

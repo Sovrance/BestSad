@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Primitive Record v0.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "primitive_id",
+    "semantic_id",
+    "maturity",
+    "kernel_version",
+    "lowering",
+    "input_types",
+    "output_types",
+    "effects"
+  ],
+  "properties": {
+    "primitive_id": {
+      "type": "string"
+    },
+    "semantic_id": {
+      "type": "string"
+    },
+    "display_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "maturity": {
+      "enum": [
+        "EXP",
+        "OBS",
+        "SPEC",
+        "VER",
+        "CORE"
+      ]
+    },
+    "kernel_version": {
+      "type": "string"
+    },
+    "input_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lowering": {
+      "type": "object"
+    },
+    "semantic_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "parent_primitive_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reuse_metrics": {
+      "type": "object"
+    },
+    "verification": {
+      "type": "object"
+    },
+    "failure_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}
