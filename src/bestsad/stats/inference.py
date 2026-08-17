@@ -361,9 +361,18 @@ def power_analysis(
     to record that and re-scope, not to run underpowered and interpret the point estimate. The
     pre-registration gate refuses to certify a confirmatory run when `powered` is false.
     """
-    if variance_estimate <= 0 or effect_size <= 0:
+    if effect_size <= 0:
         return PowerAnalysis(effect_size, variance_estimate, seeds_per_condition, alpha,
-                             target_power, 1.0 if effect_size > 0 else 0.0, 0, framing)
+                             target_power, 0.0, 0, framing)
+
+    if variance_estimate <= 0:
+        # Zero measured variance across seeds is almost never "infinite power". It means the
+        # seeds did not vary anything the endpoint depends on, so there is no variance estimate
+        # to power an analysis with. Treating it as powered would let a degenerate measurement
+        # certify a confirmatory run, which is exactly what §26.8 forbids ("using variance
+        # measured in E0 rather than assumed").
+        return PowerAnalysis(effect_size, 0.0, seeds_per_condition, alpha, target_power,
+                             0.0, 0, framing)
 
     z_alpha = normal_quantile(1 - alpha / 2) if framing == "superiority" else normal_quantile(1 - alpha)
     se = math.sqrt(2 * variance_estimate / seeds_per_condition) if seeds_per_condition else float("inf")

@@ -44,7 +44,11 @@ class Preregistration:
 
     experiment_id: str
     primary_endpoint: str
-    conditions: tuple[str, ...]
+    #: Full condition records, not bare ids: `schemas/preregistration.schema.json` declares
+    #: `conditions` as an array of `control_condition` objects, so the pre-registration fixes
+    #: each condition's role, declared confound, and compute allocation in advance — which is
+    #: the point of pre-registering the condition list at all.
+    conditions: tuple[dict, ...]
     seeds_per_condition: int
     minimum_interesting_effect: dict
     multiple_comparison_control: dict
@@ -118,6 +122,9 @@ class Preregistration:
                 "post_data": post_data,
             },
         )
+
+    def condition_ids(self) -> tuple[str, ...]:
+        return tuple(c["condition_id"] for c in self.conditions)
 
     def is_complete(self) -> tuple[bool, list[str]]:
         """Check the fields spec §26.5 says a pre-registration must fix."""

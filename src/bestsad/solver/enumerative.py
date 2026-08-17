@@ -162,8 +162,17 @@ class EnumerativeSynthesizer:
         seed: int = 0,
     ) -> None:
         self.kernel = kernel
-        self.vocabulary = tuple(vocabulary)
         self.primitive_sigs = dict(primitive_sigs or {})
+        # Seed-dependent vocabulary order. Enumeration order has to be *some* order, and a
+        # fixed one is a systematic bias: whichever operation comes first gets the level's
+        # budget first, and a genome's primitives sit at different positions in each condition's
+        # vocabulary. Permuting per seed converts that fixed bias into measurable variance,
+        # which is what spec §26.1 wants seeds to vary and what E0 must measure rather than
+        # assume (§26.8). With a fixed order the across-seed variance is identically zero, and a
+        # power analysis computed from it is vacuous.
+        ordered = list(vocabulary)
+        random.Random(f"vocab-order:{seed}").shuffle(ordered)
+        self.vocabulary = tuple(ordered)
         self.budget = budget or SearchBudget()
         self.rng = random.Random(seed)
         self.seed = seed

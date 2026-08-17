@@ -21,7 +21,16 @@ def _prereg(**overrides) -> Preregistration:
     base = dict(
         experiment_id="EXP-TEST",
         primary_endpoint="verified_ood_solve_rate_per_compute",
-        conditions=("A", "B", "C", "D", "E", "F", "G", "H", "I"),
+        conditions=tuple(
+            {
+                "condition_id": cid,
+                "role": "treatment" if cid in ("D", "E") else "confound_control"
+                if cid in ("F", "H", "I") else "reference",
+                "genome_id": f"G-{cid}",
+                "description": f"condition {cid}",
+            }
+            for cid in "ABCDEFGHI"
+        ),
         seeds_per_condition=8,
         minimum_interesting_effect={"absolute_solve_rate_points": 0.05},
         multiple_comparison_control={

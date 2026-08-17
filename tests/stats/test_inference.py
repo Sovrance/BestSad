@@ -152,3 +152,14 @@ def test_non_inferiority_framing_needs_fewer_seeds_than_superiority():
     one_sided = power_analysis(effect_size=0.05, variance_estimate=0.0025,
                                seeds_per_condition=10, framing="non_inferiority")
     assert one_sided.required_seeds < two_sided.required_seeds
+
+
+def test_zero_measured_variance_is_not_treated_as_infinite_power():
+    """Zero variance across seeds means the seeds did not vary anything the endpoint depends
+    on, not that the run has perfect power. Certifying a confirmatory run off a degenerate
+    measurement is exactly what §26.8 forbids."""
+    degenerate = power_analysis(
+        effect_size=0.05, variance_estimate=0.0, seeds_per_condition=3
+    )
+    assert not degenerate.powered
+    assert degenerate.achieved_power == 0.0
