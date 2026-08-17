@@ -1,0 +1,51 @@
+"""Statistics, pre-registration tooling, and the reporting gate (spec §26)."""
+
+from .inference import (
+    FDRResult,
+    Interval,
+    PowerAnalysis,
+    TestResult,
+    benjamini_hochberg,
+    bootstrap_ci,
+    bootstrap_difference_ci,
+    mean,
+    median,
+    non_inferiority_test,
+    normal_quantile,
+    power_analysis,
+    stdev,
+    variance,
+    welch_t_test,
+)
+from .preregistration import (
+    CLAIM_LEVELS,
+    ClaimRequest,
+    Preregistration,
+    PreregistrationError,
+    ReportGate,
+    ReportRefused,
+)
+
+__all__ = [
+    "CLAIM_LEVELS",
+    "ClaimRequest",
+    "FDRResult",
+    "Interval",
+    "PowerAnalysis",
+    "Preregistration",
+    "PreregistrationError",
+    "ReportGate",
+    "ReportRefused",
+    "TestResult",
+    "benjamini_hochberg",
+    "bootstrap_ci",
+    "bootstrap_difference_ci",
+    "mean",
+    "median",
+    "non_inferiority_test",
+    "normal_quantile",
+    "power_analysis",
+    "stdev",
+    "variance",
+    "welch_t_test",
+]

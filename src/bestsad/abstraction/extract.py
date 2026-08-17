@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import random
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Mapping, Sequence
 
 from ..bsir.canonicalize import term_semantic_hash
@@ -255,8 +255,7 @@ def select(
 
     if regime == "utility":
         scored = [
-            Candidate(**{**c.__dict__, "utility": score_utility(c, family_count=family_count)})
-            for c in usable
+            replace(c, utility=score_utility(c, family_count=family_count)) for c in usable
         ]
         ranked = sorted(scored, key=lambda c: (-c.utility, c.semantic_key))
         return [c for c in ranked if c.utility > 0][:count]
