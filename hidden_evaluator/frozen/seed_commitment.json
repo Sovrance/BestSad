@@ -1,0 +1,9 @@
+{
+  "comment": "Seed commitment for the frozen hidden benchmark (spec §20.1 class A). Committed before any evaluation run; the benchmark is regenerated from it rather than stored.",
+  "generator_version": "taskgen-1.0.0",
+  "kernel_version": "K0-1.0.0",
+  "held_out_seed_base": 90210,
+  "adversarial_seed_base": 90211,
+  "in_family_ood_seed_base": 90212,
+  "committed_at_utc": "2026-08-17T00:00:00Z"
+}
