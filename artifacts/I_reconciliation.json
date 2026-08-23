@@ -1,0 +1,226 @@
+[
+ {
+  "expected": 476507.0,
+  "actual": 168174.0,
+  "relative_residual": 0.6470691931073416,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 474697.0,
+  "actual": 133204.0,
+  "relative_residual": 0.7193915276481629,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 469971.0,
+  "actual": 131942.0,
+  "relative_residual": 0.7192550178628043,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 493670.0,
+  "actual": 174114.0,
+  "relative_residual": 0.6473069054226508,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 523860.0,
+  "actual": 184563.0,
+  "relative_residual": 0.6476864047646318,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 468191.0,
+  "actual": 129280.0,
+  "relative_residual": 0.7238733764638791,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 551732.0,
+  "actual": 214386.0,
+  "relative_residual": 0.6114309121095024,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 501389.0,
+  "actual": 176787.0,
+  "relative_residual": 0.6474055075001646,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 473732.0,
+  "actual": 150084.0,
+  "relative_residual": 0.6831879628144183,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 446791.0,
+  "actual": 124612.0,
+  "relative_residual": 0.7210955457921041,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 403058.0,
+  "actual": 112838.0,
+  "relative_residual": 0.7200452540329183,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 428922.0,
+  "actual": 136300.0,
+  "relative_residual": 0.6822266053035284,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 402441.0,
+  "actual": 99372.0,
+  "relative_residual": 0.7530768485318344,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 447359.0,
+  "actual": 140867.0,
+  "relative_residual": 0.6851141924047577,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 381581.0,
+  "actual": 107056.0,
+  "relative_residual": 0.7194409574900218,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 444977.0,
+  "actual": 140137.0,
+  "relative_residual": 0.6850691159318347,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 430632.0,
+  "actual": 120246.0,
+  "relative_residual": 0.7207685448364265,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 451773.0,
+  "actual": 159600.0,
+  "relative_residual": 0.6467252359038721,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 425457.0,
+  "actual": 134123.0,
+  "relative_residual": 0.6847554511971833,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 496764.0,
+  "actual": 175179.0,
+  "relative_residual": 0.6473597120564292,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 428629.0,
+  "actual": 136196.0,
+  "relative_residual": 0.6822520174789853,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 425476.0,
+  "actual": 119953.0,
+  "relative_residual": 0.7180734048453967,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 519925.0,
+  "actual": 199970.0,
+  "relative_residual": 0.6153868346396115,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 407126.0,
+  "actual": 129588.0,
+  "relative_residual": 0.6817005054946135,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 445229.0,
+  "actual": 140217.0,
+  "relative_residual": 0.6850676842703418,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 537676.0,
+  "actual": 208960.0,
+  "relative_residual": 0.6113644648449996,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 403307.0,
+  "actual": 99567.0,
+  "relative_residual": 0.7531235510417622,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 452436.0,
+  "actual": 159838.0,
+  "relative_residual": 0.6467168837139396,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 427846.0,
+  "actual": 151320.0,
+  "relative_residual": 0.6463213399213735,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 450185.0,
+  "actual": 141737.0,
+  "relative_residual": 0.6851583238002155,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 381130.0,
+  "actual": 94458.0,
+  "relative_residual": 0.7521633038595755,
+  "tolerance": 0.05,
+  "reconciled": false
+ },
+ {
+  "expected": 451631.0,
+  "actual": 159555.0,
+  "relative_residual": 0.6467137995398898,
+  "tolerance": 0.05,
+  "reconciled": false
+ }
+]

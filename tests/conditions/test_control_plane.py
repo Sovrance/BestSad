@@ -161,3 +161,25 @@ def test_scaffolding_residual_is_disclosed_in_words():
 
 def test_required_controls_are_the_three_from_invariant_three():
     assert REQUIRED_CONTROLS == ("F", "H", "I")
+
+
+def test_condition_i_spreads_inherited_evolution_compute_across_tasks():
+    """`node_budget` is a per-task budget; inherited evolution compute is a total.
+
+    Adding the total to every task hands condition I one full extra evolution budget per task,
+    and the §26.6 identity compute(I) == compute(A) + compute(evolution in D) fails outright.
+    The reconciliation check caught exactly this in the first full run, which is what it is for.
+    """
+    plane = _plane(baseline_node_budget=25_000, evolution_nodes=260_000)
+    # Without spreading, I's per-task budget would be 285,000.
+    assert plane["I"].node_budget == 25_000 + 260_000
+
+    spread = build_conditions(
+        kernel_version=KERNEL_VERSION,
+        random_primitives=[], mdl_primitives=[], utility_primitives=[], expert_primitives=[],
+        baseline_node_budget=25_000,
+        evolution_nodes=260_000,
+        tasks_per_seed=26,
+    )
+    assert spread["I"].node_budget == 25_000 + 10_000
+    assert spread["I"].node_budget < plane["I"].node_budget

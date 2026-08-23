@@ -1,0 +1,47 @@
+{
+ "condition_id": "I",
+ "seed": 27,
+ "primary": 0.7250069303412471,
+ "verified_ood_rate": 0.3333333333333333,
+ "verified_in_family_rate": 0.875,
+ "verified_adversarial_rate": 0.0,
+ "train_only_rate": 0.16666666666666666,
+ "total_compute": 459765.72,
+ "model_tokens": 147,
+ "search_nodes": 99567,
+ "language_description_tokens": 124,
+ "primitive_reuse": {},
+ "cross_family_reuse": {},
+ "ledger": {
+  "run_id": "EXP-001-DR-2026-08-23",
+  "condition_id": "I",
+  "seed": 27,
+  "model_identity_hash": "enumerative-search-v1",
+  "accelerator_type": "cpu",
+  "components": {
+   "model_input_tokens": 0,
+   "model_output_tokens": 215,
+   "search_compute": 232172.0,
+   "evolution_compute": 0.0,
+   "compile_time_s": 0.0,
+   "execution_time_s": 0.0,
+   "verifier_time_s": 0.0,
+   "candidate_evaluations": 947862,
+   "wall_clock_s": 22.173094749450684
+  },
+  "totals": {
+   "total_experimental_compute": 459765.72,
+   "accounting_policy_id": "acct-1.0.0"
+  },
+  "paired_outcomes": {
+   "compression_ratio": 0.0,
+   "capability_delta": 0.0
+  },
+  "best_of_n_disclosure": {
+   "n": 1,
+   "candidates_evaluated": 0
+  }
+ },
+ "hardcoding_incidents": 0,
+ "reproducibility_digest": "1e3a6ea6b23b717b1216fa5110b4c534"
+}

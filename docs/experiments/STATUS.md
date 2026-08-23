@@ -1,6 +1,6 @@
 # Implementation status against `IMPLEMENTATION_PLAN_v0.2.md`
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-23.
 
 ## Complete, with acceptance tests passing
 
@@ -17,24 +17,23 @@ Last updated: 2026-08-17.
 | **M8** Causal attribution plane | Done | `tests/causal/` — ablation verified by semantic-hash equality, concentration stop rule fires on a planted shortcut and not on a general primitive, null and negative primitives reported |
 | **M9** Statistics and reporting | Done | `tests/stats/` — every refusal in the report gate asserted; statistics checked against independently hand-computed values |
 
-## Not complete
+| **M10** EXP-001 S2/S3 execution | Done | E0 (16 seeds) → pre-registration committed → S2 (8 conditions × 32 seeds) → S3 (condition G + per-primitive mediation). Report in `docs/experiments/EXP-001-DR-report.md`; negative result in `docs/research/negative_results/`; end-to-end coverage in `tests/experiments/`. **Gate G6 satisfied** — the ledger is not empty |
 
-**M10 — EXP-001 stage S2/S3 execution.** The runner (`bestsad.experiments.exp001`) and the
-analysis and certification path (`bestsad.experiments.analysis`) are written, and stage S1 has
-been executed end to end. **S2 and S3 have not been run**, so:
+## The M10 result, in one paragraph
 
-- no result exists, and none should be quoted;
-- the runner's S2/S3 paths are not yet covered by an end-to-end test;
-- no negative-result record has been written, because there is no finding to record yet.
+Outcome **`h0_consistent`**, Claim Level 1. The treatment moved the primary endpoint by +0.0052
+(95% CI −0.0260 to +0.0391) against a pre-registered threshold of +0.05; **no control was
+beaten**; and the human-expert DSL beat both treatments by ~9.5× the margin they hold over the
+baseline — the falsification signal spec §24.9 names explicitly. The reporting gate refused any
+capability claim and certified the run as consistent with H0. Per **ADR-0007** this is
+instrument validation, not evidence about any language model: H2, H13, H14 and H15 remain
+untested, and spec §45 applies in full.
 
-The blocker is wall-clock cost, not design: a single condition-seed takes ~100 s at the current
-budget, and S2 is 8 conditions × the seed count. The next step is a timed profile and a budget
-that makes the full staged run practical, then the run itself.
-
-When it does run, note what it will and will not mean. Per **ADR-0007**, the model role is
-filled by an enumerative synthesizer, not a language model. Any output is **Claim Level 0/E —
-exploratory instrument validation**. It cannot bear on H2, H13, H14 or H15, all of which are
-claims about a *model*, and spec §45's prohibited claims apply in full.
+The run exposed two defects, both caught by the instrument's own checks and both now fixed and
+regression-tested: condition I was over-funded 2.8× (the §26.6 reconciliation caught it), and
+checkpoint keys collided across configurations. It also established that **confound control C1 is
+not implementable against a saturating enumerative searcher** — condition I was measured across a
+7.8× compute range and returned an identical solve rate every time.
 
 ## Deferred behind gates, as the plan requires
 

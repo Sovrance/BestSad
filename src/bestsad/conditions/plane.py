@@ -56,6 +56,12 @@ class Condition:
     compute_tolerance: float = 0.05
     residual_confound: ResidualConfound | None = None
     node_budget: int | None = None
+    #: Extra enumeration depth. Condition I exists to spend D's evolution compute on *additional
+    #: search* (spec §24.5 I). A bounded-depth enumerator saturates: once it has enumerated
+    #: every term up to its depth limit, more nodes buy nothing, and the control is handed a
+    #: budget it cannot absorb. For an enumerative searcher, "more search" means deeper search,
+    #: which is the faithful analogue of more sampling for a model.
+    search_depth_bonus: int = 0
     scaffolding: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -135,6 +141,7 @@ def build_conditions(
     expert_primitives: Sequence[Primitive],
     baseline_node_budget: int,
     evolution_nodes: int,
+    tasks_per_seed: int = 1,
 ) -> dict[str, Condition]:
     """Assemble the full condition set A–I.
 
@@ -234,7 +241,13 @@ def build_conditions(
             "search-only compute-matched: condition A given the entire compute consumed by "
             "genome evolution in D, spent on additional search in the baseline language"
         ),
-        node_budget=baseline_node_budget + evolution_nodes,
+        # `node_budget` is a *per-task* search budget, but the evolution compute it inherits is
+        # a *total* across the whole seed. Adding the total to every task hands condition I one
+        # full extra evolution budget per task — 26x too much at the current task count — and
+        # the §26.6 identity compute(I) == compute(A) + compute(evolution in D) fails. The
+        # inherited total is therefore spread across the tasks it has to cover.
+        node_budget=baseline_node_budget + max(1, evolution_nodes // max(1, tasks_per_seed)),
+        search_depth_bonus=1,
         inherited_evolution_compute_from="D",
         matched_to_condition="D",
     )

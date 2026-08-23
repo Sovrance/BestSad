@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import pickle
 import time
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict, dataclass, field
@@ -149,11 +150,27 @@ def expert_dsl_primitives() -> list[Primitive]:
 
 
 def _discovery_job(payload: tuple) -> tuple:
-    """Worker entry point for abstraction discovery on one seed."""
-    seed, kwargs, run_id = payload
+    """Worker entry point for abstraction discovery on one seed.
+
+    Checkpointed via pickle rather than JSON: the payload contains `Primitive` objects, whose
+    expansions are K0 terms. Serializing those to JSON and back would need a term parser that
+    round-trips attributes exactly, and a silent mismatch there would change what condition D
+    actually is.
+    """
+    seed, kwargs, run_id, checkpoint_dir = payload
+    path = Path(checkpoint_dir) / f"discovery_seed{seed}.pkl" if checkpoint_dir else None
+    if path is not None and path.exists():
+        with path.open("rb") as handle:
+            return pickle.load(handle)
+
     runner = Exp001Runner(run_id=run_id, seeds=(seed,), **kwargs)
     primitives, evolution_nodes, notes = runner.discover(seed)
-    return seed, primitives, evolution_nodes, notes, runner.log
+    result = (seed, primitives, evolution_nodes, notes, runner.log)
+    if path is not None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("wb") as handle:
+            pickle.dump(result, handle)
+    return result
 
 
 def _job(payload: tuple) -> dict:
@@ -164,10 +181,44 @@ def _job(payload: tuple) -> dict:
     produces byte-identical records to running them in sequence. Parallelism here buys wall
     clock and changes nothing about the result, which is the only kind of speed-up this
     instrument can accept.
+
+    Completed jobs are written to `checkpoint_dir` and reused on a later run. A full staged run
+    takes hours, dominated by condition I — which is expensive *by design*, since it must be
+    given the entire compute genome evolution consumed in D. Losing all of it to one interruption
+    would be an accident of engineering, not a scientific constraint, so it is checkpointed.
     """
-    condition, seed, kwargs, run_id = payload
+    condition, seed, kwargs, run_id, checkpoint_dir = payload
+    # The key must cover everything that changes the result, not just the genome. Condition I's
+    # genome is empty and identical across configurations, so a key built from the genome alone
+    # collides between runs with different search budgets or depths — and silently serves a
+    # record produced under the *other* configuration. A checkpoint that returns the wrong
+    # answer instantly is worse than no checkpoint at all.
+    fingerprint = hashlib.sha256(
+        json.dumps(
+            {
+                "genome": condition.genome.content_hash(),
+                "node_budget": condition.node_budget,
+                "depth_bonus": condition.search_depth_bonus,
+                "budget": asdict(kwargs["budget"]),
+                "per_family": kwargs.get("per_family"),
+                "in_family": kwargs.get("in_family_per_family"),
+                "adversarial": kwargs.get("adversarial_per_family"),
+            },
+            sort_keys=True,
+            default=str,
+        ).encode()
+    ).hexdigest()[:12]
+    key = f"{condition.condition_id}_{fingerprint}_seed{seed}"
+    path = Path(checkpoint_dir) / f"{key}.json" if checkpoint_dir else None
+    if path is not None and path.exists():
+        return json.loads(path.read_text())
+
     runner = Exp001Runner(run_id=run_id, seeds=(seed,), **kwargs)
-    return runner._run_condition(condition, seed, runner._task_sets(seed)).to_record()
+    record = runner._run_condition(condition, seed, runner._task_sets(seed)).to_record()
+    if path is not None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(record, indent=1, default=str))
+    return record
 
 
 class Exp001Runner:
@@ -185,6 +236,7 @@ class Exp001Runner:
         in_family_per_family: int | None = None,
         adversarial_per_family: int | None = None,
         workers: int = 1,
+        checkpoint_dir: Path | None = None,
     ) -> None:
         self.run_id = run_id
         self.seeds = tuple(seeds)
@@ -199,6 +251,7 @@ class Exp001Runner:
             max(1, per_family - 1) if adversarial_per_family is None else adversarial_per_family
         )
         self.workers = max(1, workers)
+        self.checkpoint_dir = checkpoint_dir
         self.budget = budget or SearchBudget(max_nodes=90_000, max_size=6)
         self.artifacts_dir = artifacts_dir or Path("artifacts") / run_id
         self.abstraction_count = abstraction_count
@@ -209,6 +262,15 @@ class Exp001Runner:
 
     def _say(self, message: str) -> None:
         self.log.append(message)
+
+    def tasks_per_seed(self) -> int:
+        """How many tasks each condition is scored on per seed.
+
+        Condition I's inherited evolution compute is a total and must be spread across these
+        (spec §26.6), which is what keeps its reconciliation identity true.
+        """
+        sets = self._task_sets(self.seeds[0])
+        return sum(len(sets[name]) for name in ("held_out", "in_family_ood", "adversarial"))
 
     def _task_sets(self, seed: int) -> dict[str, TaskSet]:
         return {
@@ -230,7 +292,11 @@ class Exp001Runner:
 
     def _map_jobs(self, jobs: Sequence[tuple[Condition, int]]) -> list[dict]:
         """Run `(condition, seed)` jobs, in parallel when `workers > 1`."""
-        payloads = [(condition, seed, self._sizing(), self.run_id) for condition, seed in jobs]
+        checkpoint = str(self.checkpoint_dir) if self.checkpoint_dir else None
+        payloads = [
+            (condition, seed, self._sizing(), self.run_id, checkpoint)
+            for condition, seed in jobs
+        ]
         if self.workers == 1:
             return [_job(p) for p in payloads]
         with ProcessPoolExecutor(max_workers=self.workers) as pool:
@@ -245,8 +311,11 @@ class Exp001Runner:
         genome = condition.genome
         kernel = genome.kernel(fuel=self.budget.kernel_fuel)
         projection = get_projection(genome.projection_name)
-        budget = SearchBudget(**{**asdict(self.budget),
-                                 "max_nodes": condition.node_budget or self.budget.max_nodes})
+        budget = SearchBudget(**{
+            **asdict(self.budget),
+            "max_nodes": condition.node_budget or self.budget.max_nodes,
+            "max_size": self.budget.max_size + condition.search_depth_bonus,
+        })
         synthesizer = EnumerativeSynthesizer(
             kernel, genome.vocabulary(BASE_VOCABULARY), genome.signatures(),
             budget=budget, seed=seed,
@@ -424,7 +493,8 @@ class Exp001Runner:
         scaffolding_reports = []
         reconciliations = []
 
-        payloads = [(seed, self._sizing(), self.run_id) for seed in self.seeds]
+        checkpoint = str(self.checkpoint_dir) if self.checkpoint_dir else None
+        payloads = [(seed, self._sizing(), self.run_id, checkpoint) for seed in self.seeds]
         if self.workers == 1:
             discoveries = [_discovery_job(p) for p in payloads]
         else:
@@ -445,6 +515,7 @@ class Exp001Runner:
                 expert_primitives=expert_dsl_primitives(),
                 baseline_node_budget=self.budget.max_nodes,
                 evolution_nodes=evolution_nodes,
+                tasks_per_seed=self.tasks_per_seed(),
             )
             check_condition_f(plane["F"], plane["A"])
 

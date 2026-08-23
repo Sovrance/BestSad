@@ -1,0 +1,53 @@
+{
+ "condition_id": "G",
+ "seed": 22,
+ "primary": 0.7636455829212192,
+ "verified_ood_rate": 0.5,
+ "verified_in_family_rate": 0.875,
+ "verified_adversarial_rate": 0.0,
+ "train_only_rate": 0.16666666666666666,
+ "total_compute": 654754.0,
+ "model_tokens": 196,
+ "search_nodes": 122902,
+ "language_description_tokens": 173,
+ "primitive_reuse": {
+  "prim:g_sum": 3
+ },
+ "cross_family_reuse": {
+  "prim:g_sum": [
+   "F9"
+  ]
+ },
+ "ledger": {
+  "run_id": "EXP-001-DR-2026-08-23",
+  "condition_id": "G",
+  "seed": 22,
+  "model_identity_hash": "enumerative-search-v1",
+  "accelerator_type": "cpu",
+  "components": {
+   "model_input_tokens": 0,
+   "model_output_tokens": 304,
+   "search_compute": 259015.0,
+   "evolution_compute": 0.0,
+   "compile_time_s": 0.0,
+   "execution_time_s": 0.0,
+   "verifier_time_s": 0.0,
+   "candidate_evaluations": 1055248,
+   "wall_clock_s": 38.39656209945679
+  },
+  "totals": {
+   "total_experimental_compute": 654754.0,
+   "accounting_policy_id": "acct-1.0.0"
+  },
+  "paired_outcomes": {
+   "compression_ratio": 0.0,
+   "capability_delta": 0.0
+  },
+  "best_of_n_disclosure": {
+   "n": 1,
+   "candidates_evaluated": 0
+  }
+ },
+ "hardcoding_incidents": 0,
+ "reproducibility_digest": "3f372f44ce17a3cb93a0bbd2511136dc"
+}
