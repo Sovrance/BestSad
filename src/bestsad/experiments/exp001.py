@@ -18,8 +18,10 @@ important control in the experiment (spec §24.5 I).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -90,7 +92,22 @@ class ConditionOutcome:
     def to_record(self) -> dict:
         data = asdict(self)
         data["cross_family_reuse"] = {k: sorted(v) for k, v in self.cross_family_reuse.items()}
+        data["reproducibility_digest"] = self.reproducibility_digest()
         return data
+
+    def reproducibility_digest(self) -> str:
+        """Content hash of everything except wall-clock timing.
+
+        Wall clock must be logged (spec §26.4) and can never be reproduced exactly, so a naive
+        record comparison always reports a difference and replay verification becomes useless.
+        This digest is what Gate G2's "replay works" is actually checked against: it covers
+        every scientific quantity and no timing field.
+        """
+        data = asdict(self)
+        data.pop("ledger", None)
+        data["cross_family_reuse"] = {k: sorted(v) for k, v in self.cross_family_reuse.items()}
+        payload = json.dumps(data, sort_keys=True, default=str)
+        return hashlib.sha256(payload.encode()).hexdigest()[:32]
 
 
 @dataclass(slots=True)
@@ -131,6 +148,28 @@ def expert_dsl_primitives() -> list[Primitive]:
     ]
 
 
+def _discovery_job(payload: tuple) -> tuple:
+    """Worker entry point for abstraction discovery on one seed."""
+    seed, kwargs, run_id = payload
+    runner = Exp001Runner(run_id=run_id, seeds=(seed,), **kwargs)
+    primitives, evolution_nodes, notes = runner.discover(seed)
+    return seed, primitives, evolution_nodes, notes, runner.log
+
+
+def _job(payload: tuple) -> dict:
+    """Worker entry point: run one (condition, seed) and return its record.
+
+    A separate process per job. Each job is a pure function of `(condition, seed, sizing,
+    budget)` — the synthesizer is deterministic given those — so running them concurrently
+    produces byte-identical records to running them in sequence. Parallelism here buys wall
+    clock and changes nothing about the result, which is the only kind of speed-up this
+    instrument can accept.
+    """
+    condition, seed, kwargs, run_id = payload
+    runner = Exp001Runner(run_id=run_id, seeds=(seed,), **kwargs)
+    return runner._run_condition(condition, seed, runner._task_sets(seed)).to_record()
+
+
 class Exp001Runner:
     """Runs EXP-001's staged gates end to end."""
 
@@ -143,10 +182,23 @@ class Exp001Runner:
         budget: SearchBudget | None = None,
         artifacts_dir: Path | None = None,
         abstraction_count: int = 4,
+        in_family_per_family: int | None = None,
+        adversarial_per_family: int | None = None,
+        workers: int = 1,
     ) -> None:
         self.run_id = run_id
         self.seeds = tuple(seeds)
+        # `per_family` sizes the curriculum and the held-out set, which carries the primary
+        # endpoint. The secondary sets can be sized independently: they inform secondary
+        # endpoints only, and every task in them costs the full node budget when unsolved.
         self.per_family = per_family
+        self.in_family_per_family = (
+            per_family if in_family_per_family is None else in_family_per_family
+        )
+        self.adversarial_per_family = (
+            max(1, per_family - 1) if adversarial_per_family is None else adversarial_per_family
+        )
+        self.workers = max(1, workers)
         self.budget = budget or SearchBudget(max_nodes=90_000, max_size=6)
         self.artifacts_dir = artifacts_dir or Path("artifacts") / run_id
         self.abstraction_count = abstraction_count
@@ -162,9 +214,27 @@ class Exp001Runner:
         return {
             "curriculum": curriculum_set(seed, self.per_family),
             "held_out": held_out_set(90210 + seed, self.per_family),
-            "in_family_ood": in_family_ood_set(90212 + seed, self.per_family),
-            "adversarial": adversarial_set(90211 + seed, max(1, self.per_family - 1)),
+            "in_family_ood": in_family_ood_set(90212 + seed, self.in_family_per_family),
+            "adversarial": adversarial_set(90211 + seed, self.adversarial_per_family),
         }
+
+    def _sizing(self) -> dict:
+        """The constructor arguments a worker needs to reproduce this runner's task sizing."""
+        return {
+            "per_family": self.per_family,
+            "in_family_per_family": self.in_family_per_family,
+            "adversarial_per_family": self.adversarial_per_family,
+            "budget": self.budget,
+            "abstraction_count": self.abstraction_count,
+        }
+
+    def _map_jobs(self, jobs: Sequence[tuple[Condition, int]]) -> list[dict]:
+        """Run `(condition, seed)` jobs, in parallel when `workers > 1`."""
+        payloads = [(condition, seed, self._sizing(), self.run_id) for condition, seed in jobs]
+        if self.workers == 1:
+            return [_job(p) for p in payloads]
+        with ProcessPoolExecutor(max_workers=self.workers) as pool:
+            return list(pool.map(_job, payloads))
 
     def _run_condition(
         self,
@@ -254,11 +324,8 @@ class Exp001Runner:
         condition = Condition("A", "reference", baseline, "K0 baseline",
                               node_budget=self.budget.max_nodes)
 
-        outcomes = []
-        for seed in self.seeds:
-            outcomes.append(self._run_condition(condition, seed, self._task_sets(seed)))
-
-        rates = [o.verified_ood_rate for o in outcomes]
+        records = self._map_jobs([(condition, seed) for seed in self.seeds])
+        rates = [float(r["verified_ood_rate"]) for r in records]
         measured_variance = variance(rates)
         analysis = power_analysis(
             effect_size=minimum_interesting_effect,
@@ -289,7 +356,7 @@ class Exp001Runner:
                 "variance": measured_variance,
                 "bootstrap_ci": bootstrap_ci(rates, seed=1).to_record(),
                 "power_analysis": analysis.to_record(),
-                "outcomes": [o.to_record() for o in outcomes],
+                "outcomes": records,
             },
         )
 
@@ -350,16 +417,25 @@ class Exp001Runner:
     def stage_s2(self) -> StageResult:
         """Conditions A–F, H, I across seeds (spec §43 S2)."""
         self._say("S2: running conditions A-F, H, I")
-        per_condition: dict[str, list[ConditionOutcome]] = {}
+        per_condition: dict[str, list[dict]] = {}
+        jobs: list[tuple[Condition, int]] = []
+        evolution_by_seed: dict[int, int] = {}
         discovery_notes: list[dict] = []
         scaffolding_reports = []
         reconciliations = []
 
-        for seed in self.seeds:
-            primitives, evolution_nodes, notes = self.discover(seed)
+        payloads = [(seed, self._sizing(), self.run_id) for seed in self.seeds]
+        if self.workers == 1:
+            discoveries = [_discovery_job(p) for p in payloads]
+        else:
+            with ProcessPoolExecutor(max_workers=self.workers) as pool:
+                discoveries = list(pool.map(_discovery_job, payloads))
+
+        for seed, primitives, evolution_nodes, notes, worker_log in discoveries:
             notes["seed"] = seed
             notes["evolution_nodes"] = evolution_nodes
             discovery_notes.append(notes)
+            self.log.extend(worker_log)
 
             plane = build_conditions(
                 kernel_version=KERNEL_VERSION,
@@ -385,26 +461,29 @@ class Exp001Runner:
                 }
             )
 
-            task_sets = self._task_sets(seed)
             for cid in ("A", "B", "C", "D", "E", "F", "H", "I"):
-                outcome = self._run_condition(plane[cid], seed, task_sets)
-                per_condition.setdefault(cid, []).append(outcome)
+                jobs.append((plane[cid], seed))
+            evolution_by_seed[seed] = evolution_nodes
+
+        records = self._map_jobs(jobs)
+        for record in records:
+            per_condition.setdefault(record["condition_id"], []).append(record)
+
+        for seed in self.seeds:
+            def nodes(cid: str) -> int:
+                return int(
+                    next(r["search_nodes"] for r in per_condition[cid] if r["seed"] == seed)
+                )
 
             reconciliations.append(
                 reconcile_search_only(
-                    baseline=ComputeLedger(
-                        self.run_id, "A", seed,
-                        search_nodes=int(per_condition["A"][-1].search_nodes),
-                    ),
+                    baseline=ComputeLedger(self.run_id, "A", seed, search_nodes=nodes("A")),
                     treatment=ComputeLedger(
                         self.run_id, "D", seed,
-                        search_nodes=int(per_condition["D"][-1].search_nodes),
-                        evolution_nodes=evolution_nodes,
+                        search_nodes=nodes("D"),
+                        evolution_nodes=evolution_by_seed[seed],
                     ),
-                    search_only=ComputeLedger(
-                        self.run_id, "I", seed,
-                        search_nodes=int(per_condition["I"][-1].search_nodes),
-                    ),
+                    search_only=ComputeLedger(self.run_id, "I", seed, search_nodes=nodes("I")),
                 )
             )
 
@@ -413,10 +492,7 @@ class Exp001Runner:
             passed=True,
             detail="conditions A-F, H, I completed",
             payload={
-                "per_condition": {
-                    cid: [o.to_record() for o in outcomes]
-                    for cid, outcomes in per_condition.items()
-                },
+                "per_condition": per_condition,
                 "discovery": discovery_notes,
                 "scaffolding": scaffolding_reports,
                 "compute_reconciliation": reconciliations,
@@ -428,19 +504,17 @@ class Exp001Runner:
     def stage_s3(self, s2: StageResult) -> StageResult:
         """Condition G, the human-expert DSL reference class (spec §43 S3)."""
         self._say("S3: running condition G (human-expert DSL reference class)")
-        outcomes = []
-        for seed in self.seeds:
-            plane = build_conditions(
-                kernel_version=KERNEL_VERSION,
-                random_primitives=[], mdl_primitives=[], utility_primitives=[],
-                expert_primitives=expert_dsl_primitives(),
-                baseline_node_budget=self.budget.max_nodes,
-                evolution_nodes=0,
-            )
-            outcomes.append(self._run_condition(plane["G"], seed, self._task_sets(seed)))
+        plane = build_conditions(
+            kernel_version=KERNEL_VERSION,
+            random_primitives=[], mdl_primitives=[], utility_primitives=[],
+            expert_primitives=expert_dsl_primitives(),
+            baseline_node_budget=self.budget.max_nodes,
+            evolution_nodes=0,
+        )
+        records = self._map_jobs([(plane["G"], seed) for seed in self.seeds])
         return StageResult(
             stage="S3",
             passed=True,
             detail="condition G completed",
-            payload={"per_condition": {"G": [o.to_record() for o in outcomes]}},
+            payload={"per_condition": {"G": records}},
         )

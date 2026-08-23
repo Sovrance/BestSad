@@ -146,6 +146,10 @@ class TestResult:
     df: float
     effect: float
     label: str = ""
+    #: True when within-group variance was zero, so no sampling model applies. The difference
+    #: may be perfectly real and still carry no *inferential* support: n identical values are
+    #: one observation repeated, not n independent ones.
+    degenerate: bool = False
 
 
 def welch_t_test(a: Sequence[float], b: Sequence[float], label: str = "") -> TestResult:
@@ -162,7 +166,13 @@ def welch_t_test(a: Sequence[float], b: Sequence[float], label: str = "") -> Tes
     se2 = va / na + vb / nb
     effect = mean(a) - mean(b)
     if se2 <= 0:
-        return TestResult(0.0, 1.0 if effect == 0 else 0.0, 0.0, effect, label)
+        # Zero within-group variance. The t statistic diverges and the naive p-value is 0, which
+        # would certify *any* nonzero difference as significant — a deterministic search would
+        # then "prove" an effect from a single task flipping. The assumption the test rests on
+        # (normal sampling with positive variance) does not hold, so no inferential claim is
+        # available and the conservative p-value is reported instead. `degenerate` says why, and
+        # the power analysis independently refuses a zero-variance run (spec §26.8).
+        return TestResult(0.0, 1.0, 0.0, effect, label, degenerate=True)
     t = effect / math.sqrt(se2)
     df = se2**2 / ((va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1))
     p = 2.0 * (1.0 - _t_cdf(abs(t), df))
@@ -187,7 +197,8 @@ def non_inferiority_test(
     va, vb = variance(a), variance(b)
     se2 = va / na + vb / nb
     if se2 <= 0:
-        return TestResult(0.0, 0.0 if effect > -margin else 1.0, 0.0, effect, label)
+        # As above: no sampling model, so non-inferiority cannot be *established* either.
+        return TestResult(0.0, 1.0, 0.0, effect, label, degenerate=True)
     t = (effect + margin) / math.sqrt(se2)
     df = se2**2 / ((va / na) ** 2 / (na - 1) + (vb / nb) ** 2 / (nb - 1))
     p = 1.0 - _t_cdf(t, df)

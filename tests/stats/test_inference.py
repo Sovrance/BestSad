@@ -163,3 +163,26 @@ def test_zero_measured_variance_is_not_treated_as_infinite_power():
     )
     assert not degenerate.powered
     assert degenerate.achieved_power == 0.0
+
+
+def test_zero_variance_does_not_manufacture_significance():
+    """Two perfectly deterministic conditions differing by a constant have zero within-group
+    variance. The naive t statistic diverges and the p-value collapses to 0, which would
+    certify any nonzero difference — a deterministic search would "prove" an effect from one
+    task flipping. No sampling model applies, so no inferential claim is available."""
+    a = [0.50, 0.50, 0.50, 0.50]
+    b = [0.25, 0.25, 0.25, 0.25]
+    result = welch_t_test(a, b)
+    assert result.effect == pytest.approx(0.25)
+    assert result.degenerate
+    assert result.p_value == 1.0
+
+    ni = non_inferiority_test(a, b, margin=0.02)
+    assert ni.degenerate and ni.p_value == 1.0
+
+
+def test_ordinary_tests_are_not_marked_degenerate():
+    a = [0.50, 0.52, 0.48, 0.51]
+    b = [0.25, 0.27, 0.23, 0.26]
+    result = welch_t_test(a, b)
+    assert not result.degenerate and result.p_value < 0.05

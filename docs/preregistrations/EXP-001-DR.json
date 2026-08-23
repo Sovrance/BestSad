@@ -1,0 +1,161 @@
+{
+  "amendments": [],
+  "analysis_code_revision": "see run manifest code_revision",
+  "conditions": [
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "A",
+      "controls_confound": null,
+      "description": "K0 baseline language",
+      "genome_id": "G-A",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "reference"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "B",
+      "controls_confound": null,
+      "description": "K0 + random macros, matched to D by count and size",
+      "genome_id": "G-B",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "lower_bound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "C",
+      "controls_confound": null,
+      "description": "K0 + MDL/frequency-extracted macros",
+      "genome_id": "G-C",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "lower_bound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "D",
+      "controls_confound": null,
+      "description": "K0 + utility-selected abstractions",
+      "genome_id": "G-D",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "treatment"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "E",
+      "controls_confound": null,
+      "description": "D + compact projection",
+      "genome_id": "G-E",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "treatment"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "F",
+      "controls_confound": "C2_compression",
+      "description": "compression-matched, no new semantics",
+      "genome_id": "G-F",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": true,
+      "condition_id": "G",
+      "controls_confound": null,
+      "description": "human-expert DSL, authored blind to the evolved genomes",
+      "genome_id": "G-G",
+      "human_authored": true,
+      "introduces_new_semantics": true,
+      "role": "reference_class"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "H",
+      "controls_confound": "C3_scaffolding",
+      "description": "scaffolding-matched variant of E",
+      "genome_id": "G-H",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "I",
+      "controls_confound": "C1_compute",
+      "description": "A plus all compute D's evolution consumed",
+      "genome_id": "G-I",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "confound_control"
+    }
+  ],
+  "declared_outcome_interpretations": {
+    "efficiency_only": "compression improved with capability inside the non-inferiority margin -> reported as an efficiency result, never as a capability result",
+    "h0_consistent": "any of F, H, I matches or beats the treatment, or the concentration test fails with shortcut-shaped primitives -> recorded as consistent with H0 regardless of the aggregate effect size",
+    "null_result": "effect below threshold -> recorded in docs/research/negative_results/ with the search-space constraint it implies",
+    "positive": "primary effect met, FDR-corrected, all control gates passed, concentration test passed -> would proceed to S4 in a model-based experiment; here it licenses only the statement that the instrument can detect an effect of this size"
+  },
+  "evaluator_image_digest": "not-containerised-see-ADR-0005",
+  "exclusion_criteria": [
+    "sandbox crash",
+    "evaluator image mismatch",
+    "ledger corruption",
+    "Exclusion for unfavourable results is prohibited; all exclusions listed with cause."
+  ],
+  "experiment_id": "EXP-001-DR",
+  "exploratory_endpoints": [
+    "primitive_reuse",
+    "cross_family_reuse",
+    "hardcoding_incidents"
+  ],
+  "kernel_version": "K0-1.0.0",
+  "minimum_interesting_effect": {
+    "absolute_solve_rate_points": 0.05,
+    "note": "Spec \u00a724.8's provisional >=5 percentage-point threshold, retained rather than relaxed. E0 measured variance 0.005064 implies 32 seeds are required to power it; the seed count was raised to 32 rather than weakening the threshold to suit the budget."
+  },
+  "model_identity": {
+    "claim_limitation": "ADR-0007: results are Claim Level 0/E instrument validation and cannot bear on H2, H13, H14 or H15, all of which are claims about a model.",
+    "kind": "deterministic enumerative synthesizer, NOT a language model",
+    "model_id": "enumerative-search-v1"
+  },
+  "multiple_comparison_control": {
+    "family": [
+      "in_family_ood_rate",
+      "adversarial_rate",
+      "search_nodes",
+      "generation_tokens",
+      "language_description_length",
+      "train_only_rate"
+    ],
+    "level": 0.05,
+    "method": "benjamini_hochberg"
+  },
+  "power_analysis": {
+    "achieved_power": 0.8025120470161513,
+    "alpha": 0.05,
+    "framing": "superiority",
+    "margin": null,
+    "powered": true,
+    "required_seeds": 32,
+    "target_power": 0.8,
+    "variance_estimate": 0.005063657407407405,
+    "variance_source_run": "E0-2026-08-17"
+  },
+  "preregistration_hash": "c8b93c6c89debfde1d5b1d60bc5514d9234fc337c464a5854300240941220a60",
+  "primary_endpoint": "verified_ood_solve_rate_per_compute on held-out compositional families F9-F12",
+  "secondary_endpoints": [
+    "in_family_ood_rate",
+    "adversarial_rate",
+    "search_nodes",
+    "generation_tokens",
+    "language_description_length",
+    "train_only_rate"
+  ],
+  "seeds_per_condition": 32,
+  "stopping_rule": "Fixed: 32 seeds per condition, all conditions run to completion. No interim analysis, no data-dependent stopping. Aborted runs are recorded with their cause, never silently discarded.",
+  "timestamp_utc": "2026-08-23T16:26:35+00:00"
+}
