@@ -1,0 +1,89 @@
+Bestsad — Proprietary Software License
+
+Copyright (c) 2026 Sovrance. All rights reserved.
+
+NOTICE
+------
+
+This software and all associated materials in this repository — including the
+source code, the research architecture and experimental specification, the
+research companion, pre-registrations, experimental results, negative-result
+records, schemas, and documentation (collectively, the "Software") — are the
+proprietary and confidential property of Sovrance (the "Owner").
+
+The Software is licensed, not sold. No ownership rights are transferred by
+access to, or possession of, this repository.
+
+GRANT
+-----
+
+No license, express or implied, is granted to any party except by a separate
+written agreement signed by the Owner. Absent such an agreement, no person or
+entity may:
+
+  1. use, execute, or run the Software for any purpose;
+  2. copy, reproduce, or store the Software except as strictly incidental to
+     access expressly authorised by the Owner;
+  3. modify, adapt, translate, or create derivative works of the Software;
+  4. distribute, publish, sublicense, sell, lease, or otherwise transfer the
+     Software or any portion of it;
+  5. reverse engineer, decompile, or disassemble any compiled portion of the
+     Software, except to the extent this restriction is unenforceable under
+     applicable law;
+  6. remove, obscure, or alter this notice or any proprietary marking.
+
+Where the Owner grants access to a named individual or entity, that access is
+personal, non-exclusive, non-transferable, revocable at will, and limited to the
+purpose stated in the granting agreement.
+
+CONFIDENTIALITY
+---------------
+
+The Software includes unpublished research materials. Recipients must treat the
+Software as confidential information and must not disclose it to any third party
+without the Owner's prior written consent.
+
+RESEARCH RESULTS
+----------------
+
+Nothing in this license alters the scientific reporting obligations recorded in
+the Software itself. In particular, the claims register (specification §45), the
+prohibition on reporting a capability claim without its required controls, and
+the requirement to preserve negative results remain binding on any authorised
+user of the Software. A license to use the Software is not a license to
+misrepresent what it measured.
+
+THIRD-PARTY COMPONENTS
+----------------------
+
+The Software depends on third-party packages distributed under their own
+licenses. Those licenses govern those components; this license governs only the
+Software as defined above.
+
+NO WARRANTY
+-----------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, TITLE, AND NONINFRINGEMENT. THE SOFTWARE IS A RESEARCH
+INSTRUMENT AND IS NOT REPRESENTED AS FIT FOR PRODUCTION OR SAFETY-CRITICAL USE.
+
+LIMITATION OF LIABILITY
+-----------------------
+
+IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+TERMINATION
+-----------
+
+Any authorisation granted by the Owner terminates automatically and immediately
+upon breach of this license. On termination the recipient must cease all use and
+destroy all copies of the Software in their possession or control.
+
+CONTACT
+-------
+
+Requests for licensing or authorisation should be directed to the Owner.

@@ -8,6 +8,10 @@ version = "0.2.0"
 description = "Bestsad research instrument: evolved machine-native computational representations under controlled evaluation"
 readme = "README.md"
 requires-python = ">=3.11"
+license = { file = "LICENSE" }
+# Proprietary: this classifier makes PyPI reject an upload outright, so an accidental
+# `twine upload` fails rather than publishing unpublished research materials.
+classifiers = ["Private :: Do Not Upload"]
 dependencies = [
     "jsonschema>=4.0",
 ]
