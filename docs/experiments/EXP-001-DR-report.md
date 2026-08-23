@@ -111,6 +111,19 @@ shortcut-shaped primitive, it is simply small. The full table, nulls included, i
 **Cross-seed stability (§34 Q2):** 28 distinct abstractions over 32 seeds; 13 appeared in
 exactly one seed, the most stable in 20 of 32 (62%). Discovery is markedly seed-sensitive.
 
+## Staged funding gates (§43), evaluated honestly
+
+| Stage | Gate to proceed | Verdict |
+|---|---|---|
+| **S1** E0 baseline + variance | Variance measured; power analysis passes for the pre-registered minimum interesting effect | **passed** — variance 0.005064 measured over 16 seeds; 32 seeds give power 0.8025 for a 5-point effect |
+| **S2** A–E plus F, H, I | Pre-registered primary effect met, FDR-corrected, across the pre-registered seed count; no control matches treatment | **failed** — effect +0.0052 against a +0.05 threshold, and all three of F, H and I match the treatment |
+| **S3** G reference class; per-primitive mediation | Concentration test passed; D/E margin over A not dwarfed by G's margin over D/E | **failed** — the concentration test passed, but G's margin over D/E (+0.0495) is ~9.5× D/E's margin over A (+0.0052), which is exactly the dwarfing the gate is written to catch |
+| **S4** tokenizer / adapted model | S2 **and** S3 both passed | **not reached** — correctly not started |
+| **S5** compiler evolution, cross-model transfer | S4 passed | **not reached** |
+
+The expensive arms stay gated. That is the staging working: S2 and S3 cost roughly two hours of
+CPU between them and stopped the program from spending anything on fine-tuning.
+
 ## Defects this run exposed
 
 Both were caught by the instrument's own checks, and both are fixed and regression-tested:

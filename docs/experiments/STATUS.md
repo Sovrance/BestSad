@@ -16,7 +16,6 @@ Last updated: 2026-08-23.
 | **M7** MDL Semantic Gain (SG-v2) | Done | `tests/mdl/` — training-only compression scores ≤ 0, held-out shortening scores > 0, coding scheme hashed |
 | **M8** Causal attribution plane | Done | `tests/causal/` — ablation verified by semantic-hash equality, concentration stop rule fires on a planted shortcut and not on a general primitive, null and negative primitives reported |
 | **M9** Statistics and reporting | Done | `tests/stats/` — every refusal in the report gate asserted; statistics checked against independently hand-computed values |
-
 | **M10** EXP-001 S2/S3 execution | Done | E0 (16 seeds) → pre-registration committed → S2 (8 conditions × 32 seeds) → S3 (condition G + per-primitive mediation). Report in `docs/experiments/EXP-001-DR-report.md`; negative result in `docs/research/negative_results/`; end-to-end coverage in `tests/experiments/`. **Gate G6 satisfied** — the ledger is not empty |
 
 ## The M10 result, in one paragraph
