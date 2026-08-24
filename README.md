@@ -49,30 +49,6 @@ Plus MDL-grounded Semantic Gain, per-primitive causal mediation with a gain-conc
 - A negative EXP-001 is a real contribution. See spec §44.
 - Prohibited claims are enumerated in spec §45. Read it before writing anything public.
 
-## Assurance protocol
-
-Every evolved primitive, genome, and experimental capability claim carries an explicit,
-machine-enforced assurance lifecycle: `docs/architecture/BESTSAD_ATLAS_ASSURANCE_INTEGRATION_ENG_v0.1.md`.
-
-The rule it exists to enforce is that **producers of evidence cannot promote their own
-conclusions**. K0, BSIR, the evaluator, the sandbox policy, the MDL coding scheme and the
-pre-registration are content-addressed roots; a change to any of them stales its descendants
-automatically. Query it with `bestsad assure roots`, `bestsad assure stale`,
-`bestsad primitive explain <id>`, and `bestsad report <run-id> --confirmatory`, which exits
-non-zero when promotion dependencies do not hold.
-
-## Licensing
-
-**Proprietary. All rights reserved.** See `LICENSE`.
-
-This repository contains unpublished research materials and is confidential. No license to use,
-copy, modify, or distribute is granted except by separate written agreement with the owner.
-
-The license does not relax the scientific reporting obligations recorded in this package — the
-claims register (spec §45), the requirement that a capability claim carry conditions F, H and I,
-and the requirement to preserve negative results all continue to bind any authorised user. A
-license to use the instrument is not a license to misrepresent what it measured.
-
 ## Naming
 
 **Bestsad** is an English coinage inspired by Diné/Navajo lexical roots (*béésh*, metal/technological; *saad*, word/speech) and by the history of the Navajo Code Talkers. It is **not** presented as a grammatically canonical Diné compound or an established Navajo word. Any public branding making a stronger linguistic claim should be reviewed by a qualified Diné speaker, linguist, or cultural advisor. See spec §1.

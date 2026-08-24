@@ -35,7 +35,13 @@ BESTSAD_REFERENCES_v0.2.bib                      schemas/ (the eight v0.2 schema
 `sha256sum -c MANIFEST_SHA256.txt` must keep passing. It is the evidence that the normative
 specification has not been quietly edited to match the implementation — which is exactly the
 direction of drift a research instrument has to guard against. New guidance goes in a new file
-(this one, `docs/adr/`, `docs/architecture/`), never by editing a delivered document.
+(this one, `REPOSITORY.md`, `docs/adr/`, `docs/architecture/`), never by editing a delivered
+document.
+
+`tests/integrity/test_delivered_package.py` enforces this, one test per pinned file. It was
+added after `README.md` drifted for a week: the manifest was pinned from the start and nothing
+verified it, which is the same as not having pinned it. Repository-level front matter — licence
+notice, assurance protocol, layout — is in `REPOSITORY.md` for exactly this reason.
 
 ## Before opening a pull request
 

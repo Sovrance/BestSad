@@ -86,6 +86,59 @@ jobs:
           bestsad assure roots
           bestsad --help
 
+  evaluator-image:
+    name: evaluator image (spec §27.1 deployment half)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the evaluator image
+        run: docker build -f src/bestsad/evaluator/Dockerfile -t bestsad-evaluator:ci .
+      # The image's value is in what it does not contain and what it cannot do, so assert both
+      # rather than trusting the comments inside the Dockerfile. A Dockerfile that is only read,
+      # never run, is documentation with a filename that implies otherwise.
+      - name: Image carries no hidden evaluation assets (spec §27.2)
+        run: |
+          # Prove the probe works before trusting its negative. Written the obvious way — an
+          # `if` around a test for the assets' presence — a container that fails to start, or
+          # an image with no shell, reports "nothing found" and the check passes having
+          # verified nothing. That is the same defect this branch exists to remove: a control
+          # that binds only when it happens to run.
+          # Search the whole image rather than two guessed paths — the point is that the assets
+          # are nowhere in it, not that they are absent from where I thought to look — and run
+          # the search as root so no directory is skipped for permissions.
+          #
+          # The query carries its own positive control. `canonicalize.py` is known to be in the
+          # image, so if the search cannot find the file that is definitely there, its silence
+          # about the files that must not be there proves nothing. Without this, any way for the
+          # search to fail — the earlier version exited non-zero on permission-denied and took
+          # `set -e` with it — reads as a clean image.
+          probe="$(docker run --rm --user 0 --entrypoint sh bestsad-evaluator:ci \
+                     -c 'find / -xdev \( -name "hidden_evaluator*" -o -name "canonicalize.py" \) -print' \
+                   || true)"
+          if ! printf '%s\n' "$probe" | grep -q 'canonicalize\.py'; then
+            echo "::error::the image probe missed its own positive control; the search did not run"
+            exit 1
+          fi
+          if printf '%s\n' "$probe" | grep -q 'hidden_evaluator'; then
+            echo "::error::hidden evaluation assets are present in the evaluator image:"
+            printf '%s\n' "$probe" | grep 'hidden_evaluator'
+            exit 1
+          fi
+      - name: Runs unprivileged
+        run: |
+          uid="$(docker run --rm --entrypoint id bestsad-evaluator:ci -u)"
+          test "$uid" = "10001" || { echo "::error::image runs as uid $uid"; exit 1; }
+      - name: Starts read-only, with no network and no capabilities
+        run: |
+          docker run --rm \
+            --network none \
+            --read-only \
+            --tmpfs /scratch:rw,noexec,nosuid,size=64m \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            bestsad-evaluator:ci --help
+
   schemas:
     name: schema validation
     runs-on: ubuntu-latest

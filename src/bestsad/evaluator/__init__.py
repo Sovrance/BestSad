@@ -20,6 +20,15 @@ from .integrity import (
     detect_hardcoding,
     suspicious_primitive,
 )
+from .isolation import (
+    DEFAULT_ADDRESS_SPACE,
+    DEFAULT_CPU_SECONDS,
+    DEFAULT_FILE_SIZE,
+    ISOLATION_AVAILABLE,
+    IsolatedResult,
+    ResourceLimits,
+    run_isolated,
+)
 from .sandbox import (
     IntegrityMonitor,
     IntegrityViolation,
@@ -29,6 +38,12 @@ from .sandbox import (
 )
 
 __all__ = [
+    "DEFAULT_ADDRESS_SPACE",
+    "DEFAULT_CPU_SECONDS",
+    "DEFAULT_FILE_SIZE",
+    "ISOLATION_AVAILABLE",
+    "IsolatedResult",
+    "ResourceLimits",
     "SCORING_CONTRACT_VERSION",
     "BenchmarkManifest",
     "Evaluator",
@@ -45,5 +60,6 @@ __all__ = [
     "default_policy",
     "detect_hardcoding",
     "manifest_for",
+    "run_isolated",
     "suspicious_primitive",
 ]
