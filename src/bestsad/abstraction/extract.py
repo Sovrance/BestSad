@@ -28,9 +28,15 @@ from ..genomes.registry import Primitive
 from ..kernel import INT, Kernel, OpSig, Program, Term, Ty
 from ..kernel.terms import var
 from ..kernel.typecheck import TypeError_, Typechecker, _Unifier
+from .rewrite import rewrite_corpus
 
 #: Subtrees smaller than this are not worth abstracting: the call site costs a node too.
 MIN_PATTERN_SIZE = 3
+
+#: Version of the selection machinery. Bumped whenever a regime's *objective* changes, so that
+#: cached discovery output produced by an older extractor is not silently reused — the same
+#: class of defect as the checkpoint-key collision that once served a stale condition I.
+SELECTION_VERSION = "select-2.0.0-joint-mdl-bits"
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,6 +237,137 @@ def score_utility(candidate: Candidate, *, family_count: int) -> float:
     return depth_saved * (0.35 + 0.65 * spread) * (0.4 + 0.6 * frequency)
 
 
+@dataclass(frozen=True, slots=True)
+class LibraryResult:
+    """The outcome of a joint MDL library search."""
+
+    selected: tuple[Candidate, ...]
+    initial_bits: float
+    final_bits: float
+    steps: tuple[dict, ...]
+
+    @property
+    def bits_saved(self) -> float:
+        return self.initial_bits - self.final_bits
+
+
+def _library_cost_bits(selected: Sequence[Candidate], scheme, base_vocabulary) -> float:
+    """Bits to *state* the library — the second half of the two-part MDL code."""
+    return sum(
+        scheme.description_length(c.pattern, base_vocabulary) for c in selected
+    )
+
+
+def mdl_library_search(
+    candidates: Sequence[Candidate],
+    corpus: Corpus,
+    *,
+    count: int,
+    scheme=None,
+    base_vocabulary: Sequence[str] | None = None,
+    beam: int = 3,
+) -> LibraryResult:
+    """Choose a library jointly, by two-part MDL in bits (ADR-0006).
+
+    Objective, minimised:
+
+        L(corpus | library) + L(library)
+
+    Both terms in **bits** under the pre-registered coding scheme, the same one SG-v2 uses — so
+    condition C and the Semantic Gain metric now measure description length the same way rather
+    than one counting bits and the other counting nodes.
+
+    Candidates are selected one at a time, and after each selection the corpus is **rewritten**
+    to use the chosen abstraction before the remaining candidates are re-scored. That is what
+    makes the search joint: two abstractions covering the same subtree can no longer both claim
+    the saving, because after the first is applied the mass it compressed is simply gone. Ranking
+    candidates independently double-counts exactly that shared mass, which is what made this
+    control weaker than it should have been.
+
+    A beam keeps `beam` partial libraries alive, so one locally-best first pick cannot foreclose
+    a jointly better pair. Selection stops when no remaining candidate reduces total bits — a
+    library that costs more to state than it saves is not selected at any size.
+    """
+    from ..mdl import CodingScheme
+
+    scheme = scheme or CodingScheme()
+    base_vocabulary = list(base_vocabulary or _default_vocabulary())
+    programs = [program for program, _family in corpus.entries]
+    if not programs or not candidates:
+        return LibraryResult((), 0.0, 0.0, ())
+
+    initial = scheme.set_length(programs, base_vocabulary)
+
+    # Each beam entry: (selected, rewritten programs, total bits, step log)
+    beams: list[tuple[list[Candidate], list, float, list[dict]]] = [
+        ([], programs, initial, [])
+    ]
+
+    for _round in range(count):
+        expanded: list[tuple[list[Candidate], list, float, list[dict]]] = []
+        for selected, current, current_bits, log in beams:
+            chosen_keys = {c.semantic_key for c in selected}
+            for candidate in candidates:
+                if candidate.semantic_key in chosen_keys:
+                    continue
+                primitive_id = f"prim:m{len(selected)}"
+                rewritten, occurrences = rewrite_corpus(
+                    current,
+                    primitive_id=primitive_id,
+                    pattern=candidate.pattern,
+                    params=candidate.params,
+                )
+                if occurrences == 0:
+                    # Already compressed away by an earlier selection: no mass left to claim.
+                    continue
+                vocabulary = base_vocabulary + [
+                    f"prim:m{i}" for i in range(len(selected) + 1)
+                ]
+                corpus_bits = scheme.set_length(rewritten, vocabulary)
+                library_bits = _library_cost_bits(
+                    [*selected, candidate], scheme, base_vocabulary
+                )
+                total = corpus_bits + library_bits
+                if total >= current_bits:
+                    continue
+                expanded.append(
+                    (
+                        [*selected, candidate],
+                        rewritten,
+                        total,
+                        [
+                            *log,
+                            {
+                                "primitive_id": primitive_id,
+                                "semantic_key": candidate.semantic_key,
+                                "occurrences_rewritten": occurrences,
+                                "bits_before": current_bits,
+                                "bits_after": total,
+                                "bits_saved": current_bits - total,
+                            },
+                        ],
+                    )
+                )
+        if not expanded:
+            break
+        expanded.sort(key=lambda entry: (entry[2], entry[0][-1].semantic_key))
+        beams = expanded[:beam]
+
+    best = min(beams, key=lambda entry: (entry[2], [c.semantic_key for c in entry[0]]))
+    return LibraryResult(
+        selected=tuple(best[0]),
+        initial_bits=initial,
+        final_bits=best[2],
+        steps=tuple(best[3]),
+    )
+
+
+def _default_vocabulary() -> list[str]:
+    from ..kernel.ops import OPS_BY_NAME
+
+    return list(OPS_BY_NAME)
+
+
 def select(
     candidates: Sequence[Candidate],
     regime: str,
@@ -238,8 +375,13 @@ def select(
     *,
     family_count: int = 8,
     seed: int = 0,
+    corpus: Corpus | None = None,
 ) -> list[Candidate]:
-    """Select `count` abstractions under the named regime."""
+    """Select `count` abstractions under the named regime.
+
+    `corpus` is required for the `mdl` regime to run its joint search; without it that regime
+    falls back to independent ranking, which ADR-0006 records as the weaker form.
+    """
     usable = [c for c in candidates if c.occurrences >= 2 and c.size >= MIN_PATTERN_SIZE]
     if not usable:
         return []
@@ -250,6 +392,11 @@ def select(
         return rng.sample(pool, min(count, len(pool)))
 
     if regime == "mdl":
+        if corpus is not None:
+            # Joint two-part MDL in bits (ADR-0006). The independent ranking below is retained
+            # only for callers with no corpus to rewrite against, and is documented as the
+            # weaker form it is.
+            return list(mdl_library_search(usable, corpus, count=count).selected)
         ranked = sorted(usable, key=lambda c: (-c.corpus_saving, c.semantic_key))
         return [c for c in ranked if c.corpus_saving > 0][:count]
 

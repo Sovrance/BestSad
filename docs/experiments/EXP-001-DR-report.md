@@ -124,6 +124,38 @@ exactly one seed, the most stable in 20 of 32 (62%). Discovery is markedly seed-
 The expensive arms stay gated. That is the staging working: S2 and S3 cost roughly two hours of
 CPU between them and stopped the program from spending anything on fine-tuning.
 
+## Condition C re-run under a strengthened extractor (2026-08-24)
+
+ADR-0006 recorded that condition C's MDL extractor ranked candidates independently and counted
+nodes rather than bits, which made the control *weaker than it should be* — biasing toward the
+treatment, the wrong direction. That is now fixed: two-part MDL in bits, with the corpus
+rewritten after each selection so overlapping abstractions cannot both claim the same mass.
+
+Condition C was re-run on all 32 seeds. The comparison is more informative than a null:
+
+| | independent ranking (nodes) | joint two-part MDL (bits) |
+|---|---:|---:|
+| Verified compositional OOD | 0.2344 | **0.2344** |
+| Variance across seeds | 0.005398 | 0.005398 |
+| Mean search nodes | 204,152 | 204,175 |
+| Language description (tokens) | 156 | **149** |
+| Abstractions selected per seed | 4 | **median 2–3; two seeds selected none** |
+| Per-seed digests differing | — | **28 of 32** |
+
+The strengthened control selects a genuinely different and *smaller* library — the runs differ
+on 28 of 32 seeds — and the verified solve rate is **identical on every one of the 32 seeds**.
+D-versus-C is unchanged to four decimals: **+0.0078, p = 0.6487, 95% CI −0.0260 to +0.0417**.
+
+Two things follow. The D-versus-C comparison was **not** an artefact of a weakened control, so
+the limitation ADR-0006 attached to it is discharged. And the run's `h0_consistent` outcome does
+not depend on the extractor's weaknesses.
+
+It also sharpens the run's own conclusion: at this instrument's resolution the *selection
+objective* does not move the endpoint at all. That is what you would expect if the binding
+constraint is the candidate pool — subtrees of programs the searcher could already solve —
+rather than how those candidates are ranked, which is exactly the search-space constraint the
+negative-result record names.
+
 ## Defects this run exposed
 
 Both were caught by the instrument's own checks, and both are fixed and regression-tested:

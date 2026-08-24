@@ -64,10 +64,10 @@ Disclosed here so they travel with any result (spec §40.3):
 1. **ADR-0005** — the candidate sandbox is an in-process audit hook, not a kernel sandbox, and
    `hidden_evaluator/` shares a checkout. Production needs an immutable evaluator image, process
    isolation, and the assets relocated. No result above Claim Level 1 until then.
-2. **ADR-0006** — condition C's MDL extractor ranks candidates independently rather than
-   searching for a jointly optimal library, and counts nodes rather than bits. This makes the
-   control *weaker* than it should be, which biases toward the treatment — the wrong direction —
-   and must be disclosed with any D-beats-C comparison.
+2. ~~**ADR-0006** — condition C's MDL extractor ranks candidates independently and counts nodes
+   rather than bits.~~ **Discharged 2026-08-24.** Rebuilt as a joint two-part MDL search in bits;
+   condition C re-run on all 32 seeds gives an identical per-seed solve rate, so the D-versus-C
+   comparison was not an artefact of a weakened control.
 3. **ADR-0007** — `compression_ratio` uses a surface-token proxy, not a model tokenizer.
 4. The synthesizer cannot capture outer variables in closures, so some tasks are unreachable in
    *every* condition. Equal across conditions, but it lowers the ceiling.

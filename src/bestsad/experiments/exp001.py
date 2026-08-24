@@ -158,7 +158,27 @@ def _discovery_job(payload: tuple) -> tuple:
     actually is.
     """
     seed, kwargs, run_id, checkpoint_dir = payload
-    path = Path(checkpoint_dir) / f"discovery_seed{seed}.pkl" if checkpoint_dir else None
+    # The key covers the selection machinery's version and the sizing, not just the seed.
+    # Discovery output depends on the extractor that produced it, so a key naming only the seed
+    # would serve abstractions selected under a different objective after the extractor changed.
+    from ..abstraction.extract import SELECTION_VERSION
+
+    fingerprint = hashlib.sha256(
+        json.dumps(
+            {
+                "selection": SELECTION_VERSION,
+                "per_family": kwargs.get("per_family"),
+                "abstraction_count": kwargs.get("abstraction_count"),
+                "budget": asdict(kwargs["budget"]),
+            },
+            sort_keys=True,
+            default=str,
+        ).encode()
+    ).hexdigest()[:12]
+    path = (
+        Path(checkpoint_dir) / f"discovery_{fingerprint}_seed{seed}.pkl"
+        if checkpoint_dir else None
+    )
     if path is not None and path.exists():
         with path.open("rb") as handle:
             return pickle.load(handle)
@@ -460,7 +480,11 @@ class Exp001Runner:
             "u",
         )
         mdl = to_primitives(
-            select(candidates, "mdl", self.abstraction_count, seed=seed), "m"
+            # Pass the corpus so condition C runs the *joint* two-part MDL search in bits
+            # (ADR-0006) rather than ranking candidates independently. Without the corpus the
+            # regime silently falls back to the weaker independent ranking, which would make
+            # the control easier for the treatment to beat.
+            select(candidates, "mdl", self.abstraction_count, seed=seed, corpus=corpus), "m"
         )
         random_macros = random_matched_primitives(utility, candidates, "r", seed)
 
