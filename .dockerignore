@@ -1,0 +1,14 @@
+# The evaluator image must not carry the hidden benchmark (spec §27.2), run artifacts, or any
+# local state. Everything the image needs is pyproject.toml, README.md and src/.
+hidden_evaluator/
+artifacts/
+docs/
+tests/
+.git/
+.github/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/

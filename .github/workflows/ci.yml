@@ -77,6 +77,38 @@ jobs:
           bestsad assure roots
           bestsad --help
 
+  evaluator-image:
+    name: evaluator image (spec §27.1 deployment half)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the evaluator image
+        run: docker build -f src/bestsad/evaluator/Dockerfile -t bestsad-evaluator:ci .
+      # The image's value is in what it does not contain and what it cannot do, so assert both
+      # rather than trusting the comments inside the Dockerfile. A Dockerfile that is only read,
+      # never run, is documentation with a filename that implies otherwise.
+      - name: Image carries no hidden evaluation assets (spec §27.2)
+        run: |
+          if docker run --rm --entrypoint sh bestsad-evaluator:ci \
+               -c '[ -e /hidden_evaluator ] || [ -e /build/hidden_evaluator ]'; then
+            echo "::error::hidden evaluation assets were baked into the evaluator image"
+            exit 1
+          fi
+      - name: Runs unprivileged
+        run: |
+          uid="$(docker run --rm --entrypoint id bestsad-evaluator:ci -u)"
+          test "$uid" = "10001" || { echo "::error::image runs as uid $uid"; exit 1; }
+      - name: Starts read-only, with no network and no capabilities
+        run: |
+          docker run --rm \
+            --network none \
+            --read-only \
+            --tmpfs /scratch:rw,noexec,nosuid,size=64m \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --pids-limit 128 \
+            bestsad-evaluator:ci --help
+
   schemas:
     name: schema validation
     runs-on: ubuntu-latest

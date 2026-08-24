@@ -61,9 +61,15 @@ transfer — gated on S4). None started, correctly.
 
 Disclosed here so they travel with any result (spec §40.3):
 
-1. **ADR-0005** — the candidate sandbox is an in-process audit hook, not a kernel sandbox, and
-   `hidden_evaluator/` shares a checkout. Production needs an immutable evaluator image, process
-   isolation, and the assets relocated. No result above Claim Level 1 until then.
+1. **ADR-0005** (narrowed 2026-08-24, not closed) — candidate-side work now runs in a separate
+   process with kernel-enforced CPU, address-space, file-size and core-dump limits, a cleared
+   environment and a scratch-pinned working directory (`bestsad.evaluator.isolation`), red-teamed
+   in `tests/integrity/test_process_isolation.py`; and the evaluator image exists, CI-verified to
+   build, carry no hidden assets, and start read-only with no network. What remains: **no
+   experiment has been run inside that image** (EXP-001-DR ran on the host), there is no declared
+   seccomp allowlist, and `hidden_evaluator/` still shares a checkout — a separate process on the
+   same host reads the same disk. **No result above Claim Level 1 until the assets are
+   relocated and a run records the image digest it executed under.**
 2. **ADR-0006** — condition C's MDL extractor ranks candidates independently rather than
    searching for a jointly optimal library, and counts nodes rather than bits. This makes the
    control *weaker* than it should be, which biases toward the treatment — the wrong direction —
