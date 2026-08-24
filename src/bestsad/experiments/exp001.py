@@ -49,6 +49,7 @@ from ..kernel import INT, KERNEL_VERSION, Kernel, TList, app, const_int, lam, va
 from ..kernel.ops import OPS_BY_NAME
 from ..mdl import CodingScheme, PairedOutcome, compression_ratio
 from ..solver import EnumerativeSynthesizer, SearchBudget
+from ..solver.enumerative import SYNTHESIZER_VERSION
 from ..stats import bootstrap_ci, mean, power_analysis, variance
 from ..tasks import (
     CURRICULUM_FAMILIES,
@@ -167,6 +168,7 @@ def _discovery_job(payload: tuple) -> tuple:
         json.dumps(
             {
                 "selection": SELECTION_VERSION,
+                "synthesizer": SYNTHESIZER_VERSION,
                 "per_family": kwargs.get("per_family"),
                 "abstraction_count": kwargs.get("abstraction_count"),
                 "budget": asdict(kwargs["budget"]),
@@ -216,6 +218,10 @@ def _job(payload: tuple) -> dict:
     fingerprint = hashlib.sha256(
         json.dumps(
             {
+                # What the searcher can reach is part of what produced this record. Without it
+                # a checkpoint written by an older synthesizer is served silently to a newer
+                # one, which is the same defect the genome/budget fields above exist to prevent.
+                "synthesizer": SYNTHESIZER_VERSION,
                 "genome": condition.genome.content_hash(),
                 "node_budget": condition.node_budget,
                 "depth_bonus": condition.search_depth_bonus,
