@@ -56,6 +56,12 @@ _ENUM_KEYS = frozenset(str(t) for t in ENUM_TYPES)
 
 DEFAULT_CONSTANTS: tuple[int, ...] = (0, 1, 2, -1, 3, 10)
 
+#: Identifies what the synthesizer can and cannot find. Any change that alters the reachable
+#: program set must bump this, because it is what keeps a checkpoint from serving a record
+#: produced by a *different* searcher. A checkpoint that returns the wrong answer instantly is
+#: worse than no checkpoint at all.
+SYNTHESIZER_VERSION = "enum-2.0.0-closure-capture"
+
 #: Probe values used to give a closure an observational signature.
 #:
 #: The spread matters more than the count. An earlier probe set topped out at 7, which made
@@ -177,7 +183,7 @@ class EnumerativeSynthesizer:
         self.rng = random.Random(seed)
         self.seed = seed
         self._checker = Typechecker(self.primitive_sigs)
-        self._lambda_bank: dict | None = None
+        self._lambda_banks: dict[tuple, dict] = {}
         self._lambda_cost = 0
         self._instantiation_cache: dict[str, list] = {}
 
@@ -213,7 +219,7 @@ class EnumerativeSynthesizer:
             expected.append(_outcome_key(outcome))
         target = b"|".join(expected)
 
-        lambda_bank = self._lambdas(result)
+        lambda_bank = self._lambdas(result, dict(task.params))
 
         bank = _Bank(cap=self.budget.bank_cap)
         for name, ty in task.params:
@@ -387,21 +393,30 @@ class EnumerativeSynthesizer:
 
     # -- closures -------------------------------------------------------------------------
 
-    def _lambdas(self, result: SearchResult) -> dict:
-        """Enumerate small closures for the higher-order operations, once per solver.
+    def _lambdas(self, result: SearchResult, outer_env: Mapping[str, Ty]) -> dict:
+        """Enumerate small closures for the higher-order operations.
 
         The bank depends on the *vocabulary*, so a genome with more primitives pays a larger
         one-off cost here. That cost is charged to the condition that owns the genome, which is
         what makes "a useless abstraction is not free" true in the instrument rather than only
         in the write-up.
 
-        Closures are enumerated over their own parameters and the constant pool only — outer
-        variables are not captured. That is a restriction on the search, not on K0, and it
-        applies identically in every condition.
+        Closure bodies may reference the enclosing program's parameters as well as their own —
+        ``filter (lambda e: ge(e, n)) xs`` needs `n`, and without capture that task is unreachable no
+        matter how good the representation is. The restriction used to apply identically in every
+        condition, so it did not bias the comparison, but it lowered the ceiling for all of them
+        and made a whole shape of solution invisible to the instrument.
+
+        Banks are cached per outer signature rather than once per solver, since the reachable
+        bodies now depend on what is in scope. Tasks within a family share a signature, so the
+        one-off cost is still amortised, and it is paid identically by every condition solving
+        the same task.
         """
-        if self._lambda_bank is not None:
-            result.nodes_expanded += 0  # already charged to the solver's first task
-            return self._lambda_bank
+        key = (tuple(sorted((name, str(ty)) for name, ty in outer_env.items())),)
+        cached = self._lambda_banks.get(key)
+        if cached is not None:
+            result.nodes_expanded += 0  # already charged when this signature was first built
+            return cached
 
         bank: dict = {}
         scalar_signatures = [
@@ -412,7 +427,7 @@ class EnumerativeSynthesizer:
         ]
         for params, ret in scalar_signatures:
             names = tuple(f"L{i}" for i in range(len(params)))
-            env = dict(zip(names, params))
+            env = self._closure_env(names, params, outer_env)
             bodies = self._enumerate_bodies(env, ret, result)
             bank[(tuple(params), str(ret))] = [
                 lam(tuple(zip(names, params)), body) for body in bodies
@@ -424,7 +439,7 @@ class EnumerativeSynthesizer:
         # every condition — an artefact of the search apparatus rather than a finding about
         # representation.
         list_params = (TList(INT),)
-        list_env = {"L0": TList(INT)}
+        list_env = self._closure_env(("L0",), (TList(INT),), outer_env)
         list_bodies = list(self._enumerate_bodies(list_env, TList(INT), result))
         for inner in bank.get(((INT,), str(INT)), []):
             result.nodes_expanded += 1
@@ -436,9 +451,30 @@ class EnumerativeSynthesizer:
             lam((("L0", TList(INT)),), body) for body in list_bodies[: self.budget.lam_bank_cap * 3]
         ]
 
-        self._lambda_bank = bank
+        self._lambda_banks[key] = bank
         self._lambda_cost = result.nodes_expanded
         return bank
+
+    @staticmethod
+    def _closure_env(
+        names: tuple[str, ...], params: tuple[Ty, ...], outer_env: Mapping[str, Ty]
+    ) -> dict[str, Ty]:
+        """A closure body sees its own parameters plus the enclosing program's.
+
+        The closure's own names win on collision: `L0` is bound by the lambda, and an outer
+        variable of the same name would be shadowed at evaluation, so offering it here would
+        enumerate bodies whose meaning does not match what the term actually computes.
+        """
+        env = {
+            name: ty
+            for name, ty in outer_env.items()
+            # A type with no probe values cannot be pruned by observational equivalence, and
+            # capturing it would mean pruning on signatures computed from a stand-in value.
+            # Leaving it out costs reach; including it would cost soundness.
+            if name not in names and can_probe(ty)
+        }
+        env.update(dict(zip(names, params)))
+        return env
 
     def _enumerate_bodies(
         self, env: dict[str, Ty], want: Ty, result: SearchResult
@@ -544,9 +580,19 @@ def _probe_values(ty: Ty) -> tuple:
 
         return (Pair(0, 0), Pair(3, 1), Pair(-2, 5))
     values = _PROBES.get(key)
-    if values is None:  # pragma: no cover - closure params are drawn from the set above
-        return (0,)
+    if values is None:
+        # Loud rather than a plausible-looking default. Returning `(0,)` for an unknown type
+        # feeds an int where a list is expected: the probe either traps or, worse, succeeds and
+        # gives the term an observational signature computed from the wrong thing — and
+        # observational equivalence is what the search prunes on. `can_probe` is the guard;
+        # reaching here means something bypassed it.
+        raise KeyError(f"no probe values for type {key}; cannot prune soundly")
     return values
+
+
+def can_probe(ty: Ty) -> bool:
+    """Whether a variable of this type can be given an observational signature."""
+    return str(ty) == str(TTuple(INT, INT)) or _PROBES.get(str(ty)) is not None
 
 
 def _probe_tuples(env: Mapping[str, Ty]) -> tuple[tuple, ...]:
