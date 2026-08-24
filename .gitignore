@@ -5,3 +5,7 @@ __pycache__/
 build/
 dist/
 artifacts/runs/
+# Job-level checkpoints are a derived cache, keyed by a configuration fingerprint and
+# regenerable by re-running. They also include pickles, which execute code on load — not
+# something a repository should hand a reader.
+artifacts/checkpoints/

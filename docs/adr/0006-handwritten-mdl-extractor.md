@@ -1,7 +1,7 @@
 # ADR 0006 — Hand-written MDL abstraction extractor for condition C
 
-**Status:** Provisional
-**Date:** 2026-08-17
+**Status:** Accepted
+**Date:** 2026-08-17 · **Amended:** 2026-08-24
 **Governs:** spec §36 (adopt an existing MDL-optimal corpus abstraction tool); implementation
 plan M6 ("condition C uses a real MDL-optimal extractor, not a strawman")
 
@@ -35,23 +35,64 @@ and candidates are ranked by it. Selection is over the same mined candidate set 
 B and D draw from, so the three regimes differ **only** in their selection rule. That is what
 makes the comparison a comparison of selection criteria rather than of mining pipelines.
 
-## Why this is provisional
+## Amendment, 2026-08-24: both weaknesses fixed
 
-Two known weaknesses, stated so they are not mistaken for design:
+This ADR was written Provisional because the first implementation had two weaknesses, recorded
+so they would not be mistaken for design:
 
-1. This ranks candidates *independently*. A genuinely MDL-optimal library is chosen jointly —
-   abstractions compete for the same corpus mass, and picking the top-k independently
-   overcounts overlapping savings. A joint/beam search over the library is the correct form.
-2. The saving is counted in **nodes**, whereas SG-v2 (M7) counts **bits** under a declared
-   prior. The two should agree on ordering in easy cases and can disagree at the margin.
+1. It ranked candidates *independently*. A genuinely MDL-optimal library is chosen jointly —
+   abstractions compete for the same corpus mass, and picking the top-k independently overcounts
+   overlapping savings.
+2. The saving was counted in **nodes**, while SG-v2 (M7) counts **bits** under a declared prior.
 
-Both weaknesses make condition C *weaker than it should be*, which biases in favour of the
-treatment. That direction is the wrong one for a control, and it must be disclosed with any
-result in which D beats C.
+Both made condition C *weaker than it should be*, which biases in favour of the treatment — the
+wrong direction for a control. Option (a) of the revisit trigger has now been taken.
 
-## Revisit trigger
+**The objective is now two-part MDL in bits:**
 
-Before EXP-001 is run as anything other than an instrument dry run, either (a) replace the
-independent ranking with a joint library search and re-express the objective in bits, or
-(b) adopt an external MDL extractor behind a validated BSIR translation. Until one of those
-happens, any D-beats-C comparison carries this ADR as a stated limitation.
+    minimise   L(corpus | library) + L(library)
+
+computed with the same `CodingScheme` SG-v2 uses, so the control and the Semantic Gain metric
+measure description length the same way rather than one counting bits and the other nodes.
+
+**Selection is joint.** After each abstraction is chosen the corpus is *rewritten* to use it
+(`abstraction/rewrite.py`) before the remaining candidates are re-scored. Two abstractions
+covering the same subtree can no longer both claim the saving: once the first is applied, the
+mass the second would have compressed is gone. A beam (default width 3) keeps several partial
+libraries alive so one locally-best first pick cannot foreclose a jointly better pair, and
+selection stops as soon as no remaining candidate reduces total bits — a library that costs more
+to state than it saves is never selected, at any size.
+
+`tests/abstraction/test_joint_mdl.py` pins both properties, including that the reported total
+saving equals the sum of the per-step savings (no double counting) and that changing the coding
+scheme's prior changes the result (the scheme is genuinely consulted).
+
+### What this changes about the EXP-001-DR result
+
+Condition C was re-run across all 32 seeds under the strengthened extractor
+(`artifacts/C_joint_mdl.json`). The result is worth stating precisely, because it is more
+informative than "no change":
+
+- The joint search selects a **genuinely different and smaller** library — a median of 2–3
+  abstractions per seed against the utility regime's 4, two seeds selecting none at all, and a
+  language description 149 tokens against 156.
+- The runs genuinely differ: per-seed reproducibility digests differ on **28 of 32 seeds**, and
+  mean search nodes moved 204,152 → 204,175.
+- The verified compositional OOD solve rate is **identical on all 32 seeds**: 0.2344 either way,
+  same variance, and D-versus-C is unchanged to four decimals (+0.0078, p = 0.6487,
+  95% CI −0.0260 to +0.0417).
+
+So strengthening the control changed *what it selects* without changing *what it achieves*. The
+limitation this ADR attached to the D-versus-C comparison is discharged: that comparison was not
+an artefact of a weakened control, and the run's `h0_consistent` outcome does not depend on the
+extractor's weaknesses. It also says something about the instrument — at this resolution the
+choice of abstraction-selection objective does not move the endpoint at all, which is consistent
+with the run's finding that the constraint lies in the candidate pool rather than in how
+candidates are ranked.
+
+## Still not done: option (b)
+
+Adopting an external MDL extractor behind a validated BSIR translation remains unattempted, for
+the reason in the Decision above: the translation would itself need to be trustworthy, on the
+control arm, where an error is least likely to be noticed. Revisit if an extractor appears that
+operates over a representation BSIR can be mapped to without a bespoke bridge.
