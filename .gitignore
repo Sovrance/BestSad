@@ -9,3 +9,6 @@ artifacts/runs/
 # regenerable by re-running. They also include pickles, which execute code on load — not
 # something a repository should hand a reader.
 artifacts/checkpoints/
+
+# Scratch worktrees used for A/B benchmarking against another branch.
+base-wt/

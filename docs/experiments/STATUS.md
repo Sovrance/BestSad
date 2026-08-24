@@ -82,5 +82,15 @@ Disclosed here so they travel with any result (spec §40.3):
    condition C re-run on all 32 seeds gives an identical per-seed solve rate, so the D-versus-C
    comparison was not an artefact of a weakened control.
 3. **ADR-0007** — `compression_ratio` uses a surface-token proxy, not a model tokenizer.
-4. The synthesizer cannot capture outer variables in closures, so some tasks are unreachable in
-   *every* condition. Equal across conditions, but it lowers the ceiling.
+4. ~~The synthesizer cannot capture outer variables in closures, so some tasks are unreachable
+   in *every* condition. Equal across conditions, but it lowers the ceiling.~~ **Discharged
+   2026-08-24, and the premise did not survive measurement.** Capture is implemented, and a
+   second and larger reach defect was found while testing it: observational-equivalence pruning
+   could not distinguish two variables of the same type, so `ge L0 n` collapsed onto the
+   constant `true` — which had silently degraded *every* two-argument closure the solver has
+   ever built. Both are fixed. A four-arm ablation attributes the whole training-side gain
+   (24/32 → 27/32) to the probe fix, with capture adding nothing on top, and **held-out solve
+   rate is unchanged at 5/16 in all four arms**: search reach was not what limited
+   generalization. Recorded in `docs/research/negative_results/`. Note `SYNTHESIZER_VERSION`
+   now participates in checkpoint fingerprints, and EXP-001-DR was produced by the older,
+   narrower searcher.
