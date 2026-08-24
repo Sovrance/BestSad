@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Dependency Edge v0.1",
+  "description": "`from_id` depends on `to_id`. Invalidation propagates along these edges (\u00a71.5).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "from_id",
+    "to_id",
+    "dependency_type"
+  ],
+  "properties": {
+    "from_id": {
+      "type": "string"
+    },
+    "to_id": {
+      "type": "string"
+    },
+    "dependency_type": {
+      "enum": [
+        "semantic_root",
+        "evidence",
+        "claim",
+        "assumption",
+        "policy",
+        "schema",
+        "artifact",
+        "model"
+      ]
+    },
+    "required_state": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Promotion Decision v0.1",
+  "description": "Append-only decision from the policy gate, separate from the evidence producer (\u00a71.1, \u00a71.7).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "claim_id",
+    "from_state",
+    "to_state",
+    "reason",
+    "actor",
+    "policy",
+    "timestamp"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string"
+    },
+    "claim_id": {
+      "type": "string"
+    },
+    "from_state": {
+      "enum": [
+        "PROPOSED",
+        "OBSERVED",
+        "VERIFIED",
+        "PROMOTED",
+        "CONTESTED",
+        "STALE",
+        "QUARANTINED",
+        "INVALIDATED",
+        "INCONCLUSIVE",
+        "REJECTED"
+      ]
+    },
+    "to_state": {
+      "enum": [
+        "PROPOSED",
+        "OBSERVED",
+        "VERIFIED",
+        "PROMOTED",
+        "CONTESTED",
+        "STALE",
+        "QUARANTINED",
+        "INVALIDATED",
+        "INCONCLUSIVE",
+        "REJECTED"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "actor": {
+      "type": "string",
+      "description": "Must differ from the claim's producer. This is the invariant the whole protocol exists to enforce."
+    },
+    "policy": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string"
+    }
+  }
+}

@@ -50,3 +50,5 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0006 | Hand-written MDL abstraction extractor for condition C | Provisional |
 | 0007 | Enumerative synthesizer as the fixed "model" for the instrument dry run | Accepted |
 | 0008 | K0 v1.0.0 semantics: bounded integers, fuel, and total operations | Accepted |
+| 0009 | Reconciling the assurance lifecycle with spec §11 maturity | Accepted |
+| 0010 | One promotion predicate, consumed by the report gate | Accepted |

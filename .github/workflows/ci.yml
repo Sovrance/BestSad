@@ -55,6 +55,28 @@ jobs:
       - name: Full differential sweep
         run: pytest -q -m slow tests/kernel
 
+  assurance:
+    name: assurance protocol (§14 acceptance)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      # Its own job: the ten acceptance criteria in the assurance integration spec are the
+      # contract that producers cannot promote themselves and that controls bind promotion.
+      # A regression there should be visible as a named failing check.
+      - name: Assurance acceptance suite
+        run: pytest -q tests/assurance
+      - name: CLI smoke
+        run: |
+          bestsad assure roots
+          bestsad --help
+
   schemas:
     name: schema validation
     runs-on: ubuntu-latest

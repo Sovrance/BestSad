@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Claim Object v0.1",
+  "description": "A falsifiable proposition the system may rely on (assurance integration \u00a71.1). Identity is content-addressed: an edited claim is a new claim, never a mutation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claim_id",
+    "statement",
+    "claim_class",
+    "producer",
+    "warrant",
+    "status"
+  ],
+  "properties": {
+    "claim_id": {
+      "type": "string"
+    },
+    "content_id": {
+      "type": "string"
+    },
+    "statement": {
+      "type": "string"
+    },
+    "claim_class": {
+      "enum": [
+        "semantic_equivalence",
+        "primitive_safety",
+        "primitive_utility",
+        "genome_validity",
+        "compiler_correctness",
+        "capability",
+        "negative_result",
+        "external_transfer"
+      ]
+    },
+    "scope": {
+      "type": "object"
+    },
+    "subject_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "producer": {
+      "type": "string",
+      "description": "The actor that produced the evidence. It may never authorise this claim's own promotion (\u00a71.7)."
+    },
+    "warrant": {
+      "enum": [
+        "FORMAL",
+        "RIGOROUS_COMPUTATION",
+        "DIRECT_OBSERVATION",
+        "CORROBORATED",
+        "EMPIRICAL",
+        "HEURISTIC",
+        "ASSERTED"
+      ]
+    },
+    "status": {
+      "enum": [
+        "PROPOSED",
+        "OBSERVED",
+        "VERIFIED",
+        "PROMOTED",
+        "CONTESTED",
+        "STALE",
+        "QUARANTINED",
+        "INVALIDATED",
+        "INCONCLUSIVE",
+        "REJECTED"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dependency_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumption_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_hashes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "detail": {
+      "type": "object"
+    }
+  }
+}

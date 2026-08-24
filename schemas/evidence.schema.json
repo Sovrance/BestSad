@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Evidence Object v0.1",
+  "description": "An observation, test, proof artifact, benchmark result, or external corroboration (\u00a71.1).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidence_id",
+    "kind",
+    "source",
+    "content_hash",
+    "method",
+    "warrant"
+  ],
+  "properties": {
+    "evidence_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "description": "An 'external:' prefix marks corroboration that must never be silently upgraded to internal proof (\u00a71.7)."
+    },
+    "content_hash": {
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "warrant": {
+      "enum": [
+        "FORMAL",
+        "RIGOROUS_COMPUTATION",
+        "DIRECT_OBSERVATION",
+        "CORROBORATED",
+        "EMPIRICAL",
+        "HEURISTIC",
+        "ASSERTED"
+      ]
+    },
+    "captured_at": {
+      "type": "string"
+    },
+    "validity": {
+      "type": "string"
+    },
+    "detail": {
+      "type": "object"
+    }
+  }
+}

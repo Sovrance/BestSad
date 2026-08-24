@@ -49,6 +49,18 @@ Plus MDL-grounded Semantic Gain, per-primitive causal mediation with a gain-conc
 - A negative EXP-001 is a real contribution. See spec §44.
 - Prohibited claims are enumerated in spec §45. Read it before writing anything public.
 
+## Assurance protocol
+
+Every evolved primitive, genome, and experimental capability claim carries an explicit,
+machine-enforced assurance lifecycle: `docs/architecture/BESTSAD_ATLAS_ASSURANCE_INTEGRATION_ENG_v0.1.md`.
+
+The rule it exists to enforce is that **producers of evidence cannot promote their own
+conclusions**. K0, BSIR, the evaluator, the sandbox policy, the MDL coding scheme and the
+pre-registration are content-addressed roots; a change to any of them stales its descendants
+automatically. Query it with `bestsad assure roots`, `bestsad assure stale`,
+`bestsad primitive explain <id>`, and `bestsad report <run-id> --confirmatory`, which exits
+non-zero when promotion dependencies do not hold.
+
 ## Licensing
 
 **Proprietary. All rights reserved.** See `LICENSE`.

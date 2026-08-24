@@ -1,0 +1,3262 @@
+{
+ "assumptions": {
+  "root:bsir_canonicalization": {
+   "active_from": "2026-08-24T12:51:09+00:00",
+   "assumption_id": "root:bsir_canonicalization",
+   "content_id": "bsir:01569f8e51e61f8981a22283e0a6311e",
+   "description": "BSIR canonicalization rules and semantic hash (spec \u00a79.4)",
+   "scope": "global",
+   "status": "active"
+  },
+  "root:evaluator_integrity": {
+   "active_from": "2026-08-24T12:51:09+00:00",
+   "assumption_id": "root:evaluator_integrity",
+   "content_id": "eval:5981c98365cf84c45580811ce9c4a313",
+   "description": "evaluator integrity plane and scoring contract (spec \u00a720)",
+   "scope": "global",
+   "status": "active"
+  },
+  "root:hidden_benchmark_manifest": {
+   "active_from": "2026-08-24T12:51:09+00:00",
+   "assumption_id": "root:hidden_benchmark_manifest",
+   "content_id": "bm-exp001",
+   "description": "frozen hidden benchmark manifest (spec \u00a720.1 A)",
+   "scope": "global",
+   "status": "active"
+  },
+  "root:k0_semantic_kernel": {
+   "active_from": "2026-08-24T12:51:09+00:00",
+   "assumption_id": "root:k0_semantic_kernel",
+   "content_id": "k0:aa6990a21eaeb0407acc2429cab55258",
+   "description": "K0 semantic kernel and reference interpreter (spec \u00a78)",
+   "scope": "global",
+   "status": "active"
+  },
+  "root:mdl_coding_scheme": {
+   "active_from": "2026-08-24T12:51:09+00:00",
+   "assumption_id": "root:mdl_coding_scheme",
+   "content_id": "mdl:f4584462eca186487be006c0d1b519f9",
+   "description": "MDL coding scheme and kappa (spec \u00a721.4)",
+   "scope": "global",
+   "status": "active"
+  },
+  "root:preregistration": {
+   "active_from": "2026-08-24T12:51:09+00:00",
+   "assumption_id": "root:preregistration",
+   "content_id": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+   "description": "committed pre-registration (spec \u00a726.5)",
+   "scope": "global",
+   "status": "active"
+  },
+  "root:sandbox_policy": {
+   "active_from": "2026-08-24T12:51:09+00:00",
+   "assumption_id": "root:sandbox_policy",
+   "content_id": "sandbox:b2f6e87910840fde1eb48f3694404009",
+   "description": "candidate sandbox policy (spec \u00a727.1)",
+   "scope": "global",
+   "status": "active"
+  }
+ },
+ "certificates": {
+  "cert:capability": {
+   "certificate_id": "cert:capability",
+   "claim_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "dependency_refs": [],
+   "evidence_refs": [],
+   "hashes": {},
+   "issued_at": "2026-08-24T12:51:09+00:00",
+   "status": "FAIL",
+   "verifier": "bestsad.experiments.analysis",
+   "warrant": "EMPIRICAL",
+   "warrant_statement": "no control was beaten; effect one tenth of the pre-registered threshold"
+  },
+  "cert:negative": {
+   "certificate_id": "cert:negative",
+   "claim_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+   "dependency_refs": [],
+   "evidence_refs": [],
+   "hashes": {},
+   "issued_at": "2026-08-24T12:51:09+00:00",
+   "status": "PASS",
+   "verifier": "bestsad.experiments.analysis",
+   "warrant": "EMPIRICAL",
+   "warrant_statement": "valid experiment: pre-registered, powered, controls run, residuals disclosed"
+  }
+ },
+ "claims": {
+  "claim:135fe0c909dbda619936701067f8be1d": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:135fe0c909dbda619936701067f8be1d",
+   "content_id": "claim:135fe0c909dbda619936701067f8be1d",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:4980b70706e39fea1f1ad4673d02f572",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u2 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u2"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:1ea53fd65d06dec0f01368d51d2212c2": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:preregistration"
+   ],
+   "claim_class": "negative_result",
+   "claim_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+   "content_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "preregistration_content_id": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "run_id": "EXP-001-DR-2026-08-23",
+    "search_space_constraint": "Abstractions mined from solved curriculum programs are bounded by what the searcher already solves, so no subtree of a baseline solution can encode a held-out family the baseline never reached."
+   },
+   "evidence_refs": [
+    "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+    "ev:02ca0fdc7b22ade1ec37187737c58900",
+    "ev:f016178b9853f131f96633c1b34ee962",
+    "ev:7161f713f5989d945d02d17e38beee53",
+    "ev:5fedabdae908c5d74734414993b3cc47",
+    "ev:4ec77e147a36567a4872e49b7e6a5696"
+   ],
+   "producer": "bestsad.experiments.analysis",
+   "scope": {
+    "outcome_class": "h0_consistent"
+   },
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "EXP-001-DR does not support the target effect: D/E vs A is +0.0052 (95% CI -0.0260 to +0.0391) against a pre-registered threshold of +0.05, and no required control was beaten.",
+   "status": "PROMOTED",
+   "subject_refs": [],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:2a193b3ebdbff69ac1c34088f1702ca4": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4",
+   "content_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u0"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:2b8453f950399764e6ca465816cd6d13": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:2b8453f950399764e6ca465816cd6d13",
+   "content_id": "claim:2b8453f950399764e6ca465816cd6d13",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:e1d60abee0bed7a52aacebab66d3a6c8",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u1 contributes a direct effect of +0.0083 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u1"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:395d79984369093d9776da93e1ec7f8f": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:395d79984369093d9776da93e1ec7f8f",
+   "content_id": "claim:395d79984369093d9776da93e1ec7f8f",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:4d2ec105c2a1941c4d863f84754b5c62",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u0"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:472907d56fbd36d4dd96c5e708151ed2": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:472907d56fbd36d4dd96c5e708151ed2",
+   "content_id": "claim:472907d56fbd36d4dd96c5e708151ed2",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:59c4209666468aa6f06439811b979437",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u2 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u2"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:57b83c6630ecf21eb5c8d4f0598000fc": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc",
+   "content_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:7276048dfc9d6ad3ef1bb73f048a116c",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u1 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u1"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:5b8f5f2eda9decabb634f4535d27a907": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:5b8f5f2eda9decabb634f4535d27a907",
+   "content_id": "claim:5b8f5f2eda9decabb634f4535d27a907",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:c7e8bb56ee7782fd5adfd21292f4f0d2",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u2 contributes a direct effect of +0.0167 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u2"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:8336e1bf10f778ec16c5fae59c320b2c": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:8336e1bf10f778ec16c5fae59c320b2c",
+   "content_id": "claim:8336e1bf10f778ec16c5fae59c320b2c",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:5fe71958d830f9ba069739dd6ed58fc2",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u0"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:84cf6ee0a2f0aa08fd17ec890866824a": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:bsir_canonicalization",
+    "root:evaluator_integrity",
+    "root:hidden_benchmark_manifest",
+    "root:preregistration",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "capability",
+   "claim_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "content_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "causal_attribution_refs": [
+     "artifacts/attribution.json"
+    ],
+    "ci_high": 0.03906249999999997,
+    "ci_low": -0.02604166666666677,
+    "compute_ledger_id": "artifacts/I_reconciliation.json",
+    "effect": 0.005208333333333343,
+    "preregistration_content_id": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "run_id": "EXP-001-DR-2026-08-23"
+   },
+   "evidence_refs": [
+    "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+    "ev:02ca0fdc7b22ade1ec37187737c58900",
+    "ev:f016178b9853f131f96633c1b34ee962",
+    "ev:7161f713f5989d945d02d17e38beee53",
+    "ev:5fedabdae908c5d74734414993b3cc47",
+    "ev:4ec77e147a36567a4872e49b7e6a5696"
+   ],
+   "producer": "bestsad.experiments.analysis",
+   "scope": {
+    "comparators": [
+     "A",
+     "B",
+     "C",
+     "F",
+     "G",
+     "H",
+     "I"
+    ],
+    "effect_metric": "verified_ood_solve_rate",
+    "treatment_condition": "D"
+   },
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Utility-selected abstractions improve verified compositional OOD synthesis.",
+   "status": "INCONCLUSIVE",
+   "subject_refs": [
+    "D"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:95dd8aa50daff05b5889f24056b8fd3f": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:95dd8aa50daff05b5889f24056b8fd3f",
+   "content_id": "claim:95dd8aa50daff05b5889f24056b8fd3f",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:75f19d31afaa31735077c6088ffee9cb",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u1 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u1"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:e0d166dad58bd64b6bdaa0998dbf2171": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171",
+   "content_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:4c977c13faf95cae9bd032f3fad0506e",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u1 contributes a direct effect of +0.0167 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u1"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:f66311e7860d9a847bd45d90a9d8ce4b": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b",
+   "content_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:e545130b4fade2a07dfbe48ed3e2c7e3",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u2 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u2"
+   ],
+   "warrant": "EMPIRICAL"
+  },
+  "claim:fd00bdf1e733fdc45e31c8ec2a43b62f": {
+   "assumption_refs": [
+    "root:k0_semantic_kernel",
+    "root:evaluator_integrity",
+    "root:mdl_coding_scheme"
+   ],
+   "claim_class": "primitive_utility",
+   "claim_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f",
+   "content_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f",
+   "created_at": "2026-08-24T12:51:09+00:00",
+   "dependency_refs": [],
+   "detail": {
+    "compression_shaped": false,
+    "shortcut_shaped": false
+   },
+   "evidence_refs": [
+    "ev:98a52d284546cea0bd13b477c8778771",
+    "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+   ],
+   "producer": "bestsad.causal",
+   "scope": {},
+   "source_hashes": {
+    "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+    "root:hidden_benchmark_manifest": "bm-exp001",
+    "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+   },
+   "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+   "status": "PROPOSED",
+   "subject_refs": [
+    "prim:u0"
+   ],
+   "warrant": "EMPIRICAL"
+  }
+ },
+ "dependency_edges": [
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "required_state": "active",
+   "to_id": "root:bsir_canonicalization"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "required_state": "active",
+   "to_id": "root:hidden_benchmark_manifest"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "required_state": "active",
+   "to_id": "root:preregistration"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+   "required_state": "active",
+   "to_id": "root:preregistration"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:2b8453f950399764e6ca465816cd6d13",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:2b8453f950399764e6ca465816cd6d13",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:2b8453f950399764e6ca465816cd6d13",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:135fe0c909dbda619936701067f8be1d",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:135fe0c909dbda619936701067f8be1d",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:135fe0c909dbda619936701067f8be1d",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:95dd8aa50daff05b5889f24056b8fd3f",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:95dd8aa50daff05b5889f24056b8fd3f",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:95dd8aa50daff05b5889f24056b8fd3f",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:395d79984369093d9776da93e1ec7f8f",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:395d79984369093d9776da93e1ec7f8f",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:395d79984369093d9776da93e1ec7f8f",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:472907d56fbd36d4dd96c5e708151ed2",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:472907d56fbd36d4dd96c5e708151ed2",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:472907d56fbd36d4dd96c5e708151ed2",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:5b8f5f2eda9decabb634f4535d27a907",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:5b8f5f2eda9decabb634f4535d27a907",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:5b8f5f2eda9decabb634f4535d27a907",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:8336e1bf10f778ec16c5fae59c320b2c",
+   "required_state": "active",
+   "to_id": "root:k0_semantic_kernel"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:8336e1bf10f778ec16c5fae59c320b2c",
+   "required_state": "active",
+   "to_id": "root:evaluator_integrity"
+  },
+  {
+   "dependency_type": "semantic_root",
+   "from_id": "claim:8336e1bf10f778ec16c5fae59c320b2c",
+   "required_state": "active",
+   "to_id": "root:mdl_coding_scheme"
+  }
+ ],
+ "events": [
+  {
+   "event_id": "event:f738e3af4fb834c7b9311dc75f43664c",
+   "kind": "assumption_recorded",
+   "payload": {
+    "active_from": "2026-08-24T12:51:09+00:00",
+    "assumption_id": "root:k0_semantic_kernel",
+    "content_id": "k0:aa6990a21eaeb0407acc2429cab55258",
+    "description": "K0 semantic kernel and reference interpreter (spec \u00a78)",
+    "scope": "global",
+    "status": "active"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "root:k0_semantic_kernel"
+  },
+  {
+   "event_id": "event:26697b75648deda1808c94f13511c663",
+   "kind": "assumption_recorded",
+   "payload": {
+    "active_from": "2026-08-24T12:51:09+00:00",
+    "assumption_id": "root:bsir_canonicalization",
+    "content_id": "bsir:01569f8e51e61f8981a22283e0a6311e",
+    "description": "BSIR canonicalization rules and semantic hash (spec \u00a79.4)",
+    "scope": "global",
+    "status": "active"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "root:bsir_canonicalization"
+  },
+  {
+   "event_id": "event:aaccd8c50291a402548d11f5aa9d8f6e",
+   "kind": "assumption_recorded",
+   "payload": {
+    "active_from": "2026-08-24T12:51:09+00:00",
+    "assumption_id": "root:evaluator_integrity",
+    "content_id": "eval:5981c98365cf84c45580811ce9c4a313",
+    "description": "evaluator integrity plane and scoring contract (spec \u00a720)",
+    "scope": "global",
+    "status": "active"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "root:evaluator_integrity"
+  },
+  {
+   "event_id": "event:70aee093fa57de64cb220a1a852ec80a",
+   "kind": "assumption_recorded",
+   "payload": {
+    "active_from": "2026-08-24T12:51:09+00:00",
+    "assumption_id": "root:hidden_benchmark_manifest",
+    "content_id": "bm-exp001",
+    "description": "frozen hidden benchmark manifest (spec \u00a720.1 A)",
+    "scope": "global",
+    "status": "active"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "root:hidden_benchmark_manifest"
+  },
+  {
+   "event_id": "event:5c83d291f9f20065df1f358fe85e73fd",
+   "kind": "assumption_recorded",
+   "payload": {
+    "active_from": "2026-08-24T12:51:09+00:00",
+    "assumption_id": "root:mdl_coding_scheme",
+    "content_id": "mdl:f4584462eca186487be006c0d1b519f9",
+    "description": "MDL coding scheme and kappa (spec \u00a721.4)",
+    "scope": "global",
+    "status": "active"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "root:mdl_coding_scheme"
+  },
+  {
+   "event_id": "event:6cd621cd146e3ca11b716924f6731b8e",
+   "kind": "assumption_recorded",
+   "payload": {
+    "active_from": "2026-08-24T12:51:09+00:00",
+    "assumption_id": "root:sandbox_policy",
+    "content_id": "sandbox:b2f6e87910840fde1eb48f3694404009",
+    "description": "candidate sandbox policy (spec \u00a727.1)",
+    "scope": "global",
+    "status": "active"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "root:sandbox_policy"
+  },
+  {
+   "event_id": "event:19beb796987d0298b77057dbaac6937c",
+   "kind": "assumption_recorded",
+   "payload": {
+    "active_from": "2026-08-24T12:51:09+00:00",
+    "assumption_id": "root:preregistration",
+    "content_id": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+    "description": "committed pre-registration (spec \u00a726.5)",
+    "scope": "global",
+    "status": "active"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "root:preregistration"
+  },
+  {
+   "event_id": "event:5d86cec6e20e03c9526f6e54484f783d",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+    "detail": {
+     "preregistration_hash": "c8b93c6c89debfde1d5b1d60bc5514d9234fc337c464a5854300240941220a60"
+    },
+    "evidence_id": "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+    "kind": "preregistration",
+    "method": "committed and hashed before S2/S3",
+    "source": "docs/preregistrations/EXP-001-DR.json",
+    "validity": "current",
+    "warrant": "FORMAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:39e7e78646f6e43d49ad16b517e3a2e7"
+  },
+  {
+   "event_id": "event:3478b3930cd0bfc61a2187c669f440f3",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:02ca0fdc7b22ade1ec37187737c58900",
+    "detail": {
+     "conditions": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "I_overfunded_original",
+      "I_underfunded_saturated"
+     ],
+     "seeds": 32
+    },
+    "evidence_id": "ev:02ca0fdc7b22ade1ec37187737c58900",
+    "kind": "experiment_manifest",
+    "method": "32 seeds x 9 conditions",
+    "source": "artifacts/run_meta.json",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:02ca0fdc7b22ade1ec37187737c58900"
+  },
+  {
+   "event_id": "event:1468230b3922c6b282e95a14798ff650",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:f016178b9853f131f96633c1b34ee962",
+    "detail": {
+     "control_gates": {
+      "B": {
+       "beaten": false,
+       "detail": "lower-bound control B",
+       "effect": 0.01302083333333337,
+       "p_value": 0.4647301300085318,
+       "present": true
+      },
+      "C": {
+       "beaten": false,
+       "detail": "lower-bound control C",
+       "effect": 0.0078125,
+       "p_value": 0.6487298392082672,
+       "present": true
+      },
+      "F": {
+       "beaten": false,
+       "ci": {
+        "ci_high": 0.03906249999999997,
+        "ci_low": -0.02604166666666677,
+        "estimate": 0.005208333333333343,
+        "level": 0.95
+       },
+       "detail": "F matches or beats D \u2014 no capability claim",
+       "effect": 0.005208333333333343,
+       "p_value": 0.7594045110527072,
+       "present": true
+      },
+      "G": {
+       "beaten": null,
+       "detail": "reference class: G's margin over the treatment, reported together with the treatment's margin over A (spec \u00a740.2)",
+       "effect": 0.04947916666666663,
+       "p_value": 0.022073964477716146,
+       "present": true
+      },
+      "H": {
+       "beaten": false,
+       "ci": {
+        "ci_high": 0.031249999999999972,
+        "ci_low": -0.02864583333333337,
+        "estimate": 0.0,
+        "level": 0.95
+       },
+       "detail": "H matches or beats D \u2014 no capability claim",
+       "effect": 0.0,
+       "p_value": 1.0,
+       "present": true
+      },
+      "I": {
+       "beaten": false,
+       "ci": {
+        "ci_high": 0.03906249999999997,
+        "ci_low": -0.02604166666666677,
+        "estimate": 0.005208333333333343,
+        "level": 0.95
+       },
+       "detail": "I matches or beats D \u2014 no capability claim",
+       "effect": 0.005208333333333343,
+       "p_value": 0.7594045110527072,
+       "present": true
+      }
+     }
+    },
+    "evidence_id": "ev:f016178b9853f131f96633c1b34ee962",
+    "kind": "condition_manifest",
+    "method": "conditions A-F,H,I plus G",
+    "source": "artifacts/S2_payload.json",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:f016178b9853f131f96633c1b34ee962"
+  },
+  {
+   "event_id": "event:2819c865651cf77558ef346a129d58f6",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:7161f713f5989d945d02d17e38beee53",
+    "detail": {
+     "c1_residual_disclosed": {
+      "control": "condition I",
+      "reconciled": false,
+      "residual": "compute reconciliation within 75.3% of the expected identity compute(I) == compute(A) + compute(evolution in D)"
+     }
+    },
+    "evidence_id": "ev:7161f713f5989d945d02d17e38beee53",
+    "kind": "compute_ledger",
+    "method": "per-condition compute accounting",
+    "source": "artifacts/I_reconciliation.json",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:7161f713f5989d945d02d17e38beee53"
+  },
+  {
+   "event_id": "event:dabf0d608b49fa501f4d254dd50cbef6",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:5fedabdae908c5d74734414993b3cc47",
+    "detail": {
+     "concentration": {
+      "passed": true,
+      "threshold": 0.8,
+      "top1_share": 0.39999999999999986,
+      "top2_share": 0.7999999999999997,
+      "verdict": "attributable"
+     }
+    },
+    "evidence_id": "ev:5fedabdae908c5d74734414993b3cc47",
+    "kind": "causal_attribution",
+    "method": "per-primitive ablation with concentration test",
+    "source": "artifacts/attribution.json",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:5fedabdae908c5d74734414993b3cc47"
+  },
+  {
+   "event_id": "event:19e669b34ccedfceba4fcac16eae4578",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:4ec77e147a36567a4872e49b7e6a5696",
+    "detail": {
+     "outcome_class": "h0_consistent"
+    },
+    "evidence_id": "ev:4ec77e147a36567a4872e49b7e6a5696",
+    "kind": "report",
+    "method": "full run report with residual disclosure",
+    "source": "docs/experiments/EXP-001-DR-report.md",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:4ec77e147a36567a4872e49b7e6a5696"
+  },
+  {
+   "event_id": "event:ca1799a231aff60dcf66740ffc8b5685",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:bsir_canonicalization",
+     "root:evaluator_integrity",
+     "root:hidden_benchmark_manifest",
+     "root:preregistration",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "capability",
+    "claim_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+    "content_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "causal_attribution_refs": [
+      "artifacts/attribution.json"
+     ],
+     "ci_high": 0.03906249999999997,
+     "ci_low": -0.02604166666666677,
+     "compute_ledger_id": "artifacts/I_reconciliation.json",
+     "effect": 0.005208333333333343,
+     "preregistration_content_id": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "run_id": "EXP-001-DR-2026-08-23"
+    },
+    "evidence_refs": [
+     "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+     "ev:02ca0fdc7b22ade1ec37187737c58900",
+     "ev:f016178b9853f131f96633c1b34ee962",
+     "ev:7161f713f5989d945d02d17e38beee53",
+     "ev:5fedabdae908c5d74734414993b3cc47",
+     "ev:4ec77e147a36567a4872e49b7e6a5696"
+    ],
+    "producer": "bestsad.experiments.analysis",
+    "scope": {
+     "comparators": [
+      "A",
+      "B",
+      "C",
+      "F",
+      "G",
+      "H",
+      "I"
+     ],
+     "effect_metric": "verified_ood_solve_rate",
+     "treatment_condition": "D"
+    },
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Utility-selected abstractions improve verified compositional OOD synthesis.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "D"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a"
+  },
+  {
+   "event_id": "event:6cadf109c91e3962fff1ac889c1cfc16",
+   "kind": "certificate_issued",
+   "payload": {
+    "certificate_id": "cert:capability",
+    "claim_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a",
+    "dependency_refs": [],
+    "evidence_refs": [],
+    "hashes": {},
+    "issued_at": "2026-08-24T12:51:09+00:00",
+    "status": "FAIL",
+    "verifier": "bestsad.experiments.analysis",
+    "warrant": "EMPIRICAL",
+    "warrant_statement": "no control was beaten; effect one tenth of the pre-registered threshold"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "cert:capability"
+  },
+  {
+   "event_id": "event:6aa4b22f1f3e62f071bc6ea6363fdce3",
+   "kind": "state_recorded",
+   "payload": {
+    "actor": "bestsad.experiments.analysis",
+    "from": "PROPOSED",
+    "reason": "S2/S3 complete",
+    "to": "OBSERVED"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a"
+  },
+  {
+   "event_id": "event:e752685c7271cf7847476207f347a94f",
+   "kind": "state_recorded",
+   "payload": {
+    "actor": "bestsad.experiments.analysis",
+    "from": "OBSERVED",
+    "reason": "controls not beaten; see negative-result claim",
+    "to": "INCONCLUSIVE"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:84cf6ee0a2f0aa08fd17ec890866824a"
+  },
+  {
+   "event_id": "event:f190bd862b3c579aa5f64b7cf2ae3da5",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:preregistration"
+    ],
+    "claim_class": "negative_result",
+    "claim_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+    "content_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "preregistration_content_id": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "run_id": "EXP-001-DR-2026-08-23",
+     "search_space_constraint": "Abstractions mined from solved curriculum programs are bounded by what the searcher already solves, so no subtree of a baseline solution can encode a held-out family the baseline never reached."
+    },
+    "evidence_refs": [
+     "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+     "ev:02ca0fdc7b22ade1ec37187737c58900",
+     "ev:f016178b9853f131f96633c1b34ee962",
+     "ev:7161f713f5989d945d02d17e38beee53",
+     "ev:5fedabdae908c5d74734414993b3cc47",
+     "ev:4ec77e147a36567a4872e49b7e6a5696"
+    ],
+    "producer": "bestsad.experiments.analysis",
+    "scope": {
+     "outcome_class": "h0_consistent"
+    },
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "EXP-001-DR does not support the target effect: D/E vs A is +0.0052 (95% CI -0.0260 to +0.0391) against a pre-registered threshold of +0.05, and no required control was beaten.",
+    "status": "PROPOSED",
+    "subject_refs": [],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:1ea53fd65d06dec0f01368d51d2212c2"
+  },
+  {
+   "event_id": "event:c82d5b2c060bcd9bea91e964c6ceae57",
+   "kind": "certificate_issued",
+   "payload": {
+    "certificate_id": "cert:negative",
+    "claim_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+    "dependency_refs": [],
+    "evidence_refs": [],
+    "hashes": {},
+    "issued_at": "2026-08-24T12:51:09+00:00",
+    "status": "PASS",
+    "verifier": "bestsad.experiments.analysis",
+    "warrant": "EMPIRICAL",
+    "warrant_statement": "valid experiment: pre-registered, powered, controls run, residuals disclosed"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "cert:negative"
+  },
+  {
+   "event_id": "event:ab70736c96d6fa7c4c0ce54818dd9432",
+   "kind": "state_recorded",
+   "payload": {
+    "actor": "bestsad.experiments.analysis",
+    "from": "PROPOSED",
+    "reason": "run complete",
+    "to": "OBSERVED"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:1ea53fd65d06dec0f01368d51d2212c2"
+  },
+  {
+   "event_id": "event:8ce3fc2b7c2b6e44c96daff392277a72",
+   "kind": "state_recorded",
+   "payload": {
+    "actor": "bestsad.experiments.analysis",
+    "from": "OBSERVED",
+    "reason": "analysis plan followed as pre-registered",
+    "to": "VERIFIED"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:1ea53fd65d06dec0f01368d51d2212c2"
+  },
+  {
+   "event_id": "event:c563afcb574c650fa1735d6a55abb800",
+   "kind": "promotion_decision",
+   "payload": {
+    "actor": "bestsad.assurance.PolicyGate",
+    "claim_id": "claim:1ea53fd65d06dec0f01368d51d2212c2",
+    "decision_id": "decision:653c12370acf9a2bf6e33556f980b33a",
+    "from_state": "VERIFIED",
+    "policy": "bestsad-assurance-policy-v1",
+    "reason": "promotion predicate satisfied",
+    "timestamp": "2026-08-24T12:51:09+00:00",
+    "to_state": "PROMOTED"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:1ea53fd65d06dec0f01368d51d2212c2"
+  },
+  {
+   "event_id": "event:8494ab09823d9fd381da0045fb99ac5f",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "detail": {
+     "ci_high": 0.0,
+     "ci_low": 0.0,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u0"
+    },
+    "evidence_id": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:004f76de4a9dcd254ab44ac95695efb5"
+  },
+  {
+   "event_id": "event:5274c4662698fe5c7cf0accd27f80eee",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:67ef30fb22e48c3057fbeb50afd0bd0e",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:bf081beb44e0500c818471f61401cc21",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4",
+    "content_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:004f76de4a9dcd254ab44ac95695efb5",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u0"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:2a193b3ebdbff69ac1c34088f1702ca4"
+  },
+  {
+   "event_id": "event:62a8a6ce0c3e3e895420759e16471f69",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:e1d60abee0bed7a52aacebab66d3a6c8",
+    "detail": {
+     "ci_high": 0.04166666666666666,
+     "ci_low": -0.024999999999999967,
+     "direct_effect": 0.00833333333333336,
+     "primitive_id": "prim:u1"
+    },
+    "evidence_id": "ev:e1d60abee0bed7a52aacebab66d3a6c8",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:e1d60abee0bed7a52aacebab66d3a6c8"
+  },
+  {
+   "event_id": "event:c80cc44073f3c13ede92eae642ca0791",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:5d9d3f854c13974688039590707f71c0",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:0187c1c66091d77d79e4f35738e579dc",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:2b8453f950399764e6ca465816cd6d13",
+    "content_id": "claim:2b8453f950399764e6ca465816cd6d13",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:e1d60abee0bed7a52aacebab66d3a6c8",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u1 contributes a direct effect of +0.0083 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u1"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:2b8453f950399764e6ca465816cd6d13"
+  },
+  {
+   "event_id": "event:875ae2611ad4d974fe9a0f184a967bfd",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:7276048dfc9d6ad3ef1bb73f048a116c",
+    "detail": {
+     "ci_high": 0.09523809523809523,
+     "ci_low": -0.10714285714285712,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u1"
+    },
+    "evidence_id": "ev:7276048dfc9d6ad3ef1bb73f048a116c",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:7276048dfc9d6ad3ef1bb73f048a116c"
+  },
+  {
+   "event_id": "event:080d14deeaf19596842a0a3484104f3a",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:499a1fe1fda36f74a82cbc4cb2a0b020",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:fe795d4d1ed3498d2bb8ba9fa72e733f",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc",
+    "content_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:7276048dfc9d6ad3ef1bb73f048a116c",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u1 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u1"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:57b83c6630ecf21eb5c8d4f0598000fc"
+  },
+  {
+   "event_id": "event:cde129ddd94723c9387817f0934b5e7e",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:4980b70706e39fea1f1ad4673d02f572",
+    "detail": {
+     "ci_high": 0.09523809523809523,
+     "ci_low": -0.10714285714285712,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u2"
+    },
+    "evidence_id": "ev:4980b70706e39fea1f1ad4673d02f572",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:4980b70706e39fea1f1ad4673d02f572"
+  },
+  {
+   "event_id": "event:8b482231279f7fd7ec6b8cf8e0f3a915",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:ec178275fd4a0a927df2dff788b42124",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:e16b216f228d7cbae2036b66bb6a7150",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:135fe0c909dbda619936701067f8be1d",
+    "content_id": "claim:135fe0c909dbda619936701067f8be1d",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:4980b70706e39fea1f1ad4673d02f572",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u2 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u2"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:135fe0c909dbda619936701067f8be1d"
+  },
+  {
+   "event_id": "event:da49d9729c2ff11e5a567af3684e349d",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "detail": {
+     "ci_high": 0.0,
+     "ci_low": 0.0,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u0"
+    },
+    "evidence_id": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:004f76de4a9dcd254ab44ac95695efb5"
+  },
+  {
+   "event_id": "event:36af2397c80f39042b81d06a1a287a2f",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:19203c1f6c4278cf52dc055b89e88e78",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:fb4da23c83aa3394e8b56058e061c210",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:75f19d31afaa31735077c6088ffee9cb",
+    "detail": {
+     "ci_high": 0.06250000000000003,
+     "ci_low": -0.0625,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u1"
+    },
+    "evidence_id": "ev:75f19d31afaa31735077c6088ffee9cb",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:75f19d31afaa31735077c6088ffee9cb"
+  },
+  {
+   "event_id": "event:ef07cafb5535f7f5338a458c749827b1",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:db1780560dd25c2fc4710bd7f1dd26fe",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:15f22245c8644c8d508bb7488460ed80",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:95dd8aa50daff05b5889f24056b8fd3f",
+    "content_id": "claim:95dd8aa50daff05b5889f24056b8fd3f",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:75f19d31afaa31735077c6088ffee9cb",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u1 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u1"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:95dd8aa50daff05b5889f24056b8fd3f"
+  },
+  {
+   "event_id": "event:ff05253e555eb86ba89124ae7fef4b77",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:e545130b4fade2a07dfbe48ed3e2c7e3",
+    "detail": {
+     "ci_high": 0.06250000000000003,
+     "ci_low": -0.0625,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u2"
+    },
+    "evidence_id": "ev:e545130b4fade2a07dfbe48ed3e2c7e3",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:e545130b4fade2a07dfbe48ed3e2c7e3"
+  },
+  {
+   "event_id": "event:8ca05e2a6f6300338fc68fb761da8933",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:1ef4fd328989114bfa4d8114259e41f8",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:06555d647bfbb8f995c408f19faabc68",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b",
+    "content_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:e545130b4fade2a07dfbe48ed3e2c7e3",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u2 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u2"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:f66311e7860d9a847bd45d90a9d8ce4b"
+  },
+  {
+   "event_id": "event:b51ba9e0e3021a12c777e5fe64ce51f7",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "detail": {
+     "ci_high": 0.0,
+     "ci_low": 0.0,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u0"
+    },
+    "evidence_id": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:004f76de4a9dcd254ab44ac95695efb5"
+  },
+  {
+   "event_id": "event:5dd4d5710a356ba56be1b64a3d8b0127",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:0d55c5c2957885367cf546940b8eab99",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:243c24084d6ba1f7a491ebedc585f83c",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:98a52d284546cea0bd13b477c8778771",
+    "detail": {
+     "ci_high": 0.08333333333333334,
+     "ci_low": -0.08333333333333334,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u0"
+    },
+    "evidence_id": "ev:98a52d284546cea0bd13b477c8778771",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:98a52d284546cea0bd13b477c8778771"
+  },
+  {
+   "event_id": "event:acd68fdfc5fc3198e236e8e9129acc6c",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:7e11f68025f5e7fc92d1cc43deb48220",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:ed974a3675c72e08ff03be972bc3ea6b",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f",
+    "content_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:98a52d284546cea0bd13b477c8778771",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u0"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:fd00bdf1e733fdc45e31c8ec2a43b62f"
+  },
+  {
+   "event_id": "event:cb3be68649a81e00abdd0956806f5c0e",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:4d2ec105c2a1941c4d863f84754b5c62",
+    "detail": {
+     "ci_high": 0.3333333333333333,
+     "ci_low": -0.3333333333333333,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u0"
+    },
+    "evidence_id": "ev:4d2ec105c2a1941c4d863f84754b5c62",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:4d2ec105c2a1941c4d863f84754b5c62"
+  },
+  {
+   "event_id": "event:718bcf5ff8daa8db1d7e0f5f9ebc4abf",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:989535a962a46bff42909d2f77ef9f5a",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:d79860ca3f10c1f21c35815f38d745b1",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:395d79984369093d9776da93e1ec7f8f",
+    "content_id": "claim:395d79984369093d9776da93e1ec7f8f",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:4d2ec105c2a1941c4d863f84754b5c62",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u0"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:395d79984369093d9776da93e1ec7f8f"
+  },
+  {
+   "event_id": "event:b076b723d76cc6e0154908ebf6bba798",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:59c4209666468aa6f06439811b979437",
+    "detail": {
+     "ci_high": 0.07500000000000001,
+     "ci_low": -0.07500000000000001,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u2"
+    },
+    "evidence_id": "ev:59c4209666468aa6f06439811b979437",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:59c4209666468aa6f06439811b979437"
+  },
+  {
+   "event_id": "event:03cf189087010ae8b0d9a26f2d62c1e0",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:f907cec60f9fc4c31d3752e0a5ad9179",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:67ba734ad28ce2cb67c0d976f639763f",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:472907d56fbd36d4dd96c5e708151ed2",
+    "content_id": "claim:472907d56fbd36d4dd96c5e708151ed2",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:59c4209666468aa6f06439811b979437",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u2 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u2"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:472907d56fbd36d4dd96c5e708151ed2"
+  },
+  {
+   "event_id": "event:0601b2b8f913550be8cbe6e7118e0dc1",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:4c977c13faf95cae9bd032f3fad0506e",
+    "detail": {
+     "ci_high": 0.05000000000000002,
+     "ci_low": 0.0,
+     "direct_effect": 0.01666666666666669,
+     "primitive_id": "prim:u1"
+    },
+    "evidence_id": "ev:4c977c13faf95cae9bd032f3fad0506e",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:4c977c13faf95cae9bd032f3fad0506e"
+  },
+  {
+   "event_id": "event:8b225234d5cc47b934a4149d46987a88",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:6f1d1c72649adf6dcf522d3218cf09fe",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:cc7468032611e5a879b1c0c218105035",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171",
+    "content_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:4c977c13faf95cae9bd032f3fad0506e",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u1 contributes a direct effect of +0.0167 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u1"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:e0d166dad58bd64b6bdaa0998dbf2171"
+  },
+  {
+   "event_id": "event:e2eba756f3c37943ad1604372cb6f8c2",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:c7e8bb56ee7782fd5adfd21292f4f0d2",
+    "detail": {
+     "ci_high": 0.05000000000000002,
+     "ci_low": 0.0,
+     "direct_effect": 0.01666666666666669,
+     "primitive_id": "prim:u2"
+    },
+    "evidence_id": "ev:c7e8bb56ee7782fd5adfd21292f4f0d2",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:c7e8bb56ee7782fd5adfd21292f4f0d2"
+  },
+  {
+   "event_id": "event:0870f109fa4b7d587cc601cf52aa68b9",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:8a081c0f6c2fb7f89cc9dab4dd1ecbac",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:fa2af3944e3f1298f027645683c2428a",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:5b8f5f2eda9decabb634f4535d27a907",
+    "content_id": "claim:5b8f5f2eda9decabb634f4535d27a907",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:c7e8bb56ee7782fd5adfd21292f4f0d2",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u2 contributes a direct effect of +0.0167 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u2"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:5b8f5f2eda9decabb634f4535d27a907"
+  },
+  {
+   "event_id": "event:feff7c4af42df723689002c820f486ce",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:5fe71958d830f9ba069739dd6ed58fc2",
+    "detail": {
+     "ci_high": 0.08333333333333331,
+     "ci_low": -0.08333333333333331,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u0"
+    },
+    "evidence_id": "ev:5fe71958d830f9ba069739dd6ed58fc2",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:5fe71958d830f9ba069739dd6ed58fc2"
+  },
+  {
+   "event_id": "event:2af8c3888ddc11346f8753374769914e",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:d71846b461402706d2041b2330c53b5f",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  },
+  {
+   "event_id": "event:99300453a0b13634b65b49f71707aeb4",
+   "kind": "claim_proposed",
+   "payload": {
+    "assumption_refs": [
+     "root:k0_semantic_kernel",
+     "root:evaluator_integrity",
+     "root:mdl_coding_scheme"
+    ],
+    "claim_class": "primitive_utility",
+    "claim_id": "claim:8336e1bf10f778ec16c5fae59c320b2c",
+    "content_id": "claim:8336e1bf10f778ec16c5fae59c320b2c",
+    "created_at": "2026-08-24T12:51:09+00:00",
+    "dependency_refs": [],
+    "detail": {
+     "compression_shaped": false,
+     "shortcut_shaped": false
+    },
+    "evidence_refs": [
+     "ev:5fe71958d830f9ba069739dd6ed58fc2",
+     "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+     "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+    ],
+    "producer": "bestsad.causal",
+    "scope": {},
+    "source_hashes": {
+     "root:bsir_canonicalization": "bsir:01569f8e51e61f8981a22283e0a6311e",
+     "root:evaluator_integrity": "eval:5981c98365cf84c45580811ce9c4a313",
+     "root:hidden_benchmark_manifest": "bm-exp001",
+     "root:k0_semantic_kernel": "k0:aa6990a21eaeb0407acc2429cab55258",
+     "root:mdl_coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "root:preregistration": "prereg:c8b93c6c89debfde1d5b1d60bc5514d9",
+     "root:sandbox_policy": "sandbox:b2f6e87910840fde1eb48f3694404009"
+    },
+    "statement": "Primitive prim:u0 contributes a direct effect of +0.0000 on verified compositional OOD solve rate.",
+    "status": "PROPOSED",
+    "subject_refs": [
+     "prim:u0"
+    ],
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "claim:8336e1bf10f778ec16c5fae59c320b2c"
+  },
+  {
+   "event_id": "event:2e5f031b2a05da6b9a01319e1aa7b912",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "detail": {
+     "ci_high": 0.0,
+     "ci_low": 0.0,
+     "direct_effect": 0.0,
+     "primitive_id": "prim:u0"
+    },
+    "evidence_id": "ev:004f76de4a9dcd254ab44ac95695efb5",
+    "kind": "paired_ablation",
+    "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+    "source": "bestsad.causal.attribution",
+    "validity": "current",
+    "warrant": "EMPIRICAL"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:004f76de4a9dcd254ab44ac95695efb5"
+  },
+  {
+   "event_id": "event:99b2501fb40253e225c0b2ccbabe1ffc",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "detail": {
+     "cross_family_reuse": 2
+    },
+    "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+    "kind": "reuse_metric",
+    "method": "cross-family reuse measured directly, not inferred from accuracy",
+    "source": "bestsad.evaluator.contract",
+    "validity": "current",
+    "warrant": "DIRECT_OBSERVATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6"
+  },
+  {
+   "event_id": "event:a82b83e133732b48881b3efa34f7712e",
+   "kind": "evidence_recorded",
+   "payload": {
+    "captured_at": "2026-08-24T12:51:09+00:00",
+    "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "detail": {
+     "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+     "semantic_gain_v2": 0.0
+    },
+    "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+    "kind": "semantic_gain",
+    "method": "SG-v2 under the pre-registered coding scheme",
+    "source": "bestsad.mdl.semantic_gain",
+    "validity": "current",
+    "warrant": "RIGOROUS_COMPUTATION"
+   },
+   "recorded_at": "2026-08-24T12:51:09+00:00",
+   "subject_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb"
+  }
+ ],
+ "evidence": {
+  "ev:004f76de4a9dcd254ab44ac95695efb5": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:004f76de4a9dcd254ab44ac95695efb5",
+   "detail": {
+    "ci_high": 0.0,
+    "ci_low": 0.0,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u0"
+   },
+   "evidence_id": "ev:004f76de4a9dcd254ab44ac95695efb5",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:02ca0fdc7b22ade1ec37187737c58900": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:02ca0fdc7b22ade1ec37187737c58900",
+   "detail": {
+    "conditions": [
+     "A",
+     "B",
+     "C",
+     "D",
+     "E",
+     "F",
+     "G",
+     "H",
+     "I",
+     "I_overfunded_original",
+     "I_underfunded_saturated"
+    ],
+    "seeds": 32
+   },
+   "evidence_id": "ev:02ca0fdc7b22ade1ec37187737c58900",
+   "kind": "experiment_manifest",
+   "method": "32 seeds x 9 conditions",
+   "source": "artifacts/run_meta.json",
+   "validity": "current",
+   "warrant": "DIRECT_OBSERVATION"
+  },
+  "ev:39e7e78646f6e43d49ad16b517e3a2e7": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+   "detail": {
+    "preregistration_hash": "c8b93c6c89debfde1d5b1d60bc5514d9234fc337c464a5854300240941220a60"
+   },
+   "evidence_id": "ev:39e7e78646f6e43d49ad16b517e3a2e7",
+   "kind": "preregistration",
+   "method": "committed and hashed before S2/S3",
+   "source": "docs/preregistrations/EXP-001-DR.json",
+   "validity": "current",
+   "warrant": "FORMAL"
+  },
+  "ev:439d0dc99559da4825ffc5a50a1a8cc6": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+   "detail": {
+    "cross_family_reuse": 2
+   },
+   "evidence_id": "ev:439d0dc99559da4825ffc5a50a1a8cc6",
+   "kind": "reuse_metric",
+   "method": "cross-family reuse measured directly, not inferred from accuracy",
+   "source": "bestsad.evaluator.contract",
+   "validity": "current",
+   "warrant": "DIRECT_OBSERVATION"
+  },
+  "ev:4980b70706e39fea1f1ad4673d02f572": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:4980b70706e39fea1f1ad4673d02f572",
+   "detail": {
+    "ci_high": 0.09523809523809523,
+    "ci_low": -0.10714285714285712,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u2"
+   },
+   "evidence_id": "ev:4980b70706e39fea1f1ad4673d02f572",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:4c977c13faf95cae9bd032f3fad0506e": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:4c977c13faf95cae9bd032f3fad0506e",
+   "detail": {
+    "ci_high": 0.05000000000000002,
+    "ci_low": 0.0,
+    "direct_effect": 0.01666666666666669,
+    "primitive_id": "prim:u1"
+   },
+   "evidence_id": "ev:4c977c13faf95cae9bd032f3fad0506e",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:4d2ec105c2a1941c4d863f84754b5c62": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:4d2ec105c2a1941c4d863f84754b5c62",
+   "detail": {
+    "ci_high": 0.3333333333333333,
+    "ci_low": -0.3333333333333333,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u0"
+   },
+   "evidence_id": "ev:4d2ec105c2a1941c4d863f84754b5c62",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:4ec77e147a36567a4872e49b7e6a5696": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:4ec77e147a36567a4872e49b7e6a5696",
+   "detail": {
+    "outcome_class": "h0_consistent"
+   },
+   "evidence_id": "ev:4ec77e147a36567a4872e49b7e6a5696",
+   "kind": "report",
+   "method": "full run report with residual disclosure",
+   "source": "docs/experiments/EXP-001-DR-report.md",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:59c4209666468aa6f06439811b979437": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:59c4209666468aa6f06439811b979437",
+   "detail": {
+    "ci_high": 0.07500000000000001,
+    "ci_low": -0.07500000000000001,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u2"
+   },
+   "evidence_id": "ev:59c4209666468aa6f06439811b979437",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:5fe71958d830f9ba069739dd6ed58fc2": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:5fe71958d830f9ba069739dd6ed58fc2",
+   "detail": {
+    "ci_high": 0.08333333333333331,
+    "ci_low": -0.08333333333333331,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u0"
+   },
+   "evidence_id": "ev:5fe71958d830f9ba069739dd6ed58fc2",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:5fedabdae908c5d74734414993b3cc47": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:5fedabdae908c5d74734414993b3cc47",
+   "detail": {
+    "concentration": {
+     "passed": true,
+     "threshold": 0.8,
+     "top1_share": 0.39999999999999986,
+     "top2_share": 0.7999999999999997,
+     "verdict": "attributable"
+    }
+   },
+   "evidence_id": "ev:5fedabdae908c5d74734414993b3cc47",
+   "kind": "causal_attribution",
+   "method": "per-primitive ablation with concentration test",
+   "source": "artifacts/attribution.json",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:7161f713f5989d945d02d17e38beee53": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:7161f713f5989d945d02d17e38beee53",
+   "detail": {
+    "c1_residual_disclosed": {
+     "control": "condition I",
+     "reconciled": false,
+     "residual": "compute reconciliation within 75.3% of the expected identity compute(I) == compute(A) + compute(evolution in D)"
+    }
+   },
+   "evidence_id": "ev:7161f713f5989d945d02d17e38beee53",
+   "kind": "compute_ledger",
+   "method": "per-condition compute accounting",
+   "source": "artifacts/I_reconciliation.json",
+   "validity": "current",
+   "warrant": "DIRECT_OBSERVATION"
+  },
+  "ev:7276048dfc9d6ad3ef1bb73f048a116c": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:7276048dfc9d6ad3ef1bb73f048a116c",
+   "detail": {
+    "ci_high": 0.09523809523809523,
+    "ci_low": -0.10714285714285712,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u1"
+   },
+   "evidence_id": "ev:7276048dfc9d6ad3ef1bb73f048a116c",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:75f19d31afaa31735077c6088ffee9cb": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:75f19d31afaa31735077c6088ffee9cb",
+   "detail": {
+    "ci_high": 0.06250000000000003,
+    "ci_low": -0.0625,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u1"
+   },
+   "evidence_id": "ev:75f19d31afaa31735077c6088ffee9cb",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:98a52d284546cea0bd13b477c8778771": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:98a52d284546cea0bd13b477c8778771",
+   "detail": {
+    "ci_high": 0.08333333333333334,
+    "ci_low": -0.08333333333333334,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u0"
+   },
+   "evidence_id": "ev:98a52d284546cea0bd13b477c8778771",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:c7e8bb56ee7782fd5adfd21292f4f0d2": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:c7e8bb56ee7782fd5adfd21292f4f0d2",
+   "detail": {
+    "ci_high": 0.05000000000000002,
+    "ci_low": 0.0,
+    "direct_effect": 0.01666666666666669,
+    "primitive_id": "prim:u2"
+   },
+   "evidence_id": "ev:c7e8bb56ee7782fd5adfd21292f4f0d2",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:e1d60abee0bed7a52aacebab66d3a6c8": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:e1d60abee0bed7a52aacebab66d3a6c8",
+   "detail": {
+    "ci_high": 0.04166666666666666,
+    "ci_low": -0.024999999999999967,
+    "direct_effect": 0.00833333333333336,
+    "primitive_id": "prim:u1"
+   },
+   "evidence_id": "ev:e1d60abee0bed7a52aacebab66d3a6c8",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:e545130b4fade2a07dfbe48ed3e2c7e3": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:e545130b4fade2a07dfbe48ed3e2c7e3",
+   "detail": {
+    "ci_high": 0.06250000000000003,
+    "ci_low": -0.0625,
+    "direct_effect": 0.0,
+    "primitive_id": "prim:u2"
+   },
+   "evidence_id": "ev:e545130b4fade2a07dfbe48ed3e2c7e3",
+   "kind": "paired_ablation",
+   "method": "ablation by call-site re-expansion, verified by semantic-hash equality",
+   "source": "bestsad.causal.attribution",
+   "validity": "current",
+   "warrant": "EMPIRICAL"
+  },
+  "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+   "detail": {
+    "coding_scheme": "mdl:f4584462eca186487be006c0d1b519f9",
+    "semantic_gain_v2": 0.0
+   },
+   "evidence_id": "ev:ebcd03e13becb6e2ce0a194f1dd6cbcb",
+   "kind": "semantic_gain",
+   "method": "SG-v2 under the pre-registered coding scheme",
+   "source": "bestsad.mdl.semantic_gain",
+   "validity": "current",
+   "warrant": "RIGOROUS_COMPUTATION"
+  },
+  "ev:f016178b9853f131f96633c1b34ee962": {
+   "captured_at": "2026-08-24T12:51:09+00:00",
+   "content_hash": "ev:f016178b9853f131f96633c1b34ee962",
+   "detail": {
+    "control_gates": {
+     "B": {
+      "beaten": false,
+      "detail": "lower-bound control B",
+      "effect": 0.01302083333333337,
+      "p_value": 0.4647301300085318,
+      "present": true
+     },
+     "C": {
+      "beaten": false,
+      "detail": "lower-bound control C",
+      "effect": 0.0078125,
+      "p_value": 0.6487298392082672,
+      "present": true
+     },
+     "F": {
+      "beaten": false,
+      "ci": {
+       "ci_high": 0.03906249999999997,
+       "ci_low": -0.02604166666666677,
+       "estimate": 0.005208333333333343,
+       "level": 0.95
+      },
+      "detail": "F matches or beats D \u2014 no capability claim",
+      "effect": 0.005208333333333343,
+      "p_value": 0.7594045110527072,
+      "present": true
+     },
+     "G": {
+      "beaten": null,
+      "detail": "reference class: G's margin over the treatment, reported together with the treatment's margin over A (spec \u00a740.2)",
+      "effect": 0.04947916666666663,
+      "p_value": 0.022073964477716146,
+      "present": true
+     },
+     "H": {
+      "beaten": false,
+      "ci": {
+       "ci_high": 0.031249999999999972,
+       "ci_low": -0.02864583333333337,
+       "estimate": 0.0,
+       "level": 0.95
+      },
+      "detail": "H matches or beats D \u2014 no capability claim",
+      "effect": 0.0,
+      "p_value": 1.0,
+      "present": true
+     },
+     "I": {
+      "beaten": false,
+      "ci": {
+       "ci_high": 0.03906249999999997,
+       "ci_low": -0.02604166666666677,
+       "estimate": 0.005208333333333343,
+       "level": 0.95
+      },
+      "detail": "I matches or beats D \u2014 no capability claim",
+      "effect": 0.005208333333333343,
+      "p_value": 0.7594045110527072,
+      "present": true
+     }
+    }
+   },
+   "evidence_id": "ev:f016178b9853f131f96633c1b34ee962",
+   "kind": "condition_manifest",
+   "method": "conditions A-F,H,I plus G",
+   "source": "artifacts/S2_payload.json",
+   "validity": "current",
+   "warrant": "DIRECT_OBSERVATION"
+  }
+ }
+}

@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Capability Claim Certificate v0.1",
+  "description": "Certifies a capability claim (\u00a79). Required conditions and statistics are dependencies of promotion, not report-time formatting checks (\u00a78).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "certificate_id",
+    "claim_id",
+    "treatment_condition",
+    "comparators",
+    "preregistration_content_id",
+    "evaluator_content_id",
+    "status"
+  ],
+  "properties": {
+    "certificate_id": {
+      "type": "string"
+    },
+    "claim_id": {
+      "type": "string"
+    },
+    "treatment_condition": {
+      "type": "string"
+    },
+    "comparators": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "effect_metric": {
+      "type": "string"
+    },
+    "effect": {
+      "type": "number"
+    },
+    "ci_low": {
+      "type": "number"
+    },
+    "ci_high": {
+      "type": "number"
+    },
+    "preregistration_content_id": {
+      "type": "string"
+    },
+    "semantic_kernel_content_id": {
+      "type": "string"
+    },
+    "evaluator_content_id": {
+      "type": "string"
+    },
+    "compute_ledger_id": {
+      "type": "string"
+    },
+    "conditions_run": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "conditions_defeated": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "causal_attribution_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "concentration_test_passed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE"
+      ]
+    },
+    "promotion_state": {
+      "enum": [
+        "PROPOSED",
+        "OBSERVED",
+        "VERIFIED",
+        "PROMOTED",
+        "CONTESTED",
+        "STALE",
+        "QUARANTINED",
+        "INVALIDATED",
+        "INCONCLUSIVE",
+        "REJECTED"
+      ]
+    },
+    "source_hashes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "issued_at": {
+      "type": "string"
+    }
+  }
+}

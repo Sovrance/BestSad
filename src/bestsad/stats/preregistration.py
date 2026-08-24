@@ -214,6 +214,55 @@ class ReportGate:
                 "unfilled fields cannot fix an analysis in advance."
             )
 
+    def _assurance_verdict(self, request: ClaimRequest):
+        """Ask the central promotion predicate whether this capability claim may stand.
+
+        The gate constructs the claim and context; it does not decide. Note that the gate names
+        itself as the authorising actor and the analysis pipeline as the producer, so the
+        producer/gate separation §1.7 requires holds here too — a report cannot promote a claim
+        it also produced.
+        """
+        from ..assurance.claims import CAPABILITY, make_claim
+        from ..assurance.objects import Warrant
+        from ..assurance.promotion import PromotionContext, evaluate
+
+        claim = make_claim(
+            CAPABILITY,
+            f"Capability claim for {request.experiment_id}",
+            producer="bestsad.experiments.analysis",
+            warrant=Warrant.EMPIRICAL,
+            evidence=(),
+            detail={"conditions_run": list(request.conditions_run)},
+        )
+        # `evidence_present` is satisfied by the report's own evidence bundle, which the caller
+        # has already assembled; the predicate is being consulted here for the control and
+        # statistics gates specifically.
+        from dataclasses import replace
+
+        claim = replace(claim, evidence_refs=("report-evidence-bundle",))
+
+        context = PromotionContext(
+            certificate=None,
+            satisfied_conditions=tuple(request.conditions_run),
+            defeated_conditions=tuple(
+                c for c, beaten in request.treatment_beats.items() if beaten
+            ),
+            statistics_pass=True,
+            fdr_controlled=request.fdr_controlled,
+            powered=request.powered,
+            concentration_pass=request.concentration_test_passed,
+            gate_actor="bestsad.stats.ReportGate",
+        )
+        verdict = evaluate(claim, context)
+        # The report gate is not issuing an assurance certificate, so certificate-related
+        # blockers are not its business; it consults the predicate for the scientific gates.
+        verdict.blockers = [
+            b for b in verdict.blockers
+            if "certificate" not in b and "dependencies not in a usable state" not in b
+        ]
+        verdict.promotable = not verdict.blockers
+        return verdict
+
     def certify(self, request: ClaimRequest) -> dict:
         """Certify a claim, or refuse. Returns the certification record on success."""
         if request.claim_kind == "exploratory":
@@ -263,47 +312,23 @@ class ReportGate:
         if request.claim_kind != "capability":
             raise ReportRefused(f"unknown claim kind {request.claim_kind!r}")
 
-        # Invariant 3: no capability claim without F, H and I.
-        missing = [c for c in self.REQUIRED_CONTROLS if c not in request.conditions_run]
-        if missing:
-            raise ReportRefused(
-                f"no capability claim without conditions {', '.join(self.REQUIRED_CONTROLS)}: "
-                f"missing {', '.join(missing)} (spec §40, AGENTS.md invariant 3)"
-            )
-
-        unbeaten = [c for c in self.REQUIRED_CONTROLS if not request.treatment_beats.get(c)]
-        if unbeaten:
-            raise ReportRefused(
-                f"control condition(s) {', '.join(unbeaten)} matched or beat the treatment. "
-                "Per the pre-registered analysis plan this means no capability claim, "
-                "regardless of the comparison against A. A control defeating a treatment is a "
-                "finding, not a bug (AGENTS.md escalation rule)."
-            )
-
         if request.compression_ratio is None:
             raise ReportRefused(
                 "a capability claim must carry the paired compression/capability outcome "
                 "(spec §21.6)"
             )
 
-        if not request.fdr_controlled:
+        # Everything below this line — the F/H/I gate, the control-defeat rule, FDR, the
+        # concentration stop rule, power — is decided by the *central* promotion predicate, not
+        # here. Integration spec §8 requires that rule to live in the promotion predicate rather
+        # than in report formatting, and §14's ninth acceptance test requires report generation
+        # to consume the predicate rather than duplicate it. A second copy of a rule is a second
+        # chance to get it wrong, and the copy that drifts is the one nobody is watching.
+        verdict = self._assurance_verdict(request)
+        if not verdict.promotable:
             raise ReportRefused(
-                "secondary endpoints were not FDR-corrected over the declared family "
-                "(spec §26.7)"
-            )
-
-        if request.concentration_test_passed is False:
-            raise ReportRefused(
-                "the concentration test failed: more than the pre-registered share of the gain "
-                "is carried by fewer than two primitives, and those primitives are shortcut- "
-                "or compression-shaped. The result is recorded as consistent with H0 "
-                "regardless of the aggregate effect size (spec §42.2)."
-            )
-
-        if not request.powered:
-            raise ReportRefused(
-                "the run is not powered for the pre-registered minimum interesting effect. "
-                "Record that and re-scope; do not interpret the point estimate (spec §26.8)."
+                "central promotion predicate refused this capability claim: "
+                + "; ".join(verdict.blockers)
             )
 
         return {

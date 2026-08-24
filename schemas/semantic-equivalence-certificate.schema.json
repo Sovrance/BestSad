@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Semantic Equivalence Certificate v0.1",
+  "description": "Certifies that a primitive is equivalent to its K0 expansion (\u00a76). Names the K0 content id and the BSIR canonicalization version, so a canonicalization defect invalidates every dependent certificate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "certificate_id",
+    "claim_id",
+    "primitive_id",
+    "semantic_hash",
+    "kernel_content_id",
+    "bsir_content_id",
+    "status",
+    "warrant"
+  ],
+  "properties": {
+    "certificate_id": {
+      "type": "string"
+    },
+    "claim_id": {
+      "type": "string"
+    },
+    "primitive_id": {
+      "type": "string"
+    },
+    "semantic_hash": {
+      "type": "string"
+    },
+    "kernel_content_id": {
+      "type": "string"
+    },
+    "bsir_content_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE"
+      ]
+    },
+    "warrant": {
+      "enum": [
+        "FORMAL",
+        "RIGOROUS_COMPUTATION",
+        "DIRECT_OBSERVATION",
+        "CORROBORATED",
+        "EMPIRICAL",
+        "HEURISTIC",
+        "ASSERTED"
+      ],
+      "description": "FORMAL only where the checked domain is exhaustive or a proof exists; sampled differential testing is CORROBORATED (\u00a76)."
+    },
+    "differential_cases": {
+      "type": "integer"
+    },
+    "exhaustive": {
+      "type": "boolean"
+    },
+    "trace_evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "issued_at": {
+      "type": "string"
+    }
+  }
+}

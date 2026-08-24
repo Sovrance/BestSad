@@ -34,6 +34,23 @@ checkpoint keys collided across configurations. It also established that **confo
 not implementable against a saturating enumerative searcher** — condition I was measured across a
 7.8× compute range and returned an identical solve rate every time.
 
+## Assurance integration (`BESTSAD_ATLAS_ASSURANCE_INTEGRATION_ENG_v0.1`)
+
+Layered over M0–M10 rather than replacing any of it. Eight P0/P1 work orders complete, two P2
+deferred with the compiler milestones they annotate — status in
+`docs/architecture/ASSURANCE_WORK_ORDERS.md`, all ten §14 acceptance criteria in
+`tests/assurance/test_acceptance.py`.
+
+The change with the widest blast radius: the "no capability claim without F, H and I" rule moved
+out of report formatting and into a central promotion predicate (ADR-0010), so it now binds
+anything that consumes a claim rather than only a report. The existing 38 report-gate tests pass
+unchanged through the new path.
+
+Run against the real EXP-001-DR results, the protocol produced the asymmetry it is designed to:
+the **capability claim is INCONCLUSIVE** (certificate FAIL; all three required controls
+unbeaten) while the **negative-result claim is PROMOTED** with the search-space constraint it
+implies. `artifacts/assurance_ledger.json`.
+
 ## Deferred behind gates, as the plan requires
 
 M11 (equality saturation — adopt, don't build), M12 (MLIR + translation validation), M13
