@@ -1,9 +1,18 @@
 name: CI
 
 on:
+  # Trunk only. A topic branch is covered by the `pull_request` trigger, so matching every
+  # branch here ran the whole suite twice on each PR push — two workflow runs, thirteen
+  # duplicate check runs, for one commit.
   push:
-    branches: ["**"]
+    branches: [v1]
   pull_request:
+
+concurrency:
+  # Supersede an in-flight run when a branch is pushed again: only the newest commit's result
+  # is informative, and a stale run finishing later can report green for code already replaced.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
