@@ -94,15 +94,25 @@ jobs:
           # an image with no shell, reports "nothing found" and the check passes having
           # verified nothing. That is the same defect this branch exists to remove: a control
           # that binds only when it happens to run.
-          docker run --rm --entrypoint sh bestsad-evaluator:ci -c 'test -d /' \
-            || { echo "::error::probe container did not run; the absence check proves nothing"
-                 exit 1; }
-          # Search the whole image rather than two guessed paths: the point is that the assets
-          # are nowhere in it, not that they are absent from where I expected to look.
-          found="$(docker run --rm --entrypoint sh bestsad-evaluator:ci \
-                     -c 'find / -xdev -name "hidden_evaluator*" -print 2>/dev/null')"
-          if [ -n "$found" ]; then
-            echo "::error::hidden evaluation assets are present in the evaluator image: $found"
+          # Search the whole image rather than two guessed paths — the point is that the assets
+          # are nowhere in it, not that they are absent from where I thought to look — and run
+          # the search as root so no directory is skipped for permissions.
+          #
+          # The query carries its own positive control. `canonicalize.py` is known to be in the
+          # image, so if the search cannot find the file that is definitely there, its silence
+          # about the files that must not be there proves nothing. Without this, any way for the
+          # search to fail — the earlier version exited non-zero on permission-denied and took
+          # `set -e` with it — reads as a clean image.
+          probe="$(docker run --rm --user 0 --entrypoint sh bestsad-evaluator:ci \
+                     -c 'find / -xdev \( -name "hidden_evaluator*" -o -name "canonicalize.py" \) -print' \
+                   || true)"
+          if ! printf '%s\n' "$probe" | grep -q 'canonicalize\.py'; then
+            echo "::error::the image probe missed its own positive control; the search did not run"
+            exit 1
+          fi
+          if printf '%s\n' "$probe" | grep -q 'hidden_evaluator'; then
+            echo "::error::hidden evaluation assets are present in the evaluator image:"
+            printf '%s\n' "$probe" | grep 'hidden_evaluator'
             exit 1
           fi
       - name: Runs unprivileged
