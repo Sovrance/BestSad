@@ -153,10 +153,28 @@ def candidate_sandbox(
         _ACTIVE.pop()
 
 
+#: Environment variable naming where the frozen evaluation assets are mounted. The container
+#: puts them somewhere unrelated to the source tree (see this package's `Dockerfile`), so a
+#: policy that knows only the in-repo path protects nothing in the deployment the image exists
+#: to provide.
+HIDDEN_ROOT_ENV = "BESTSAD_HIDDEN_ROOT"
+
+
 def default_policy(scratch_dir: Path, repo_root: Path | None = None) -> SandboxPolicy:
-    """The standard policy: hidden evaluator assets are unreadable, no network, no subprocess."""
+    """The standard policy: hidden evaluator assets are unreadable, no network, no subprocess.
+
+    Both the in-repo `hidden_evaluator/` and any path named by `$BESTSAD_HIDDEN_ROOT` are
+    protected. Resolve this in the *parent*: `run_isolated` clears the child's environment, so a
+    policy built inside the child would find the variable gone and silently protect less.
+    """
     root = repo_root or Path(__file__).resolve().parents[3]
+    protected = [root / "hidden_evaluator"]
+    configured = os.environ.get(HIDDEN_ROOT_ENV)
+    if configured:
+        mounted = Path(configured)
+        if mounted not in protected:
+            protected.append(mounted)
     return SandboxPolicy(
         scratch_dir=scratch_dir,
-        protected_paths=(root / "hidden_evaluator",),
+        protected_paths=tuple(protected),
     )

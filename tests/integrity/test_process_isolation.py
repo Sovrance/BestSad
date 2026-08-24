@@ -226,3 +226,74 @@ def test_limits_are_recorded_for_the_run_record(tmp_path):
         "cpu_seconds", "address_space_bytes", "file_size_bytes", "core_dump_bytes"
     }
     assert record["core_dump_bytes"] == 0, "a core dump writes process memory to disk"
+
+
+# --- red team: escapes found in review (Codex P1 findings on PR #4) -----------------------------
+# Each of these was a real, demonstrated hole in the first version of this module. They are kept
+# as tests rather than as a changelog entry because the fix for each is a single line that a
+# later refactor could quietly drop.
+
+
+def _read_inherited_descriptor(number: int) -> str:
+    """Read a descriptor the child never opened — no `open` call, so no audit event."""
+    os.lseek(number, 0, os.SEEK_SET)
+    return os.read(number, 64).decode(errors="replace")
+
+
+class _HostileResult:
+    """A result object whose *unpickling* runs code. `__reduce__` fires in the receiver."""
+
+    def __init__(self, marker: str) -> None:
+        self.marker = marker
+
+    def __reduce__(self):
+        return (exec, (f"import pathlib; pathlib.Path({self.marker!r}).write_text('escaped')",))
+
+
+def _return_hostile_result(marker: str) -> _HostileResult:
+    return _HostileResult(marker)
+
+
+def _read_path(path: str) -> str:
+    return open(path).read()
+
+
+@pytest.mark.skipif(not (HIDDEN / "README.md").exists(), reason="hidden assets not present")
+def test_a_descriptor_open_in_the_evaluator_is_not_inherited_by_the_candidate(tmp_path):
+    """`fork` duplicates open descriptors. If the evaluator holds a hidden-benchmark file open,
+    the candidate can `os.read()` that number directly — no `open`, no audit event, no finding.
+    That is a read path to the frozen benchmark, which invariant 2 forbids outright."""
+    with open(HIDDEN / "README.md", "rb") as handle:
+        result = run_isolated(_read_inherited_descriptor, handle.fileno(), scratch_dir=tmp_path)
+    assert not result.ok, "hidden benchmark content reached the candidate through a stale fd"
+
+
+def test_a_hostile_result_object_cannot_execute_in_the_evaluator(tmp_path):
+    """The result travels as JSON, not pickle. Pickling would let a candidate's `__reduce__` run
+    in the parent — outside every audit hook and resource limit this module installs, making the
+    isolation boundary itself the delivery mechanism for the escape."""
+    marker = tmp_path / "escaped"
+    result = run_isolated(_return_hostile_result, str(marker), scratch_dir=tmp_path)
+    assert not marker.exists(), "candidate code executed inside the evaluator process"
+    assert not result.ok
+
+
+def test_the_configured_hidden_mount_is_protected_not_just_the_in_repo_path(tmp_path, monkeypatch):
+    """The container mounts the frozen assets outside the source tree. A policy that knows only
+    `<repo>/hidden_evaluator` protects nothing in the deployment the image exists to provide."""
+    mount = tmp_path / "mounted-hidden"
+    mount.mkdir()
+    (mount / "frozen.json").write_text('{"expected": "outputs"}')
+    monkeypatch.setenv("BESTSAD_HIDDEN_ROOT", str(mount))
+
+    result = run_isolated(_read_path, str(mount / "frozen.json"), scratch_dir=tmp_path)
+    assert not result.ok
+    assert "hidden evaluation asset is not readable" in result.error
+    assert [f["kind"] for f in result.findings] == ["hidden_asset_read"]
+
+
+def test_an_oversized_result_cannot_exhaust_the_evaluator(tmp_path):
+    """A bounded read: the parent must not allocate whatever the candidate decides to send."""
+    from bestsad.evaluator.isolation import MAX_RESULT_BYTES
+
+    assert MAX_RESULT_BYTES <= 64 * 1024 * 1024

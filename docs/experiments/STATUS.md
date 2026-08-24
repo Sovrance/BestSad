@@ -61,15 +61,17 @@ transfer — gated on S4). None started, correctly.
 
 Disclosed here so they travel with any result (spec §40.3):
 
-1. **ADR-0005** (narrowed 2026-08-24, not closed) — candidate-side work now runs in a separate
-   process with kernel-enforced CPU, address-space, file-size and core-dump limits, a cleared
-   environment and a scratch-pinned working directory (`bestsad.evaluator.isolation`), red-teamed
-   in `tests/integrity/test_process_isolation.py`; and the evaluator image exists, CI-verified to
-   build, carry no hidden assets, and start read-only with no network. What remains: **no
-   experiment has been run inside that image** (EXP-001-DR ran on the host), there is no declared
-   seccomp allowlist, and `hidden_evaluator/` still shares a checkout — a separate process on the
-   same host reads the same disk. **No result above Claim Level 1 until the assets are
-   relocated and a run records the image digest it executed under.**
+1. **ADR-0005** (partly addressed 2026-08-24, **not** narrowed) — a process-isolation layer
+   exists and is red-teamed (`bestsad.evaluator.isolation`, `tests/integrity/`): separate
+   process, kernel-enforced CPU/address-space/file-size/core-dump limits, cleared environment,
+   scratch-pinned cwd, no inherited descriptors, JSON rather than pickle across the boundary.
+   The evaluator image exists and CI verifies it builds, carries no hidden assets, and starts
+   read-only with no network. **None of this is on the experiment path.** `Exp001Runner` still
+   calls `_job()` directly; `run_isolated` has no non-test caller, and EXP-001-DR ran on the
+   host. Also outstanding: no declared seccomp allowlist, and `hidden_evaluator/` still shares a
+   checkout — a separate process on the same host reads the same disk. **No result above Claim
+   Level 1**, and the ceiling does not move until the runner executes through the boundary
+   inside the image, records the image digest, and the assets are relocated.
 2. ~~**ADR-0006** — condition C's MDL extractor ranks candidates independently and counts nodes
    rather than bits.~~ **Discharged 2026-08-24.** Rebuilt as a joint two-part MDL search in bits;
    condition C re-run on all 32 seeds gives an identical per-seed solve rate, so the D-versus-C

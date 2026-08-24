@@ -37,6 +37,7 @@ directory is the deployment half. ADR-0005 records the full gap and what product
 
 from __future__ import annotations
 
+import json
 import multiprocessing as mp
 import os
 import traceback
@@ -125,20 +126,101 @@ class IsolatedResult:
         }
 
 
-def _child(conn, fn, args, kwargs, policy: SandboxPolicy, limits: ResourceLimits) -> None:
+
+#: Cap on a result payload, so a candidate cannot exhaust the evaluator's memory by returning
+#: an enormous value.
+MAX_RESULT_BYTES = 32 * 1024 * 1024
+
+
+def open_descriptors() -> frozenset[int]:
+    """Every descriptor currently open in this process, above stdio."""
+    try:
+        return frozenset(int(name) for name in os.listdir("/proc/self/fd") if int(name) >= 3)
+    except (OSError, ValueError):  # pragma: no cover - non-Linux
+        found = set()
+        try:
+            limit = min(int(os.sysconf("SC_OPEN_MAX")), 65536)
+        except (ValueError, OSError):
+            limit = 4096
+        for fd in range(3, limit):
+            try:
+                os.fstat(fd)
+            except OSError:
+                continue
+            found.add(fd)
+        return frozenset(found)
+
+
+def _close_inherited_descriptors(targets: frozenset[int]) -> None:
+    """Close the descriptors the child inherited from the evaluator.
+
+    `fork` duplicates the parent's open descriptors into the child. If the evaluator happens to
+    hold a hidden-benchmark file open when a candidate starts, the candidate can `os.read()` that
+    descriptor number directly — no `open` call, so no audit event, so no integrity finding. That
+    is a read path to the frozen benchmark, which `AGENTS.md` invariant 2 forbids outright, and
+    no resource limit or audit hook closes it. Only shutting the descriptors does.
+
+    `targets` is snapshotted in the parent *before* `Process.start()`, and that ordering is the
+    whole design. Closing "everything except a keep-list" instead looks equivalent and is not:
+    `start()` creates multiprocessing's own sentinel pipe, whose write end lives in the child and
+    signals the child's death by closing. Shutting it early tells the parent the candidate has
+    exited while it is still running — the parent then blocks in `waitpid` for the full job
+    instead of enforcing its wall-clock timeout. A snapshot taken before `start()` cannot contain
+    that pipe, so it cannot make that mistake.
+    """
+    for fd in sorted(targets):
+        if fd < 3:  # keep stdio
+            continue
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+
+
+def _send(conn, payload: dict) -> None:
+    """Hand a result back as JSON bytes.
+
+    Deliberately not `conn.send()`. That pickles, and the parent's `recv()` would unpickle
+    whatever the candidate returned — a picklable object with a hostile `__reduce__` runs its
+    reducer *in the evaluator*, outside every audit hook and resource limit this module installs.
+    The isolation boundary would then be the delivery mechanism for the escape. JSON has no
+    such hook.
+    """
+    conn.send_bytes(json.dumps(payload).encode("utf-8"))
+
+
+def _receive(conn) -> dict | None:
+    """Read one JSON result, rejecting anything that is not the expected shape."""
+    try:
+        raw = conn.recv_bytes(maxlength=MAX_RESULT_BYTES)
+    except (EOFError, OSError, ValueError):
+        return None
+    try:
+        payload = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict) or not isinstance(payload.get("ok"), bool):
+        return None
+    return payload
+
+
+def _child(conn, fn, args, kwargs, policy: SandboxPolicy, limits: ResourceLimits,
+           inherited: frozenset[int]) -> None:
     """Child entry point. Everything here runs after the fork and before candidate code."""
     try:
         limits.apply()
         os.environ.clear()          # no inherited host credentials or configuration
+        _close_inherited_descriptors(inherited - {conn.fileno()})
         os.chdir(policy.scratch_dir)
         with candidate_sandbox(policy) as monitor:
             try:
                 value = fn(*args, **kwargs)
-                conn.send({"ok": True, "value": value, "findings": monitor.findings})
+                _send(conn, {"ok": True, "value": value, "findings": monitor.findings})
             except BaseException as exc:  # noqa: BLE001 - the boundary must catch everything
                 # MemoryError under RLIMIT_AS is the limit doing its job, not a candidate bug:
                 # report it as containment so the ledger does not read it as a code defect.
-                conn.send(
+                _send(
+                    conn,
                     {
                         "ok": False,
                         "error": f"{type(exc).__name__}: {exc}".rstrip(": "),
@@ -149,7 +231,7 @@ def _child(conn, fn, args, kwargs, policy: SandboxPolicy, limits: ResourceLimits
                 )
     except BaseException as exc:  # noqa: BLE001 - failure to *install* the sandbox
         try:
-            conn.send({"ok": False, "error": f"sandbox setup failed: {exc}", "findings": []})
+            _send(conn, {"ok": False, "error": f"sandbox setup failed: {exc}", "findings": []})
         except Exception:  # pragma: no cover - pipe already broken
             pass
     finally:
@@ -180,18 +262,19 @@ def run_isolated(
 
     context = mp.get_context("fork")
     parent_conn, child_conn = context.Pipe(duplex=False)
+    # Snapshot before `start()`: see `_close_inherited_descriptors` for why the ordering matters.
+    inherited = open_descriptors()
     process = context.Process(
-        target=_child, args=(child_conn, fn, args, kwargs, policy, limits), daemon=True
+        target=_child,
+        args=(child_conn, fn, args, kwargs, policy, limits, inherited),
+        daemon=True,
     )
     process.start()
     child_conn.close()
 
     payload = None
     if parent_conn.poll(timeout):
-        try:
-            payload = parent_conn.recv()
-        except EOFError:
-            payload = None
+        payload = _receive(parent_conn)
     process.join(timeout=max(1.0, timeout / 10))
 
     if process.is_alive():
