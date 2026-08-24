@@ -47,7 +47,7 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0003 | Repository layout maps spec §28 onto a `src/` package | Accepted |
 | 0004 | Hand-written statistics rather than SciPy | Provisional |
 | 0005 | In-process audit-hook sandbox for the candidate boundary | Provisional |
-| 0006 | Hand-written MDL abstraction extractor for condition C | Provisional |
+| 0006 | Hand-written MDL abstraction extractor for condition C | Accepted (amended 2026-08-24) |
 | 0007 | Enumerative synthesizer as the fixed "model" for the instrument dry run | Accepted |
 | 0008 | K0 v1.0.0 semantics: bounded integers, fuel, and total operations | Accepted |
 | 0009 | Reconciling the assurance lifecycle with spec §11 maturity | Accepted |

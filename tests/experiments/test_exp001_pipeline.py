@@ -184,3 +184,34 @@ def test_checkpoint_key_distinguishes_different_search_budgets(tmp_path):
     again = run(1500, 0)
     assert len(list(tmp_path.glob("*.json"))) == 3
     assert again["reproducibility_digest"] == first["reproducibility_digest"]
+
+
+def test_discovery_checkpoint_key_covers_the_extractor_version(tmp_path):
+    """Discovery output depends on the extractor that produced it.
+
+    A key naming only the seed would serve abstractions selected under a different objective
+    once the extractor changed — the same class of defect as the condition-I checkpoint
+    collision, and harder to notice, because stale abstractions still look like abstractions.
+    """
+    from bestsad.experiments.exp001 import _discovery_job
+
+    sizing = dict(TINY)
+    _discovery_job((1, sizing, "ckpt", str(tmp_path)))
+    written = sorted(p.name for p in tmp_path.glob("discovery_*.pkl"))
+    assert len(written) == 1
+    # The filename carries a fingerprint, not just the seed.
+    assert written[0] != "discovery_seed1.pkl"
+    assert written[0].endswith("_seed1.pkl")
+
+    # An identical configuration hits the cache rather than recomputing.
+    _discovery_job((1, sizing, "ckpt", str(tmp_path)))
+    assert len(list(tmp_path.glob("discovery_*.pkl"))) == 1
+
+    # A different budget must not reuse it.
+    from bestsad.solver import SearchBudget
+
+    other = dict(sizing)
+    other["budget"] = SearchBudget(max_nodes=4321, max_size=4, lam_max_size=2,
+                                   lam_bank_cap=20, bank_cap=30)
+    _discovery_job((1, other, "ckpt", str(tmp_path)))
+    assert len(list(tmp_path.glob("discovery_*.pkl"))) == 2
