@@ -89,9 +89,20 @@ jobs:
       # never run, is documentation with a filename that implies otherwise.
       - name: Image carries no hidden evaluation assets (spec §27.2)
         run: |
-          if docker run --rm --entrypoint sh bestsad-evaluator:ci \
-               -c '[ -e /hidden_evaluator ] || [ -e /build/hidden_evaluator ]'; then
-            echo "::error::hidden evaluation assets were baked into the evaluator image"
+          # Prove the probe works before trusting its negative. Written the obvious way — an
+          # `if` around a test for the assets' presence — a container that fails to start, or
+          # an image with no shell, reports "nothing found" and the check passes having
+          # verified nothing. That is the same defect this branch exists to remove: a control
+          # that binds only when it happens to run.
+          docker run --rm --entrypoint sh bestsad-evaluator:ci -c 'test -d /' \
+            || { echo "::error::probe container did not run; the absence check proves nothing"
+                 exit 1; }
+          # Search the whole image rather than two guessed paths: the point is that the assets
+          # are nowhere in it, not that they are absent from where I expected to look.
+          found="$(docker run --rm --entrypoint sh bestsad-evaluator:ci \
+                     -c 'find / -xdev -name "hidden_evaluator*" -print 2>/dev/null')"
+          if [ -n "$found" ]; then
+            echo "::error::hidden evaluation assets are present in the evaluator image: $found"
             exit 1
           fi
       - name: Runs unprivileged
