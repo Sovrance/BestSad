@@ -61,17 +61,22 @@ transfer — gated on S4). None started, correctly.
 
 Disclosed here so they travel with any result (spec §40.3):
 
-1. **ADR-0005** (partly addressed 2026-08-24, **not** narrowed) — a process-isolation layer
-   exists and is red-teamed (`bestsad.evaluator.isolation`, `tests/integrity/`): separate
-   process, kernel-enforced CPU/address-space/file-size/core-dump limits, cleared environment,
-   scratch-pinned cwd, no inherited descriptors, JSON rather than pickle across the boundary.
-   The evaluator image exists and CI verifies it builds, carries no hidden assets, and starts
-   read-only with no network. **None of this is on the experiment path.** `Exp001Runner` still
-   calls `_job()` directly; `run_isolated` has no non-test caller, and EXP-001-DR ran on the
-   host. Also outstanding: no declared seccomp allowlist, and `hidden_evaluator/` still shares a
-   checkout — a separate process on the same host reads the same disk. **No result above Claim
-   Level 1**, and the ceiling does not move until the runner executes through the boundary
-   inside the image, records the image digest, and the assets are relocated.
+1. **ADR-0005** (narrowed 2026-08-24, not closed) — **condition jobs now run behind the
+   boundary.** `Exp001Runner._map_jobs` routes every `(condition, seed)` job through
+   `run_isolated`: separate process, kernel-enforced CPU/address-space/file-size/core-dump
+   limits, cleared environment, no inherited descriptors, JSON rather than pickle across the
+   boundary, and the audit hook denying the hidden assets. Isolation is on by default, moves no
+   reproducibility digest, refuses to fall back silently if the platform cannot provide it, and
+   stops the run rather than dropping a cell when a job trips a limit or its integrity monitor
+   fires. The limits and which stages were isolated are recorded in the run's provenance.
+   **Still outstanding:** *abstraction discovery is not isolated* — it returns `Primitive`
+   objects whose expansions are K0 terms, and the boundary carries JSON only; serialising terms
+   would need the round-tripping parser `_discovery_job` warns would silently change what
+   condition D is. No experiment has yet been run inside the evaluator image, there is no
+   declared seccomp allowlist, and `hidden_evaluator/` still shares a checkout — a separate
+   process on the same host reads the same disk. **No result above Claim Level 1** until the
+   assets are relocated and a run records the image digest it executed under. EXP-001-DR itself
+   was produced before any of this and remains a host-run result.
 2. ~~**ADR-0006** — condition C's MDL extractor ranks candidates independently and counts nodes
    rather than bits.~~ **Discharged 2026-08-24.** Rebuilt as a joint two-part MDL search in bits;
    condition C re-run on all 32 seeds gives an identical per-seed solve rate, so the D-versus-C
