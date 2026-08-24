@@ -55,3 +55,29 @@ H2, H13, H14 or H15, and spec §45's prohibited claims apply in full.
   and is itself worth testing.
 - Adding a real model adapter is a new component behind the same interface; nothing else in the
   instrument should need to change, and that is the property this ADR is buying.
+
+
+---
+
+## Amendment, 2026-08-24 — the searcher's reach changed
+
+Two defects that narrowed the reachable program set were fixed: closure bodies can now reference
+the enclosing program's parameters, and observational-equivalence pruning can now distinguish two
+variables of the same type (it previously could not, collapsing `ge L0 n` onto the constant
+`true`). `SYNTHESIZER_VERSION` records this and participates in checkpoint fingerprints, so a
+record produced by the old searcher can never be served silently to the new one.
+
+Two consequences for this ADR:
+
+1. **EXP-001-DR was produced by the older, narrower searcher.** Its numbers stand as recorded and
+   are not directly comparable to a future run. Nothing was recomputed.
+2. The measured effect of widening the searcher was **nil on the primary-endpoint proxy** — a
+   four-arm ablation put held-out solve rate at 5/16 in every arm while training solve rate moved
+   24/32 → 27/32. That is written up in
+   `docs/research/negative_results/2026-08-24-search-reach-does-not-raise-ood.md`, and it removes
+   one candidate explanation for the EXP-001-DR null: the searcher was not simply unable to
+   express the programs it needed.
+
+This does not change the ADR's decision. The model role is still a deterministic enumerative
+synthesizer, conditions F and H still cannot be interpreted, and the instrument still cannot
+produce a capability claim in its current configuration.
