@@ -596,11 +596,29 @@ def can_probe(ty: Ty) -> bool:
 
 
 def _probe_tuples(env: Mapping[str, Ty]) -> tuple[tuple, ...]:
+    """Probe rows for the variables in `env`.
+
+    Each variable is offset into its own pool by its position. Without the offset every
+    variable of the same type receives an *identical* value in every row, and observational
+    equivalence then cannot tell two same-typed variables apart: `ge L0 n` collapses onto
+    `ge n n`, which is the constant `true`, and is pruned as a duplicate of it. Anything whose
+    meaning depends on distinguishing two variables of one type — every two-argument closure,
+    and every closure that captures a parameter of its own type — becomes unreachable, not
+    because the search ran out of budget but because the pruning could not see the difference.
+
+    The rows are widened past the longest pool for the same reason: with one row per pool entry
+    a pair of offset variables sweeps only a diagonal of the input space, and pairs that agree
+    on that diagonal still collapse.
+    """
     pools = [_probe_values(ty) for ty in env.values()]
+    if not pools:
+        return ()
+    width = max(len(pool) for pool in pools) * 2
     out: list[tuple] = []
-    width = max(len(p) for p in pools) if pools else 0
     for i in range(width):
-        out.append(tuple(pool[i % len(pool)] for pool in pools))
+        out.append(
+            tuple(pool[(i + index * 3) % len(pool)] for index, pool in enumerate(pools))
+        )
     return tuple(out)
 
 
