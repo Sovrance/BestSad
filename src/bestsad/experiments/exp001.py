@@ -23,7 +23,7 @@ import json
 import pickle
 import time
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Mapping, Sequence
 
@@ -43,7 +43,17 @@ from ..conditions import (
     check_condition_f,
     reconcile_search_only,
 )
-from ..evaluator import Evaluator, ScoreReport, detect_hardcoding, manifest_for
+from ..evaluator import (
+    ISOLATION_AVAILABLE,
+    Evaluator,
+    IntegrityViolation,
+    ResourceLimits,
+    ScoreReport,
+    default_policy,
+    detect_hardcoding,
+    manifest_for,
+    run_isolated,
+)
 from ..genomes import Genome, Primitive
 from ..kernel import INT, KERNEL_VERSION, Kernel, TList, app, const_int, lam, var
 from ..kernel.ops import OPS_BY_NAME
@@ -195,6 +205,83 @@ def _discovery_job(payload: tuple) -> tuple:
     return result
 
 
+@dataclass(frozen=True, slots=True)
+class JobIsolation:
+    """How condition jobs reach the candidate boundary (spec §27.1; ADR-0005).
+
+    Enabled by default. The limits are sized for a *condition job*, not for a unit test: a real
+    job on condition I runs for a long time by design, and a cap tuned to the isolation module's
+    own defaults would kill every one of them. They exist to stop a runaway, not to bound honest
+    work, so they are deliberately loose — and they are recorded in the run's provenance, because
+    a limit that is not written down is a confound nobody can check for (spec §40.3).
+    """
+
+    enabled: bool = True
+    cpu_seconds: int = 3 * 60 * 60
+    address_space_bytes: int = 4 * 1024 * 1024 * 1024
+    timeout_seconds: float = 4 * 60 * 60
+
+    def limits(self) -> ResourceLimits:
+        return ResourceLimits(
+            cpu_seconds=self.cpu_seconds, address_space_bytes=self.address_space_bytes
+        )
+
+    def to_record(self) -> dict:
+        return {
+            "enabled": self.enabled,
+            "isolated_stages": ["condition_jobs"] if self.enabled else [],
+            # Stated positively rather than left to inference: discovery returns Primitive
+            # objects whose expansions are K0 terms, and the boundary carries JSON only.
+            # Serialising terms would need the round-tripping parser `_discovery_job` warns
+            # about, whose silent mismatch would change what condition D is.
+            "unisolated_stages": ["abstraction_discovery"],
+            "cpu_seconds": self.cpu_seconds,
+            "address_space_bytes": self.address_space_bytes,
+            "timeout_seconds": self.timeout_seconds,
+            "available": ISOLATION_AVAILABLE,
+        }
+
+
+def _isolated_job(outer: tuple) -> dict:
+    """Run one condition job behind the process boundary.
+
+    Two failure modes are re-raised rather than absorbed, and the reason is the same for both:
+    a run that quietly drops a `(condition, seed)` cell is not a controlled experiment. A missing
+    cell does not average out — it silently reweights the comparison the whole study rests on.
+    So a job that trips a limit, and a job whose integrity monitor fired, both stop the run.
+    """
+    payload, isolation, scratch_root, checkpoint_dir = outer
+    condition, seed = payload[0], payload[1]
+    scratch = Path(scratch_root) / f"{condition.condition_id}_seed{seed}"
+    scratch.mkdir(parents=True, exist_ok=True)
+
+    policy = default_policy(scratch)
+    if checkpoint_dir:
+        # The job checkpoints outside scratch by design; name that one directory rather than
+        # switching off the write restriction wholesale.
+        policy = replace(policy, writable_paths=(Path(checkpoint_dir),))
+
+    result = run_isolated(
+        _job,
+        payload,
+        scratch_dir=scratch,
+        policy=policy,
+        limits=isolation.limits(),
+        timeout=isolation.timeout_seconds,
+    )
+    if result.findings:
+        raise IntegrityViolation(
+            f"integrity monitor fired during {condition.condition_id} seed {seed}: "
+            f"{result.findings}"
+        )
+    if not result.ok:
+        raise RuntimeError(
+            f"condition {condition.condition_id} seed {seed} did not complete under isolation: "
+            f"{result.error}"
+        )
+    return result.value
+
+
 def _job(payload: tuple) -> dict:
     """Worker entry point: run one (condition, seed) and return its record.
 
@@ -263,6 +350,7 @@ class Exp001Runner:
         adversarial_per_family: int | None = None,
         workers: int = 1,
         checkpoint_dir: Path | None = None,
+        isolation: JobIsolation | None = None,
     ) -> None:
         self.run_id = run_id
         self.seeds = tuple(seeds)
@@ -278,6 +366,7 @@ class Exp001Runner:
         )
         self.workers = max(1, workers)
         self.checkpoint_dir = checkpoint_dir
+        self.isolation = isolation or JobIsolation()
         self.budget = budget or SearchBudget(max_nodes=90_000, max_size=6)
         self.artifacts_dir = artifacts_dir or Path("artifacts") / run_id
         self.abstraction_count = abstraction_count
@@ -317,16 +406,38 @@ class Exp001Runner:
         }
 
     def _map_jobs(self, jobs: Sequence[tuple[Condition, int]]) -> list[dict]:
-        """Run `(condition, seed)` jobs, in parallel when `workers > 1`."""
+        """Run `(condition, seed)` jobs, in parallel when `workers > 1`.
+
+        With isolation on — the default — each job runs behind the boundary in
+        `bestsad.evaluator.isolation`: its own process, kernel-enforced limits, a cleared
+        environment, no inherited descriptors, and the audit hook denying the hidden assets.
+        `workers > 1` still uses a pool; the pool buys concurrency and the boundary buys
+        containment, and they are not substitutes for each other.
+        """
         checkpoint = str(self.checkpoint_dir) if self.checkpoint_dir else None
         payloads = [
             (condition, seed, self._sizing(), self.run_id, checkpoint)
             for condition, seed in jobs
         ]
+        target, work = _job, payloads
+        if self.isolation.enabled:
+            if not ISOLATION_AVAILABLE:
+                # Never fall back silently. Running unisolated while provenance records
+                # isolation would put a false statement in the run record, which is worse than
+                # refusing to run at all.
+                raise RuntimeError(
+                    "job isolation was requested but this platform provides no fork start "
+                    "method or POSIX rlimits; pass isolation=JobIsolation(enabled=False) to "
+                    "run without it, and the run record will say so"
+                )
+            scratch_root = self.artifacts_dir / "scratch"
+            scratch_root.mkdir(parents=True, exist_ok=True)
+            target = _isolated_job
+            work = [(p, self.isolation, str(scratch_root), checkpoint) for p in payloads]
         if self.workers == 1:
-            return [_job(p) for p in payloads]
+            return [target(item) for item in work]
         with ProcessPoolExecutor(max_workers=self.workers) as pool:
-            return list(pool.map(_job, payloads))
+            return list(pool.map(target, work))
 
     def _run_condition(
         self,
@@ -597,6 +708,11 @@ class Exp001Runner:
                 "discovery": discovery_notes,
                 "scaffolding": scaffolding_reports,
                 "compute_reconciliation": reconciliations,
+                # Travels with the result: which stages ran behind the candidate boundary and
+                # under what limits. A limit nobody can read is a confound nobody can check
+                # for, and "discovery was not isolated" is exactly the kind of thing that must
+                # be stated rather than inferred from source (spec §40.3).
+                "job_isolation": self.isolation.to_record(),
             },
         )
 

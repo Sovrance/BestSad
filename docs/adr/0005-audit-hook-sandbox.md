@@ -77,8 +77,8 @@ process with kernel-enforced limits applied *before* any candidate code runs:
 
 | Bullet from "What this is not" | State |
 |---|---|
-| "does not enforce CPU or memory limits" | **Built, unused.** `RLIMIT_CPU`, `RLIMIT_AS`, `RLIMIT_FSIZE`, `RLIMIT_CORE` — on the isolation path only, which nothing calls yet. |
-| "does not provide process isolation" | **Built, unused.** Separate process, cleared environment, cwd pinned to scratch, no inherited descriptors. |
+| "does not enforce CPU or memory limits" | **Closed for condition jobs.** `RLIMIT_CPU`, `RLIMIT_AS`, `RLIMIT_FSIZE`, `RLIMIT_CORE`, applied per job. Not for discovery. |
+| "does not provide process isolation" | **Closed for condition jobs.** Separate process, cleared environment, cwd pinned to scratch, no inherited descriptors. Not for discovery. |
 | "does not provide … a read-only base filesystem" | **Open in the run path.** The image provides it; the experiment runner does not yet execute inside the image. |
 | "`ctypes` and native code can bypass it" | **Open.** No seccomp allowlist. Docker's default profile is not one the program has declared. |
 | "`hidden_evaluator/` in the same checkout" | **Open.** Unchanged; ADR-0003's residual stands. |
@@ -108,7 +108,39 @@ the two properties that matter: no hidden assets inside, and it starts under `--
 --network none --cap-drop ALL`. A Dockerfile that is only ever read is documentation with a
 misleading filename.
 
-### The layer is not wired in — and an earlier draft of this ADR said it was
+### Wired in, 2026-08-24 (trigger (a) discharged, partly)
+
+`Exp001Runner._map_jobs` now routes every condition job through `run_isolated`. Three things
+made this more than a call swap, and each is worth recording:
+
+**The limits had to be re-sized.** `ResourceLimits`' defaults are tuned for candidate evaluation
+— 30 CPU-seconds — and a condition I job runs for a long time *by design*, since it is given the
+whole compute genome evolution consumed in D. Shipping the module defaults onto the experiment
+path would have killed every real job. `JobIsolation` carries loose limits meant to stop a
+runaway rather than to bound honest work, and writes them into the run's provenance.
+
+**Checkpoints are written outside scratch.** The audit hook denied that write, and the coarse
+fix — `allow_writes_outside_scratch` — would have given away the containment the restriction
+exists to provide. `SandboxPolicy` gained `writable_paths`, so the policy names the checkpoint
+directory and nothing else.
+
+**Failure had to become loud.** A job that trips a limit, or whose integrity monitor fires, now
+stops the run. Absorbing either into a missing row would be worse than not isolating at all: a
+dropped `(condition, seed)` cell does not average out, it silently reweights the comparison the
+whole study rests on.
+
+Verified against the property that actually matters: over a full S2 at fixture scale, every
+per-seed reproducibility digest — which covers every scientific quantity and no timing field —
+is identical isolated and unisolated. Isolation protects the run without touching the result.
+
+**Abstraction discovery is still not isolated.** `_discovery_job` returns `Primitive` objects
+whose expansions are K0 terms, and the boundary carries JSON only. Routing it through would
+require exactly the term serializer that function's own docstring warns about — "a silent
+mismatch there would change what condition D actually is" — and building that under time
+pressure, on the arm that defines the treatment, is the wrong trade. It is disclosed in
+provenance as an unisolated stage rather than left to be inferred from source.
+
+### The layer was not wired in — and an earlier draft of this ADR said it was
 
 Review of PR #4 caught the most important thing wrong with it: this amendment originally said
 candidate-side work "now runs" in a separate process. It does not. `run_isolated` has no
@@ -155,10 +187,9 @@ the first. Both facts belong in the record.
 
 The production requirement above is **not** met, and no claim ceiling moves:
 
-1. **The layer is not on the experiment path**, per the section above. Wiring `_map_jobs` through
-   `run_isolated` is real work — it changes how every job executes, interacts with checkpointing
-   and the process pool, and constrains job records to JSON — and it should be done deliberately
-   rather than as a same-day follow-on to discovering four defects in the boundary itself.
+1. **Abstraction discovery is still on the host**, per the section above, and EXP-001-DR was
+   produced before any of this existed. Wiring condition jobs changes nothing about a result
+   already recorded.
 2. The image exists and is CI-verified to build and start correctly. **No experiment has been run
    inside it.** EXP-001-DR ran on the host. Until a run's provenance records the image digest it
    executed under, the read-only-filesystem property is available rather than used.
@@ -178,8 +209,9 @@ routed through, but it changes no claim about any result already produced.
 
 ### Revisit trigger, restated
 
-Re-open when (a) `Exp001Runner` routes its jobs through `run_isolated`, (b) the runner executes
-inside the image and records its digest in run provenance, or (c) `hidden_evaluator/` is
-relocated out of the checkout. (a) is the first one that would let the residual narrow at all.
-All three, plus a declared seccomp profile, are what this ADR needs to move from Provisional to
-Accepted.
+~~(a) `Exp001Runner` routes its jobs through `run_isolated`~~ — **done for condition jobs,
+2026-08-24**; discovery remains, and needs a validated BSIR term round-trip first. Re-open when
+(b) the runner executes inside the image and records its digest in run provenance, or (c)
+`hidden_evaluator/` is relocated out of the checkout. (c) is now the binding constraint on the
+claim ceiling. All of these, plus a declared seccomp profile, are what this ADR needs to move
+from Provisional to Accepted.

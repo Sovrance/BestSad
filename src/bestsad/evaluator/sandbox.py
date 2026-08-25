@@ -77,12 +77,20 @@ class SandboxPolicy:
 
     scratch_dir: Path
     protected_paths: tuple[Path, ...] = ()
+    #: Directories outside scratch that this component may write to. Deliberately a list of
+    #: specific paths rather than a blanket permission: the experiment runner must write its
+    #: checkpoints somewhere durable, and widening the policy to "anywhere" to allow that would
+    #: give away the containment the scratch restriction exists to provide.
+    writable_paths: tuple[Path, ...] = ()
     allow_network: bool = False
     allow_subprocess: bool = False
     allow_writes_outside_scratch: bool = False
 
     def normalized_protected(self) -> tuple[str, ...]:
         return tuple(str(p.resolve()) for p in self.protected_paths)
+
+    def normalized_writable(self) -> tuple[str, ...]:
+        return tuple(str(p.resolve()) for p in self.writable_paths)
 
 
 _ACTIVE: list[tuple[SandboxPolicy, IntegrityMonitor]] = []
@@ -120,8 +128,10 @@ def _audit(event: str, args) -> None:
                 raise IntegrityViolation(f"hidden evaluation asset is not readable: {resolved}")
         if mode and any(flag in str(mode) for flag in ("w", "a", "+", "x")):
             if not policy.allow_writes_outside_scratch:
-                scratch = str(policy.scratch_dir.resolve())
-                if not resolved.startswith(scratch + os.sep) and resolved != scratch:
+                permitted = (str(policy.scratch_dir.resolve()),) + policy.normalized_writable()
+                if not any(
+                    resolved == root or resolved.startswith(root + os.sep) for root in permitted
+                ):
                     monitor.record("write_outside_scratch", resolved)
                     raise IntegrityViolation(f"write outside scratch denied: {resolved}")
 
