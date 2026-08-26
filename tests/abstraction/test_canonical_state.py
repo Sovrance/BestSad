@@ -190,3 +190,57 @@ class SchemaExtension(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PrimitivesCanHoldTheState(unittest.TestCase):
+    """A promotion result no `Primitive` can carry is a state the system computes and then
+    cannot store. `promote` returning CANONICAL therefore requires the registry to admit it."""
+
+    def test_registry_maturities_match_the_lifecycle_order(self):
+        from bestsad.genomes.registry import MATURITIES
+
+        self.assertEqual(MATURITIES, ORDER)
+
+    def test_a_primitive_can_be_constructed_at_canonical(self):
+        from bestsad.kernel import INT, app, const_int, var
+        from bestsad.genomes.registry import Primitive
+
+        primitive = Primitive(
+            primitive_id="prim:inc",
+            params=("n",),
+            expansion=app("add", var("n"), const_int(1)),
+            input_types=(INT,),
+            output_type=INT,
+            maturity="CANONICAL",
+        )
+        self.assertEqual(primitive.maturity, "CANONICAL")
+
+    def test_a_canonical_record_validates_against_the_sre_extension(self):
+        from bestsad.kernel import INT, app, const_int, var
+        from bestsad.genomes.registry import Primitive
+
+        record = Primitive(
+            primitive_id="prim:inc",
+            params=("n",),
+            expansion=app("add", var("n"), const_int(1)),
+            input_types=(INT,),
+            output_type=INT,
+            maturity="CANONICAL",
+        ).to_record("k0-v1.0.0")
+        record["semantic_signature"] = SIGNATURE
+        record["equivalence_verdict"] = "EQUIV_CANONICAL"
+        jsonschema.validate(record, json.loads(SRE_SCHEMA.read_text(encoding="utf-8")))
+
+    def test_an_unknown_maturity_is_still_rejected(self):
+        from bestsad.kernel import INT, app, const_int, var
+        from bestsad.genomes.registry import GenomeInvariantViolation, Primitive
+
+        with self.assertRaises(GenomeInvariantViolation):
+            Primitive(
+                primitive_id="prim:inc",
+                params=("n",),
+                expansion=app("add", var("n"), const_int(1)),
+                input_types=(INT,),
+                output_type=INT,
+                maturity="SUPERB",
+            )

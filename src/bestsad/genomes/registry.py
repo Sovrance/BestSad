@@ -21,7 +21,14 @@ from ..bsir.canonicalize import term_semantic_hash
 from ..kernel import Kernel, OpSig, Program, Term, Ty
 from ..kernel.types import parse_type
 
-MATURITIES = ("EXP", "OBS", "SPEC", "VER", "CORE")
+#: Maturity states a `Primitive` may carry. Kept in step with `abstraction.lifecycle.ORDER`,
+#: which is the definition; this is a literal rather than an import because `lifecycle` imports
+#: `Primitive` from here, and a test asserts the two agree so the duplication cannot drift.
+#:
+#: CANONICAL is new in SRE v0.1 (ADR 0017). It has to be admissible here as well as returnable
+#: from `promote`: a promotion result that no `Primitive` can hold is a state the system can
+#: compute and then not store.
+MATURITIES = ("EXP", "OBS", "SPEC", "VER", "CANONICAL", "CORE")
 
 
 class GenomeInvariantViolation(Exception):
@@ -72,7 +79,13 @@ class Primitive:
         return self.expansion.size()
 
     def to_record(self, kernel_version: str) -> dict:
-        """Serialize to `schemas/primitive_record.schema.json`."""
+        """Serialize to `schemas/primitive_record.schema.json`.
+
+        One exception, and it is deliberate: a record whose `maturity` is `CANONICAL` validates
+        against `schemas/sre/primitive-record-sre-v0.1.schema.json` instead. The delivered v0.2
+        schema is pinned by `MANIFEST_SHA256.txt` and is not edited, so the newer state lives in
+        an extension (ADR 0017). Every other state validates against both.
+        """
         return {
             "primitive_id": self.primitive_id,
             "semantic_id": self.semantic_id,

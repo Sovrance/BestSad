@@ -173,3 +173,83 @@ class WireForm(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ComputeIsMetered(unittest.TestCase):
+    """Codex review, P1: dynamic comparisons execute programs, and that compute must be
+    charged. Unmetered, it sits outside total experimental compute and breaks the compute
+    matching condition I depends on."""
+
+    def test_dynamic_comparison_charges_kernel_steps(self):
+        from bestsad.conditions import ComputeLedger
+
+        ledger = ComputeLedger(run_id="r", condition_id="c", seed=0)
+        a = prog(app("add", var("x"), const_int(1)))
+        b = prog(app("add", const_int(1), var("x")))
+        result = equivalent(a, b, CONTRACT, ledger=ledger)
+
+        self.assertEqual(result.verdict, "EQUIV_DYNAMIC")
+        self.assertGreater(ledger.kernel_steps, 0)
+        # Both sides run on every case.
+        self.assertEqual(ledger.verifier_steps, 2 * result.detail["cases"])
+
+    def test_a_counterexample_still_charges_the_steps_already_spent(self):
+        from bestsad.conditions import ComputeLedger
+
+        ledger = ComputeLedger(run_id="r", condition_id="c", seed=0)
+        a = prog(app("add", var("x"), const_int(1)))
+        b = prog(app("add", var("x"), const_int(2)))
+        result = equivalent(a, b, CONTRACT, ledger=ledger)
+
+        self.assertEqual(result.verdict, "NON_EQUIV")
+        self.assertGreater(ledger.kernel_steps, 0, "steps before a divergence are still spent")
+
+    def test_the_canonical_tier_executes_nothing_and_charges_nothing(self):
+        from bestsad.conditions import ComputeLedger
+
+        ledger = ComputeLedger(run_id="r", condition_id="c", seed=0)
+        a = prog(app("add", var("x"), const_int(1)))
+        self.assertEqual(equivalent(a, a, CONTRACT, ledger=ledger).verdict, "EQUIV_CANONICAL")
+        self.assertEqual(ledger.kernel_steps, 0)
+
+    def test_omitting_the_ledger_still_works(self):
+        a = prog(app("add", var("x"), const_int(1)))
+        b = prog(app("add", const_int(1), var("x")))
+        self.assertEqual(equivalent(a, b, CONTRACT).verdict, "EQUIV_DYNAMIC")
+
+
+class WireCarriesTheStrengthOfTheEvidence(unittest.TestCase):
+    """Codex review, P2: `scope.sampleSize` is a budget, not what ran."""
+
+    def test_executed_case_count_reaches_the_wire(self):
+        from bestsad import sre
+        from bestsad.kernel import BOOL
+
+        # One Bool parameter enumerates two cases against a default budget of 64.
+        a = Program((("b", BOOL),), app("and", var("b"), var("b")), BOOL)
+        b = Program((("b", BOOL),), app("or", var("b"), var("b")), BOOL)
+        result = equivalent(a, b, CONTRACT)
+        wire = result.to_wire()
+
+        self.assertEqual(result.verdict, "EQUIV_DYNAMIC")
+        self.assertEqual(wire["scope"]["sampleSize"], 64)
+        self.assertEqual(wire["scope"]["casesExecuted"], 2)
+        self.assertNotEqual(
+            wire["scope"]["casesExecuted"], wire["scope"]["sampleSize"],
+            "this fixture exists precisely because the two differ",
+        )
+        sre.validate("EquivalenceResult", wire)
+
+    def test_open_obligations_reach_the_wire(self):
+        from bestsad.bsir.equivalence import SYMBOLIC_OBLIGATION
+
+        a = prog(app("add", var("x"), const_int(1)))
+        b = prog(app("add", const_int(1), var("x")))
+        wire = equivalent(a, b, CONTRACT).to_wire()
+        self.assertIn(SYMBOLIC_OBLIGATION, wire["scope"]["unresolvedObligations"])
+
+    def test_a_canonical_verdict_advertises_no_sampling(self):
+        a = prog(app("add", var("x"), const_int(1)))
+        wire = equivalent(a, a, CONTRACT).to_wire()
+        self.assertNotIn("casesExecuted", wire["scope"])
+        self.assertNotIn("unresolvedObligations", wire["scope"])

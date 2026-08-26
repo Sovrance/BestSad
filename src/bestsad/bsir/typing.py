@@ -15,6 +15,13 @@ one node that is `Bool` at one occurrence and `Int` at the others.
 This module refuses to guess. A node is typed when every occurrence agrees; when they disagree
 the node is left untyped and listed in `TypingReport.ambiguous` with all observed types. See
 ADR 0016 for why picking a winner and why splitting the node were both rejected.
+
+Getting the per-occurrence types requires observing K0's inference, and AGENTS.md invariant 1
+protects that code. `_RecordingTypechecker` below subclasses `Typechecker` and overrides
+`infer`, which is enough because every recursive call inside the kernel already goes through
+`self.infer` -- so a subclass sees each subterm without one line of `src/bestsad/kernel`
+changing. ADR 0016 records why this replaced an earlier version that added a hook to the
+kernel itself.
 """
 
 from __future__ import annotations
@@ -29,6 +36,36 @@ from ..kernel.typecheck import TypeError_, Typechecker
 from ..kernel.types import Ty
 from .graph import _node_id
 from .nodes import Graph, Node
+
+
+class _RecordingTypechecker(Typechecker):
+    """`Typechecker` that remembers the type inferred at every subterm occurrence.
+
+    Nothing in the kernel changes. `Typechecker.infer` recurses through `self.infer`, so
+    overriding it here intercepts every occurrence; the unifier is handed in as an argument,
+    so the recorded types can be resolved once inference has finished.
+
+    Resolution is deferred on purpose. A type observed mid-inference may still be an unresolved
+    type variable that a later constraint pins down, so reading it at call time would report
+    `T` where the answer is `Int`.
+    """
+
+    def __init__(self, primitives: Mapping[str, OpSig] | None = None) -> None:
+        super().__init__(primitives)
+        self._seen: list[tuple[Term, Ty]] = []
+        self._unifier = None
+
+    def infer(self, term: Term, env, u, *, in_hof_operand: bool) -> Ty:
+        self._unifier = u
+        ty = super().infer(term, env, u, in_hof_operand=in_hof_operand)
+        self._seen.append((term, ty))
+        return ty
+
+    def resolved_occurrences(self) -> list[tuple[Term, Ty]]:
+        """Every recorded occurrence, with its type resolved against the final substitution."""
+        if self._unifier is None:
+            return []
+        return [(term, self._unifier.resolve(ty)) for term, ty in self._seen]
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,17 +133,17 @@ def type_graph(
     body = kernel.expand(program.body) if kernel is not None else program.body
     typed_program = Program(params=program.params, body=body, result_type=program.result_type)
 
-    observed: dict[str, dict[str, Ty]] = {}
-
-    def observe(term: Term, ty: Ty) -> None:
-        observed.setdefault(_node_id(term), {})[str(ty)] = ty
-
+    checker = _RecordingTypechecker(primitives)
     try:
-        Typechecker(primitives).check_program(typed_program, observe)
+        checker.check_program(typed_program)
     except TypeError_ as exc:
         return TypingReport(
             typed_nodes=0, total_nodes=len(graph.nodes), ambiguous={}, failure=str(exc)
         )
+
+    observed: dict[str, dict[str, Ty]] = {}
+    for term, ty in checker.resolved_occurrences():
+        observed.setdefault(_node_id(term), {})[str(ty)] = ty
 
     ambiguous: dict[str, tuple[str, ...]] = {}
     typed = 0

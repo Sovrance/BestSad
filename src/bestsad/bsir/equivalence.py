@@ -94,11 +94,20 @@ class EquivalenceResult:
         return self.verdict in ("EQUIV_CANONICAL", "EQUIV_SYMBOLIC")
 
     def to_wire(self) -> dict[str, Any]:
+        # `scope.sampleSize` is the contract's *budget*, not what ran. The enumerated domain
+        # is often smaller -- a single Bool parameter yields two cases against a budget of 64
+        # -- so a consumer reading only the scope would badly overestimate the evidence. The
+        # executed count and any open obligations therefore travel with the verdict.
+        scope = dict(self.contract.to_wire())
+        if "cases" in self.detail:
+            scope["casesExecuted"] = self.detail["cases"]
+        if self.unresolved:
+            scope["unresolvedObligations"] = list(self.unresolved)
         payload: dict[str, Any] = {
             "left": as_content_id(self.left_semantic_root),
             "right": as_content_id(self.right_semantic_root),
             "verdict": self.verdict,
-            "scope": self.contract.to_wire(),
+            "scope": scope,
             "evidenceRefs": list(self.evidence_refs),
         }
         if self.assumptions:
@@ -188,6 +197,7 @@ def equivalent(
     kernel: Kernel | None = None,
     require_proof: bool = False,
     domain: Sequence[tuple[Any, ...]] | None = None,
+    ledger: Any | None = None,
 ) -> EquivalenceResult:
     """Decide equivalence at the strongest tier the available evidence supports.
 
@@ -195,6 +205,12 @@ def equivalent(
     the caller did not demand a proof, dynamic sampling. A `NON_EQUIV` found during sampling
     always wins over `UNKNOWN`, because a witness is a fact regardless of what tier was being
     attempted.
+
+    `ledger`, when given a `conditions.compute.ComputeLedger`, is charged for the kernel steps
+    this verifier actually spends. The dynamic tier executes *both* programs on every sampled
+    case, which is real compute: unmetered, it would sit outside total experimental compute and
+    quietly break the compute matching that condition I depends on (AGENTS.md, definition of
+    done). The canonical tier costs no kernel steps and charges nothing.
     """
     left_root = semantic_hash(left, kernel)
     right_root = semantic_hash(right, kernel)
@@ -236,10 +252,15 @@ def equivalent(
         )
 
     k = kernel if kernel is not None else Kernel()
+    spent = 0
+    executions = 0
     for inputs in cases:
         lr = k.execute(left, inputs, fuel=contract.max_steps)
         rr = k.execute(right, inputs, fuel=contract.max_steps)
+        spent += lr.fuel_used + rr.fuel_used
+        executions += 2
         if not lr.same_outcome(rr):
+            _charge(ledger, spent, executions)
             kind = (
                 "DIVERGENT_TRAP"
                 if (lr.trap is not None or rr.trap is not None)
@@ -254,16 +275,33 @@ def equivalent(
             return result(
                 "NON_EQUIV",
                 counterexample=witness,
-                detail={"cases_tried": cases.index(inputs) + 1},
+                detail={"cases": cases.index(inputs) + 1, "kernel_steps": spent},
             )
 
+    _charge(ledger, spent, executions)
     return result(
         "EQUIV_DYNAMIC",
         unresolved=(SYMBOLIC_OBLIGATION,),
         detail={
             "cases": len(cases),
+            "kernel_steps": spent,
             "basis": "no divergence over the declared domain; evidence, not proof",
         },
+    )
+
+
+def _charge(ledger: Any | None, kernel_steps: int, executions: int) -> None:
+    """Charge a dynamic comparison's kernel usage to a compute ledger, when one is supplied.
+
+    Charged on every exit from the sampling loop, including the early one a counterexample
+    takes -- steps spent before a divergence is found are spent all the same.
+    """
+    if ledger is None:
+        return
+    ledger.add(
+        kernel_steps=kernel_steps,
+        verifier_steps=executions,
+        candidate_evaluations=executions,
     )
 
 

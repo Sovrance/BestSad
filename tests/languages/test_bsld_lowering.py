@@ -334,3 +334,67 @@ class SourceIsNotSemantics(unittest.TestCase):
         self.assertEqual(typecheck(lowered.program), INT)
         self.assertEqual(len(to_graph(lowered.program).nodes), 3)
         self.assertEqual(semantic_hash(lowered.program), lowered.semantic_root)
+
+
+class EvidenceMustBeAboutThisLowering(unittest.TestCase):
+    """Codex review, P1: `discharge_with` accepted any equivalence verdict.
+
+    Without a binding check the obligation mechanism is decorative — a trivially true result
+    about two unrelated programs would certify a lowering known to be wrong.
+    """
+
+    def _lying(self):
+        return descriptor(
+            {
+                "inc": {
+                    "operands": ["Int"],
+                    "result": "Int",
+                    "effects": ["Pure"],
+                    "lowers_to": {
+                        "op": "sub",
+                        "args": ["$0", {"op": "const_int", "attrs": {"value": 1}}],
+                    },
+                }
+            }
+        )
+
+    def _source(self):
+        return SourceProgram((("x", INT),), s("inc", s("var", name="x")), INT)
+
+    def _reference(self):
+        return Program((("x", INT),), app("add", var("x"), const_int(1)), INT)
+
+    def test_unrelated_evidence_cannot_discharge_a_false_lowering(self):
+        lowered = lower(self._source(), self._lying())
+        # Trivially true, and about two programs that have nothing to do with the descriptor.
+        unrelated = equivalent(self._reference(), self._reference(), CONTRACT)
+        self.assertEqual(unrelated.verdict, "EQUIV_CANONICAL")
+        self.assertNotIn(lowered.semantic_root,
+                         (unrelated.left_semantic_root, unrelated.right_semantic_root))
+
+        with self.assertRaises(LoweringError) as ctx:
+            lowered.discharge_with(LOWERING_EQUIVALENCE, unrelated, require_proof=True)
+        self.assertIn("different program", str(ctx.exception))
+        self.assertFalse(lowered.is_fully_discharged)
+
+    def test_evidence_naming_this_lowering_on_either_side_is_accepted(self):
+        honest = descriptor(
+            {
+                "inc": {
+                    "operands": ["Int"],
+                    "result": "Int",
+                    "effects": ["Pure"],
+                    "lowers_to": {
+                        "op": "add",
+                        "args": ["$0", {"op": "const_int", "attrs": {"value": 1}}],
+                    },
+                }
+            }
+        )
+        lowered = lower(self._source(), honest)
+        evidence = check_lowering(honest, "inc", self._reference(), self._source(), CONTRACT)
+        self.assertIn(lowered.semantic_root,
+                      (evidence.left_semantic_root, evidence.right_semantic_root))
+        self.assertTrue(
+            lowered.discharge_with(LOWERING_EQUIVALENCE, evidence).is_fully_discharged
+        )

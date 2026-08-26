@@ -62,9 +62,21 @@ class LoweringResult:
     ) -> "LoweringResult":
         """Discharge `obligation` using an equivalence result, or refuse to.
 
-        Refuses when the evidence is not an equivalence verdict at all, and refuses a sampled
-        verdict when the caller asked for a proof. Returning an unchanged result rather than
-        raising would let a caller believe an obligation was met, so this raises.
+        Three independent checks, and the third is the one that matters most:
+
+        1. the evidence must be an equivalence verdict at all;
+        2. it must be a proof, when the caller asked for one;
+        3. **it must be about this lowering** -- one of its two semantic roots has to be the
+           root this lowering produced.
+
+        Without (3) the whole obligation mechanism is decorative. Any `EQUIV_CANONICAL` result
+        would discharge any obligation, so `equivalent(reference, reference, contract)` --
+        trivially true and about two programs that have nothing to do with the descriptor --
+        would certify a lowering known to be wrong. Evidence that is not *about* the thing it
+        certifies is not evidence.
+
+        Raising rather than returning unchanged is deliberate: a caller that believes an
+        obligation was met is worse off than one that gets an error.
         """
         if obligation not in self.open_obligations:
             raise LoweringError(f"{obligation!r} is not open on this lowering")
@@ -76,6 +88,13 @@ class LoweringResult:
             raise LoweringError(
                 f"cannot discharge {obligation!r} with sampled evidence "
                 f"({evidence.verdict}); a proof was required"
+            )
+        roots = (evidence.left_semantic_root, evidence.right_semantic_root)
+        if self.semantic_root not in roots:
+            raise LoweringError(
+                f"cannot discharge {obligation!r} with evidence about a different program: "
+                f"this lowering is {self.semantic_root}, the evidence compares "
+                f"{roots[0]} and {roots[1]}"
             )
         return LoweringResult(
             program=self.program,

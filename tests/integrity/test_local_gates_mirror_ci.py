@@ -94,6 +94,46 @@ class LocalRunnerMirrorsCI(unittest.TestCase):
             "the unavailable branch must report INCOMPLETE before any OK result",
         )
 
+    def test_every_docker_command_in_the_workflow_is_mirrored(self):
+        """The gap a name-only mirror test misses.
+
+        The first version of the local gate ran `docker build` and nothing else, so it would
+        have reported PASS having verified that the image assembles and none of what the job
+        actually asserts: no hidden assets, uid 10001, and a read-only start with no network
+        and no capabilities. Matching job *names* did not catch that, because the name matched
+        perfectly. Matching the commands does.
+        """
+        script = (REPO_ROOT / "scripts" / "evaluator_image_gate.sh").read_text(encoding="utf-8")
+        workflow = _workflow_text()
+
+        # The distinguishing fragment of each `docker` invocation in the evaluator-image job.
+        required = [
+            "docker build -f src/bestsad/evaluator/Dockerfile",
+            'name "hidden_evaluator*"',          # the hidden-asset search
+            "canonicalize.py",                   # its positive control
+            "--entrypoint id bestsad-evaluator:ci -u",  # the uid check
+            "--network none",
+            "--read-only",
+            "--cap-drop ALL",
+            "--security-opt no-new-privileges",
+        ]
+        for fragment in required:
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, workflow, "fragment is not in ci.yml; update this test")
+                self.assertIn(
+                    fragment,
+                    script,
+                    f"ci.yml asserts {fragment!r} but the local gate never does",
+                )
+
+    def test_the_image_gate_checks_more_than_the_build(self):
+        script = (REPO_ROOT / "scripts" / "evaluator_image_gate.sh").read_text(encoding="utf-8")
+        self.assertGreaterEqual(
+            script.count("docker run"), 3,
+            "the image gate must run the built image, not merely build it",
+        )
+        self.assertIn("set -euo pipefail", script, "a failing step must fail the gate")
+
     def test_tooling_is_probed_for_usability_not_mere_presence(self):
         """`which(docker)` succeeds on a machine whose daemon is down, which turned a gate
         that could not run into a gate that appeared to fail."""

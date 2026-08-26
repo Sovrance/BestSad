@@ -91,14 +91,13 @@ GATES: tuple[Gate, ...] = (
     Gate(
         "evaluator-image",
         "evaluator image (spec §27.1 deployment half)",
-        ["docker", "build", "-f", "src/bestsad/evaluator/Dockerfile",
-         "-t", "bestsad-evaluator:ci", "."],
+        ["bash", str(REPO / "scripts" / "evaluator_image_gate.sh")],
         probe=("docker", ["docker", "info"]),
         note=(
-            "builds the evaluator image and probes it for hidden evaluation assets. The probe "
-            "carries its own positive control, so it cannot pass by failing to search -- which "
-            "is also why nothing here approximates it by reading the Dockerfile. Reading a "
-            "Dockerfile does not tell you what the built image contains."
+            "builds the evaluator image and then asserts what it does not contain and cannot "
+            "do: no hidden evaluation assets, uid 10001, and a read-only start with no network "
+            "and no capabilities. Building alone proves none of that -- the image's value is "
+            "in the three checks after the build, so the gate runs all four steps or none."
         ),
     ),
 )
