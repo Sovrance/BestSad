@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovrance.ai/sre/v0.1/analyzer-result.schema.json",
+  "title": "SRE AnalyzerResult",
+  "description": "Append-only result emitted by one analysis pass (design P2). An analyzer emits facts; it never overwrites a prior result. Coverage gaps are stated, not omitted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "producer",
+    "inputs",
+    "facts",
+    "coverage"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "producer": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "coverage": {
+      "description": "What the pass did and did not reach. An empty object asserts nothing, which is different from asserting full coverage.",
+      "type": "object"
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}

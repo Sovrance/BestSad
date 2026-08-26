@@ -39,7 +39,7 @@ from .roots import (
 #: The assurance ladder from §5, and the spec §11 maturity it corresponds to.
 #:
 #: The two ladders were designed separately and do not have the same joints. Rather than replace
-#: spec §11's EXP/OBS/SPEC/VER/CORE — which is normative, and which the primitive record schema
+#: spec §11's EXP/OBS/SPEC/VER/CANONICAL/CORE — which is normative, and which the primitive record schema
 #: encodes — the assurance states map onto it. The mapping is deliberately *not* a bijection:
 #: assurance distinguishes "semantics verified" from "experimentally supported", which spec §11
 #: rolls into VER, and that distinction is the point of the whole protocol.
@@ -57,6 +57,11 @@ MATURITY_TO_ASSURANCE: dict[str, str] = {
     "OBS": "CANDIDATE",
     "SPEC": "SEMANTICS_VERIFIED",
     "VER": "SEMANTICS_VERIFIED",
+    # CANONICAL is the last state before CORE on both ladders, so it lands on CORE_ELIGIBLE.
+    # It is *not* CORE: a proved canonical identity says the primitive and its expansion are
+    # one semantic object, which is a precondition for a kernel change and not a licence for
+    # one (SRE v0.1, ADR 0017).
+    "CANONICAL": "CORE_ELIGIBLE",
     "CORE": "CORE",
 }
 
@@ -65,7 +70,7 @@ ASSURANCE_TO_MATURITY: dict[str, str] = {
     "CANDIDATE": "EXP",
     "SEMANTICS_VERIFIED": "VER",
     "EXPERIMENTALLY_SUPPORTED": "VER",
-    "CORE_ELIGIBLE": "VER",
+    "CORE_ELIGIBLE": "CANONICAL",
     "CORE": "CORE",
 }
 

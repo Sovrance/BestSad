@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovrance.ai/sre/v0.1/primitive-record-sre.schema.json",
+  "title": "Bestsad Primitive Record, SRE v0.1 extension",
+  "description": "Extends the delivered v0.2 primitive record with the CANONICAL maturity state and the two fields that license it. The delivered schemas/primitive_record.schema.json is pinned in MANIFEST_SHA256.txt and is NOT edited (CONTRIBUTING.md, spec §31.1); a record using CANONICAL validates against this schema instead. See ADR 0017.",
+  "type": "object",
+  "required": [
+    "maturity"
+  ],
+  "properties": {
+    "maturity": {
+      "enum": [
+        "EXP",
+        "OBS",
+        "SPEC",
+        "VER",
+        "CANONICAL",
+        "CORE"
+      ],
+      "description": "The v0.2 states plus CANONICAL, which sits between VER and CORE."
+    },
+    "semantic_signature": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Recovered semantic signature this primitive's identity is pinned to. Bare 64-character hex, matching BestSad's native digest convention (ADR 0015)."
+    },
+    "equivalence_verdict": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "EQUIV_CANONICAL",
+        "EQUIV_SYMBOLIC",
+        "EQUIV_DYNAMIC",
+        "NON_EQUIV",
+        "UNKNOWN",
+        null
+      ],
+      "description": "Tier of the evidence binding the signature to the primitive's K0 expansion. Only EQUIV_CANONICAL licenses the CANONICAL maturity state."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "maturity": {
+            "const": "CANONICAL"
+          }
+        },
+        "required": [
+          "maturity"
+        ]
+      },
+      "then": {
+        "required": [
+          "semantic_signature",
+          "equivalence_verdict"
+        ],
+        "properties": {
+          "semantic_signature": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "equivalence_verdict": {
+            "const": "EQUIV_CANONICAL"
+          }
+        },
+        "description": "CANONICAL is unreachable without a canonical-tier proof. The schema enforces this independently of the promotion code, so a hand-written record cannot claim the state either."
+      }
+    }
+  ]
+}

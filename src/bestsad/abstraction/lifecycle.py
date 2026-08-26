@@ -1,8 +1,20 @@
 """Primitive lifecycle and promotion evidence (spec §11.1, §11.2).
 
-Maturity states are EXP → OBS → SPEC → VER → CORE. Promotion requires evidence, and **CORE is
-never automatic**: a kernel change invalidates every controlled comparison, so it requires a new
-research phase and explicit human review (spec §11.2). `promote` refuses to return CORE at all.
+Maturity states are EXP → OBS → SPEC → VER → CANONICAL → CORE. Promotion requires evidence, and
+**CORE is never automatic**: a kernel change invalidates every controlled comparison, so it
+requires a new research phase and explicit human review (spec §11.2). `promote` refuses to
+return CORE at all.
+
+CANONICAL is new in SRE v0.1 (design §4, §7.4). It sits between VER and CORE and means
+something narrower than either: the primitive's identity has been pinned to a recovered
+semantic signature, and that signature has been *proved* equivalent to its K0 expansion.
+
+The word "proved" is doing the work. A primitive reaches CANONICAL only on a canonical-tier
+equivalence verdict — identical normalized BSIR. Sampled agreement (`EQUIV_DYNAMIC`) is
+explicitly not enough, however many cases it covers, because CANONICAL is the state that
+licenses treating the primitive and its expansion as one semantic object. Accepting sampled
+evidence there would let a primitive that merely happens to agree on the tested domain become
+interchangeable with its expansion everywhere.
 """
 
 from __future__ import annotations
@@ -12,7 +24,10 @@ from typing import Mapping, Sequence
 
 from ..genomes.registry import Primitive
 
-ORDER = ("EXP", "OBS", "SPEC", "VER", "CORE")
+ORDER = ("EXP", "OBS", "SPEC", "VER", "CANONICAL", "CORE")
+
+#: The only equivalence verdict that licenses CANONICAL. See the module docstring.
+CANONICAL_EVIDENCE_VERDICT = "EQUIV_CANONICAL"
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +51,19 @@ class PromotionEvidence:
     runtime_benefit: float = 0.0
     alias_collisions: int = 0
     adversarial_incidents: int = 0
+    semantic_signature: str | None = None
+    equivalence_verdict: str | None = None
+
+    @property
+    def has_canonical_identity(self) -> bool:
+        """True when a recovered signature is backed by a canonical-tier equivalence proof.
+
+        Both halves are required. A signature without a verdict is an unverified claim about
+        identity; a verdict without a signature has nothing to attach itself to.
+        """
+        return bool(self.semantic_signature) and (
+            self.equivalence_verdict == CANONICAL_EVIDENCE_VERDICT
+        )
 
     def to_record(self) -> dict:
         return {
@@ -50,6 +78,8 @@ class PromotionEvidence:
             "runtime_benefit": self.runtime_benefit,
             "alias_collisions": self.alias_collisions,
             "adversarial_incidents": self.adversarial_incidents,
+            "semantic_signature": self.semantic_signature,
+            "equivalence_verdict": self.equivalence_verdict,
         }
 
 
@@ -62,6 +92,10 @@ def promote(primitive: Primitive, evidence: PromotionEvidence) -> tuple[str, str
 
     Never returns CORE. Automated search may *propose* a CORE candidate, but promoting one is a
     kernel change, and a kernel change starts a new experiment lineage (spec §8.4, §11.2).
+
+    May return CANONICAL, but only on a canonical-tier equivalence proof (SRE v0.1). That is a
+    statement about semantic identity, which is checkable, rather than about research
+    readiness, which is not — which is why it can be automated while CORE cannot.
     """
     if evidence.adversarial_incidents > 0:
         return "EXP", "adversarial incidents recorded; held at EXP pending inspection"
@@ -88,6 +122,20 @@ def promote(primitive: Primitive, evidence: PromotionEvidence) -> tuple[str, str
 
     if evidence.verification_cost <= 0:
         return "SPEC", "specified; no verification evidence recorded yet"
+
+    if evidence.has_canonical_identity:
+        return (
+            "CANONICAL",
+            "verified, and its recovered semantic signature is proved equivalent to its K0 "
+            "expansion at the canonical tier",
+        )
+
+    if evidence.semantic_signature and evidence.equivalence_verdict:
+        return (
+            "VER",
+            f"verified; a semantic signature is recorded but its equivalence evidence is "
+            f"{evidence.equivalence_verdict}, and CANONICAL requires a canonical-tier proof",
+        )
 
     return "VER", "reused across families, positive semantic gain, verification evidence present"
 
