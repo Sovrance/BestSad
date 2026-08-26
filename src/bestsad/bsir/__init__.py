@@ -12,8 +12,18 @@ from .canonicalize import (
     structural_hash,
     term_semantic_hash,
 )
+from .diff import SemanticDiff, diff
+from .equivalence import (
+    EquivalenceContract,
+    EquivalenceResult,
+    canonical_equivalent,
+    enumerate_domain,
+    equivalent,
+)
 from .graph import VerificationReport, from_graph, to_graph, verify
+from .levels import BSIRLevel, LevelAnnotation, annotate, infer_level
 from .nodes import Graph, MutationRegion, Node
+from .typing import TypingReport, type_graph, typed_graph
 from .projections import (
     CompactProjection,
     GraphProjection,
@@ -27,26 +37,40 @@ from .projections import (
 )
 
 __all__ = [
+    "BSIRLevel",
     "CompactProjection",
+    "EquivalenceContract",
+    "EquivalenceResult",
     "Graph",
     "GraphProjection",
     "HumanProjection",
+    "LevelAnnotation",
     "MutationRegion",
     "Node",
     "PROJECTIONS",
     "Projection",
     "SExprProjection",
+    "SemanticDiff",
+    "TypingReport",
     "VerificationReport",
     "alpha_normalize",
+    "annotate",
+    "canonical_equivalent",
     "canonical_program",
     "canonical_serialization",
+    "diff",
+    "enumerate_domain",
+    "equivalent",
     "from_graph",
     "get_projection",
+    "infer_level",
     "semantic_hash",
     "structural_hash",
     "term_semantic_hash",
     "to_graph",
     "token_count",
     "tokenize",
+    "type_graph",
+    "typed_graph",
     "verify",
 ]

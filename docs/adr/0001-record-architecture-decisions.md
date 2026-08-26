@@ -57,3 +57,4 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0013 | BSIR is canonical semantics; projections are never authoritative | Accepted |
 | 0014 | BSLD is declarative and its lowering is evidence-bound | Accepted |
 | 0015 | SRE wire schemas keep cross-repo conventions, not BestSad-native ones | Accepted |
+| 0016 | Read-only typechecker observer hook; disagreeing node types are recorded as ambiguity | Accepted |

@@ -11,7 +11,7 @@ evaluation (spec §9.6, validity envelope).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from .ops import HIGHER_ORDER_OPS, OPS_BY_NAME, OpSig
 from .terms import Program, Term
@@ -106,14 +106,33 @@ class Typechecker:
             return self.primitives[op]
         raise TypeError_(f"unknown operation {op!r}")
 
-    def check_program(self, program: Program) -> Ty:
+    def check_program(
+        self,
+        program: Program,
+        observe: Callable[[Term, Ty], None] | None = None,
+    ) -> Ty:
+        """Infer the program's type.
+
+        `observe`, when given, is called once per subterm occurrence with that occurrence's
+        **fully resolved** type, after inference has finished. It is a read-only hook: it
+        cannot influence unification, and with `observe=None` this method is byte-identical to
+        the pre-hook implementation. See ADR 0016.
+
+        Resolution is deferred to the end on purpose. A type recorded mid-inference may still
+        be an unresolved type variable that a later constraint pins down, so observing at call
+        time would report `T` where the answer is `Int`.
+        """
         env = dict(program.params)
         u = _Unifier({})
-        ty = self.infer(program.body, env, u, in_hof_operand=False)
+        seen: list[tuple[Term, Ty]] | None = [] if observe is not None else None
+        ty = self.infer(program.body, env, u, in_hof_operand=False, _seen=seen)
         ty = u.resolve(ty)
         if program.result_type is not None:
             u.unify(ty, program.result_type)
             ty = u.resolve(program.result_type)
+        if observe is not None and seen is not None:
+            for term, recorded in seen:
+                observe(term, u.resolve(recorded))
         return ty
 
     def infer(
@@ -123,6 +142,28 @@ class Typechecker:
         u: _Unifier,
         *,
         in_hof_operand: bool,
+        _seen: list[tuple[Term, Ty]] | None = None,
+    ) -> Ty:
+        """Infer the type of `term`, optionally recording every occurrence visited.
+
+        `_seen`, when a list, accumulates `(occurrence, type)` pairs. It is append-only and is
+        never read back during inference, so it cannot affect what is inferred (ADR 0016). The
+        recorded types may still contain unresolved type variables; `check_program` resolves
+        them once inference has finished.
+        """
+        ty = self._infer(term, env, u, in_hof_operand=in_hof_operand, _seen=_seen)
+        if _seen is not None:
+            _seen.append((term, ty))
+        return ty
+
+    def _infer(
+        self,
+        term: Term,
+        env: Mapping[str, Ty],
+        u: _Unifier,
+        *,
+        in_hof_operand: bool,
+        _seen: list[tuple[Term, Ty]] | None = None,
     ) -> Ty:
         op = term.op
 
@@ -160,7 +201,7 @@ class Typechecker:
             inner = dict(env)
             for name, ty in params:
                 inner[name] = ty
-            body_ty = self.infer(term.args[0], inner, u, in_hof_operand=False)
+            body_ty = self.infer(term.args[0], inner, u, in_hof_operand=False, _seen=_seen)
             return TFun(tuple(t for _, t in params), body_ty)
 
         sig = self.signature(op)
@@ -183,7 +224,7 @@ class Typechecker:
                 raise TypeError_(
                     f"{op} operand 0 must be a `lam`; K0 has no first-class function values"
                 )
-            got = self.infer(arg, env, u, in_hof_operand=operand_is_fun)
+            got = self.infer(arg, env, u, in_hof_operand=operand_is_fun, _seen=_seen)
             u.unify(want, got)
 
         return u.resolve(ret)
