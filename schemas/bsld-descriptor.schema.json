@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Semantic Language Description (BSLD) v0.1",
+  "description": "Declarative description of an evolved language and its lowering into BSIR (design §7.2). Data, never code: a descriptor names operations and lowering templates, and carries no control flow. Self-modifying descriptor semantics are out of scope for v0.1 (ADR 0014).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "language_id",
+    "version",
+    "operations"
+  ],
+  "properties": {
+    "language_id": {
+      "type": "string",
+      "pattern": "^lang:sha256:[a-f0-9]{64}$",
+      "description": "Content address of the descriptor, excluding this field."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "surface": {
+      "type": "object",
+      "description": "Optional, and deliberately non-authoritative (ADR 0013). A descriptor with no surface section is still a complete descriptor.",
+      "additionalProperties": true
+    },
+    "operations": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operands",
+          "result",
+          "effects",
+          "lowers_to"
+        ],
+        "properties": {
+          "operands": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "result": {
+            "type": "string"
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "Pure",
+                "Trap"
+              ]
+            }
+          },
+          "lowers_to": {
+            "$ref": "#/$defs/template"
+          },
+          "proof_obligations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "proof_obligations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op"
+      ],
+      "properties": {
+        "op": {
+          "type": "string",
+          "description": "A K0 operation name, or a nested template's operation."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^\\$[0-9]+$",
+                "description": "Positional reference to the source operation's operand."
+              },
+              {
+                "$ref": "#/$defs/template"
+              }
+            ]
+          }
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}
