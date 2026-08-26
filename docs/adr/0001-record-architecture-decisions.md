@@ -59,3 +59,4 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0015 | SRE wire schemas keep cross-repo conventions, not BestSad-native ones | Accepted |
 | 0016 | Read-only typechecker observer hook; disagreeing node types are recorded as ambiguity | Accepted |
 | 0017 | CANONICAL maturity state, added by schema extension rather than by editing the delivered package | Accepted |
+| 0018 | CI runners are unavailable; gates run locally, and the loss is stated | Accepted |
