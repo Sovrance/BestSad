@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovrance.ai/sre/v0.1/equivalence-result.schema.json",
+  "title": "SRE EquivalenceResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "left",
+    "right",
+    "verdict",
+    "scope",
+    "evidenceRefs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "left": {
+      "type": "string"
+    },
+    "right": {
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "EQUIV_CANONICAL",
+        "EQUIV_SYMBOLIC",
+        "EQUIV_DYNAMIC",
+        "NON_EQUIV",
+        "UNKNOWN"
+      ]
+    },
+    "scope": {
+      "type": "object"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "counterexampleRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

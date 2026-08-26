@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovrance.ai/sre/v0.1/counterexample.schema.json",
+  "title": "SRE Counterexample",
+  "description": "A concrete witness showing semantic, policy, or behavioural non-equivalence (design P5). A NON_EQUIV verdict without a witness is a claim; with one it is a demonstration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "witness"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "kind": {
+      "enum": [
+        "DIVERGENT_RESULT",
+        "DIVERGENT_TRAP",
+        "DIVERGENT_EFFECT",
+        "TYPE_MISMATCH"
+      ]
+    },
+    "witness": {
+      "description": "The distinguishing input, rendered canonically.",
+      "type": "object"
+    },
+    "leftOutcome": {
+      "type": "object"
+    },
+    "rightOutcome": {
+      "type": "object"
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "detail": {
+      "type": "object"
+    }
+  }
+}

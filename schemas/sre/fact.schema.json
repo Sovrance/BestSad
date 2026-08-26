@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sovrance.ai/sre/v0.1/fact.schema.json",
+  "title": "SRE Fact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "predicate",
+    "status",
+    "producer",
+    "inputs",
+    "assumptions"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "predicate": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "SUPPORTED",
+        "CONTRADICTED",
+        "UNKNOWN",
+        "AMBIGUOUS",
+        "INDETERMINATE"
+      ]
+    },
+    "producer": {
+      "type": "object",
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "detail": {
+      "type": "object"
+    }
+  }
+}

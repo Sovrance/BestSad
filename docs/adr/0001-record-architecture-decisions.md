@@ -52,3 +52,8 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0008 | K0 v1.0.0 semantics: bounded integers, fuel, and total operations | Accepted |
 | 0009 | Reconciling the assurance lifecycle with spec §11 maturity | Accepted |
 | 0010 | One promotion predicate, consumed by the report gate | Accepted |
+| 0011 | BSIR and SCIR remain separate IRs | Accepted |
+| 0012 | SRE-Core is language-native libraries against shared schemas, not a service | Accepted |
+| 0013 | BSIR is canonical semantics; projections are never authoritative | Accepted |
+| 0014 | BSLD is declarative and its lowering is evidence-bound | Accepted |
+| 0015 | SRE wire schemas keep cross-repo conventions, not BestSad-native ones | Accepted |
