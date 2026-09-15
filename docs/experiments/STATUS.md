@@ -1,6 +1,6 @@
 # Implementation status against `IMPLEMENTATION_PLAN_v0.2.md`
 
-Last updated: 2026-08-23.
+Last updated: 2026-09-15.
 
 ## Complete, with acceptance tests passing
 
@@ -50,6 +50,59 @@ Run against the real EXP-001-DR results, the protocol produced the asymmetry it 
 the **capability claim is INCONCLUSIVE** (certificate FAIL; all three required controls
 unbeaten) while the **negative-result claim is PROMOTED** with the search-space constraint it
 implies. `artifacts/assurance_ledger.json`.
+
+## How the gates run (ADR-0018, 2026-08-26)
+
+There are no GitHub Actions runners and, by owner decision, there will not be. Every check on
+GitHub has been red since ~2026-08-24 for a reason unrelated to the code, and a permanently red
+check carries no information. `ci.yml` stays as the description of the gates;
+`scripts/ci_local.py` is what executes them, mirroring every job and every `pytest` invocation
+(`tests/integrity/test_local_gates_mirror_ci.py` fails if the two drift). A gate whose tooling
+is missing reports `UNAVAILABLE` and the run `INCOMPLETE`, never `OK`. Any claim that gates
+passed must say **where they ran** and **which gates did not run**. On a machine without a
+Docker daemon the evaluator-image gate does not run, so the spec §27.2 assertion that the built
+image carries no hidden evaluation assets is unverified there — and is reported as such on every
+run rather than dropped.
+
+## Verification plane (`BESTSAD_VERIFICATION_PLANE_ENG_v0.1`, 2026-09-15)
+
+| WO | Deliverable | State |
+|---|---|---|
+| BEST-VERIF-01 | ADR-0019: adopt Z3, optional `verify` dependency group | Done |
+| BEST-VERIF-02 | Symbolic equivalence tier (spec V4): `src/bestsad/verify/smt/`, Tier 2 of `bsir/equivalence.py` | Done — `tests/verify/`, nine acceptance tests |
+| BEST-VERIF-03 | External prover adapter, closes BEST-ASSURE-10 | Done — `verify/external.py`, acceptance test 11 |
+| BEST-VERIF-04 | Non-vacuity of specifications | Done — `verify/vacuity.py`; ADR-0014 fixture path corrected |
+| BEST-VERIF-05 | Rust twin of K0 under Kani | **Gated** — ADR-0020 (provisional) and nothing else, per the work order |
+| BEST-VERIF-06 | Gate G-V | Done — job `verification (Gate G-V)` in `ci.yml`; gate `verify` in `scripts/ci_local.py` with a probe that asks Z3 to *solve* |
+
+**Gate G-V** runs `pytest -q tests/verify` with `.[dev,verify]` installed. Without a usable
+solver it reports `UNAVAILABLE` (exit 2 overall), per ADR-0018. In the `tests` gate, which
+installs no solver, the solver-backed modules skip visibly and `test_solver_unavailable.py`
+asserts the tier returns `UNKNOWN(solver_unavailable)` with nothing escaping.
+
+What an `EQUIV_SYMBOLIC` verdict is: the solver returned `unsat` for the negated equivalence
+over the contract's declared bounded domain. It carries `fuel_and_depth_traps_excluded` and
+`list_length_le_<N>` (default `N = 8`), the analyzer-result content id holding the SMT-LIB2
+text, solver version and timing, and a spec §19.1 verification score whose coverage is a stated
+bound ratio (1.0 for Int/Bool-only domains under the exact integer bound; `8/4096` for list
+domains), never an estimate. A `NON_EQUIV` from the solver has been re-executed on the K0
+reference interpreter first; a model that does not reproduce raises `EncoderDivergence` and
+reports nothing. In the assurance plane the proof is `FORMAL` with `is_external=True` and
+promotes only with the Tier 3 differential result on the same contract attached, and only if
+the contract has refuted at least one generated mutant of the pair (`verify/vacuity.py`).
+
+**Standing residual (until BEST-VERIF-05 is gated in):** *K0 has no machine-checked proof of
+its own implementation. Its assurance rests on the M1 differential sweep (`CORROBORATED`) and
+on the encoder-versus-reference differential test (BEST-VERIF-02, test 1: every K0 operation
+over the enumerated small domain and 10⁴ random programs, evaluated on the reference and through
+the encoding by solving for the output, identical `Value | Trap(kind)`).* The encoder is a
+second reading of K0 and is checked against the first, not the other way round.
+
+Discrepancies the verification-plane document recorded for the owner (§7), and their state:
+(1) the ADR-0014 fixture path — corrected by amendment, the fixture is
+`tests/languages/test_bsld_lowering.py::IncorrectLoweringIsCaught`; (2) this file and
+`ASSURANCE_WORK_ORDERS.md` predated ADR-0018 — both now carry it; (3) the research report's
+"Kani on K0" was written without the package — superseded by the document's §1 and ADR-0020.
 
 ## Deferred behind gates, as the plan requires
 

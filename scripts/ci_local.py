@@ -89,6 +89,19 @@ GATES: tuple[Gate, ...] = (
         note="emitted records validate against schemas/",
     ),
     Gate(
+        "verify",
+        "verification (Gate G-V)",
+        [sys.executable, "-m", "pytest", "-q", "tests/verify"],
+        probe=("z3", [sys.executable, "-c",
+                      "import z3; s = z3.Solver(); x = z3.Int('x'); s.add(x > 0, x < 2); "
+                      "assert s.check() == z3.sat and s.model().eval(x).as_long() == 1"]),
+        note=(
+            "the symbolic equivalence tier and its controls (ADR-0019). The solver is an "
+            "optional dependency, so the probe asks it to solve, not merely to import: a machine "
+            "without a usable z3 reports UNAVAILABLE, never OK, and never FAIL"
+        ),
+    ),
+    Gate(
         "evaluator-image",
         "evaluator image (spec §27.1 deployment half)",
         ["bash", str(REPO / "scripts" / "evaluator_image_gate.sh")],
@@ -111,6 +124,12 @@ def run_gate(gate: Gate, python: str | None = None) -> tuple[str, str]:
     """Run one gate. Returns `(status, detail)`."""
     if gate.probe is not None:
         tool, probe_command = gate.probe
+        probe_command = list(probe_command)
+        if python is not None and probe_command and probe_command[0] == sys.executable:
+            # A Python-level probe must ask the interpreter the gate will run under, or a
+            # solver present here and absent in the fresh venv would pass the probe and then
+            # fail the gate for a reason that has nothing to do with the code.
+            probe_command[0] = python
         if shutil.which(probe_command[0]) is None:
             return UNAVAILABLE, f"{tool} is not installed on this machine"
         probed = subprocess.run(probe_command, capture_output=True, text=True)
@@ -141,8 +160,16 @@ def fresh_venv(path: Path) -> str:
     subprocess.run([sys.executable, "-m", "venv", str(path)], check=True)
     python = str(path / "bin" / "python")
     subprocess.run([python, "-m", "pip", "install", "-q", "--upgrade", "pip"], check=True)
-    subprocess.run([python, "-m", "pip", "install", "-q", "-e", ".[dev]"],
-                   cwd=str(REPO), check=True)
+    # `.[dev,verify]` mirrors the verification job's install step. The solver is optional and
+    # may not be installable everywhere (no wheel, no network); then fall back to `.[dev]` as the
+    # other jobs install, say so, and let the G-V probe report UNAVAILABLE rather than FAIL.
+    verify = subprocess.run([python, "-m", "pip", "install", "-q", "-e", ".[dev,verify]"],
+                            cwd=str(REPO))
+    if verify.returncode != 0:
+        print("   could not install the optional solver (`verify` extra); installing `.[dev]` only",
+              flush=True)
+        subprocess.run([python, "-m", "pip", "install", "-q", "-e", ".[dev]"],
+                       cwd=str(REPO), check=True)
     print("   environment ready\n", flush=True)
     return python
 
