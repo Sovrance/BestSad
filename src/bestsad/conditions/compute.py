@@ -53,6 +53,12 @@ class ComputeLedger:
     compile_time_s: float = 0.0
     execution_time_s: float = 0.0
     verifier_time_s: float = 0.0
+    #: Symbolic-tier accounting (ADR-0019, design §2.5). Solver wall time is also folded into
+    #: `verifier_time_s`, which is what the compute-ledger schema carries; these three keep the
+    #: solver's share visible separately so a run can see how much of verification was proving.
+    solver_calls: int = 0
+    solver_wall_s: float = 0.0
+    solver_cpu_s: float = 0.0
 
     best_of_n: int = 1
     candidates_evaluated: int = 0

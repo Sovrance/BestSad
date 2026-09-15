@@ -15,9 +15,11 @@ this module cannot settle is `UNKNOWN`, never a quiet upgrade to equality. The d
 that bias matters — a false `NON_EQUIV` costs a wasted investigation, while a false
 `EQUIV_CANONICAL` silently merges two different programs' identities.
 
-`EQUIV_SYMBOLIC` is declared here but not produced: the solver adapter is P1 work
-(`analysis/symbolic.py`). Until it exists, a request for symbolic evidence returns `UNKNOWN`
-with the obligation left open rather than falling back to sampling and relabelling the result.
+`EQUIV_SYMBOLIC` is produced by Tier 2, the solver adapter in `verify/smt/` (ADR-0019), and
+only when the solver returns `unsat` over the contract's declared bounded domain; the verdict
+carries the bound and its assumptions. When no solver is available, or the encoder cannot
+represent the programs, a request for symbolic evidence returns `UNKNOWN` with the obligation
+left open rather than falling back to sampling and relabelling the result.
 """
 
 from __future__ import annotations
@@ -227,12 +229,15 @@ def equivalent(
     # that agree everywhere. Fall through rather than concluding.
 
     if require_proof:
-        # The symbolic tier is not implemented. Say so, and leave the obligation open, rather
-        # than sampling and calling the result a proof.
-        return result(
-            "UNKNOWN",
-            unresolved=(SYMBOLIC_OBLIGATION,),
-            detail={"reason": "symbolic solver adapter is not implemented (P1)"},
+        # Tier 2: symbolic (spec V4, ADR-0019). Imported lazily: `verify/` is a consumer of this
+        # package, and the solver it adopts is an optional dependency. Without one the tier
+        # returns UNKNOWN with reason `solver_unavailable` -- never an exception, and never a
+        # quiet downgrade to sampling relabelled as a proof.
+        from ..verify.smt.solver import symbolic_tier
+
+        return symbolic_tier(
+            left, right, contract,
+            left_root=left_root, right_root=right_root, kernel=kernel, ledger=ledger,
         )
 
     # Tier 3: dynamic. Sampling can refute, and can support, but never proves.

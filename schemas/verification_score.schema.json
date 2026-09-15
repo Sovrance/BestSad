@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bestsad Verification Score v0.1",
+  "description": "Spec 19.1: fitness records both verification coverage (the fraction of the declared domain covered by strong evidence, stated, never estimated) and verification cost (the compute spent establishing it). Emitted per solver-backed claim by the verification plane (BESTSAD_VERIFICATION_PLANE_ENG_v0.1 section 2.5). This schema is new in the verification plane and is not part of the pinned v0.2 package.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "verification_score_version",
+    "subject",
+    "verdict",
+    "verification_coverage",
+    "coverage_basis",
+    "verification_cost",
+    "scope",
+    "assumptions",
+    "analyzer_result_ref"
+  ],
+  "properties": {
+    "verification_score_version": {
+      "const": "0.1"
+    },
+    "subject": {
+      "type": "object",
+      "required": ["left", "right"],
+      "properties": {
+        "left": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "right": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "verdict": {
+      "enum": ["EQUIV_CANONICAL", "EQUIV_SYMBOLIC", "EQUIV_DYNAMIC", "NON_EQUIV", "UNKNOWN"]
+    },
+    "verification_coverage": {
+      "description": "1.0 when every bound is exact for the declared types; otherwise the product of the bound ratios that applied. Never an estimate.",
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "coverage_basis": {
+      "description": "How the coverage figure was computed, in words, so a reader can dispute it.",
+      "type": "string",
+      "minLength": 1
+    },
+    "verification_cost": {
+      "type": "object",
+      "required": ["solver_wall_s", "solver_cpu_s", "solver_calls", "kernel_steps"],
+      "properties": {
+        "solver_wall_s": { "type": "number", "minimum": 0.0 },
+        "solver_cpu_s": { "type": "number", "minimum": 0.0 },
+        "solver_calls": { "type": "integer", "minimum": 0 },
+        "kernel_steps": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "scope": {
+      "description": "The resolved solver scope: list_bound, int_abs_limit, timeout_ms, unroll_depth.",
+      "type": "object"
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "analyzer_result_ref": {
+      "description": "Content id of the SRE analyzer-result record holding the SMT-LIB2 text, solver version and timing.",
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "producer": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    }
+  }
+}

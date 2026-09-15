@@ -101,13 +101,24 @@ class DynamicTierIsNotAProof(unittest.TestCase):
         self.assertIn(SYMBOLIC_OBLIGATION, r.unresolved)
         self.assertGreater(r.detail["cases"], 0)
 
-    def test_requiring_proof_returns_unknown_rather_than_downgrading_silently(self):
+    def test_requiring_proof_never_downgrades_to_sampling(self):
+        """With a proof demanded, the only verdicts are a proof or UNKNOWN. Which one depends on
+        whether the optional solver is present (ADR-0019); what never happens is the sampled
+        verdict relabelled."""
+        from bestsad.verify import probe
+
         a = prog(app("add", var("x"), const_int(1)))
         b = prog(app("add", const_int(1), var("x")))
         r = equivalent(a, b, CONTRACT, require_proof=True)
-        self.assertEqual(r.verdict, "UNKNOWN")
-        self.assertFalse(r.is_equivalent)
-        self.assertIn(SYMBOLIC_OBLIGATION, r.unresolved)
+        self.assertNotEqual(r.verdict, "EQUIV_DYNAMIC")
+        if probe():
+            self.assertEqual(r.verdict, "EQUIV_SYMBOLIC")
+            self.assertTrue(r.is_proof)
+            self.assertNotIn(SYMBOLIC_OBLIGATION, r.unresolved)
+        else:
+            self.assertEqual(r.verdict, "UNKNOWN")
+            self.assertFalse(r.is_equivalent)
+            self.assertIn(SYMBOLIC_OBLIGATION, r.unresolved)
 
 
 class UnknownIsNotEquality(unittest.TestCase):
