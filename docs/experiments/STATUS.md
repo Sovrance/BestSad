@@ -98,6 +98,15 @@ over the enumerated small domain and 10⁴ random programs, evaluated on the ref
 the encoding by solving for the output, identical `Value | Trap(kind)`).* The encoder is a
 second reading of K0 and is checked against the first, not the other way round.
 
+**Gate record for this work (2026-09-15).** `scripts/ci_local.py --fresh-venv` on the
+authoring container (no Docker daemon): `tests`, `integrity` (G1), `kernel-sweep` (G0),
+`assurance`, `schemas`, `verify` (G-V) all **PASS**; `evaluator-image` **UNAVAILABLE**
+(`docker info` cannot reach a daemon), overall INCOMPLETE, exit 2. Separately, the GitHub Actions
+run for PR #8 (run 35007331423, head `78b8a65`) executed all seven `ci.yml` jobs with real
+durations and every job succeeded, including the evaluator-image gate — the first genuine
+Actions run since #27 (2026-08-24). That is ADR-0018's revisit trigger ("if runners return");
+whether to mark ADR-0018 superseded is the owner's call and is not made here.
+
 Discrepancies the verification-plane document recorded for the owner (§7), and their state:
 (1) the ADR-0014 fixture path — corrected by amendment, the fixture is
 `tests/languages/test_bsld_lowering.py::IncorrectLoweringIsCaught`; (2) this file and
