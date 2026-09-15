@@ -55,7 +55,7 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0011 | BSIR and SCIR remain separate IRs | Accepted |
 | 0012 | SRE-Core is language-native libraries against shared schemas, not a service | Accepted |
 | 0013 | BSIR is canonical semantics; projections are never authoritative | Accepted |
-| 0014 | BSLD is declarative and its lowering is evidence-bound | Accepted |
+| 0014 | BSLD is declarative and its lowering is evidence-bound | Accepted (amended 2026-09-15) |
 | 0015 | SRE wire schemas keep cross-repo conventions, not BestSad-native ones | Accepted |
 | 0016 | Observing K0 inference from outside the kernel; disagreeing node types are recorded as ambiguity | Accepted (amended 2026-08-26) |
 | 0017 | CANONICAL maturity state, added by schema extension rather than by editing the delivered package | Accepted |

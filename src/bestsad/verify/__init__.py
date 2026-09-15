@@ -26,6 +26,13 @@ from .external import (
     to_evidence,
 )
 from .smt.bounds import SolverScope
+from .vacuity import (
+    ContractVacuous,
+    VacuityRecord,
+    mutants,
+    non_vacuity,
+    prove_non_vacuously,
+)
 from .smt.solver import (
     EncoderDivergence,
     SolverUnavailable,
@@ -37,6 +44,7 @@ from .smt.solver import (
 )
 
 __all__ = [
+    "ContractVacuous",
     "EncoderDivergence",
     "ExternalResult",
     "ExternalResultError",
@@ -48,7 +56,11 @@ __all__ = [
     "SolverUnavailable",
     "SymbolicExecutor",
     "SymbolicResult",
+    "VacuityRecord",
     "check_equivalence",
+    "mutants",
+    "non_vacuity",
+    "prove_non_vacuously",
     "probe",
     "symbolic_execute",
 ]
