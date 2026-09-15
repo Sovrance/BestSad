@@ -61,3 +61,4 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0017 | CANONICAL maturity state, added by schema extension rather than by editing the delivered package | Accepted |
 | 0018 | CI runners are unavailable; gates run locally, and the loss is stated | Accepted |
 | 0019 | Adopt Z3 as the symbolic-equivalence engine (spec V4) | Provisional |
+| 0020 | A Rust twin of K0 verified with Kani (gated; not started) | Provisional |
