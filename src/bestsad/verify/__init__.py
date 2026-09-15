@@ -17,6 +17,14 @@ package does not touch.
   (BEST-VERIF-04).
 """
 
+from .external import (
+    ExternalResult,
+    ExternalResultError,
+    from_generic,
+    from_kani_report,
+    from_symbolic_result,
+    to_evidence,
+)
 from .smt.bounds import SolverScope
 from .smt.solver import (
     EncoderDivergence,
@@ -30,6 +38,12 @@ from .smt.solver import (
 
 __all__ = [
     "EncoderDivergence",
+    "ExternalResult",
+    "ExternalResultError",
+    "from_generic",
+    "from_kani_report",
+    "from_symbolic_result",
+    "to_evidence",
     "SolverScope",
     "SolverUnavailable",
     "SymbolicExecutor",

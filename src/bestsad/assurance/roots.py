@@ -105,6 +105,20 @@ class SemanticRoots:
         )
 
 
+def k0_root_id(kernel_hash: str, kernel_version: str | None = None) -> str:
+    """The K0 root content id for a given kernel hash.
+
+    Factored out so evidence produced against *another* K0 (an external prover result that
+    predates a kernel change) can be recorded under the root id it actually holds for, which
+    the promotion predicate then compares against the live one and refuses.
+    """
+    from ..kernel.spec import KERNEL_VERSION
+
+    return content_id(
+        {"kernel_version": kernel_version or KERNEL_VERSION, "kernel_hash": kernel_hash}, "k0"
+    )
+
+
 def current_roots(
     *,
     preregistration_hash: str | None = None,
@@ -122,9 +136,7 @@ def current_roots(
     from ..tasks.generator import GENERATOR_VERSION
 
     values = {
-        K0_ROOT: content_id(
-            {"kernel_version": KERNEL_VERSION, "kernel_hash": kernel_version_hash()}, "k0"
-        ),
+        K0_ROOT: k0_root_id(kernel_version_hash(), KERNEL_VERSION),
         BSIR_ROOT: bsir_canonicalization_content_id(),
         EVALUATOR_ROOT: content_id(
             {

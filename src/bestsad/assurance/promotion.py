@@ -190,6 +190,26 @@ def evaluate(claim: ClaimObject, context: PromotionContext) -> PromotionVerdict:
                     "shortcut- or compression-shaped primitives (spec §42.2)"
                 )
 
+        # -- an external proof is never sufficient alone (§1.7; BEST-ASSURE-10) --
+        #
+        # `NEVER_SUFFICIENT_ALONE` handles warrants that can never promote. This handles a
+        # warrant that *can* -- FORMAL -- when the thing that earned it is a third-party engine:
+        # Z3 driven by the verification plane, Kani on the K0 twin, Alive2, Lean. Such a proof
+        # is trusted for the property it checks within its declared scope, and still not on its
+        # own: the claim must carry internal corroboration on the same contract, which for
+        # semantic equivalence is the Tier 3 differential result. The builder records both
+        # facts in the claim's scope, which is part of its content-addressed identity.
+        provenance = claim.scope.get("proof_provenance")
+        if provenance is not None:
+            corroborated = bool(claim.scope.get("internal_corroboration"))
+            verdict.checks["external_proof_corroborated"] = corroborated
+            if not corroborated:
+                verdict.blockers.append(
+                    f"the proof behind this claim is external ({provenance}) and no internal "
+                    "corroboration on the same contract is attached; external corroboration is "
+                    "never silently upgraded to internal proof (§1.7)"
+                )
+
         # -- required evidence kinds --
         if spec.required_evidence_kinds and not claim.evidence_refs:
             verdict.checks["evidence_present"] = False

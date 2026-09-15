@@ -1,7 +1,7 @@
 # Assurance integration — work-order status
 
 Tracks `BESTSAD_ATLAS_ASSURANCE_INTEGRATION_ENG_v0.1.md` §13 against what is built.
-Last updated: 2026-08-23.
+Last updated: 2026-09-15 (BEST-ASSURE-10 closed by BEST-VERIF-03; the gate runner of ADR-0018 is dated 2026-08-26).
 
 | WO | Pri | Deliverable | Gate | State |
 |---|---|---|---|---|
@@ -14,9 +14,9 @@ Last updated: 2026-08-23.
 | BEST-ASSURE-07 | P1 | M6/M8 primitive evidence and causal claim objects | Shortcut concentration quarantine | **Done** — `primitive_effect_claims()`; concentration result feeds the predicate |
 | BEST-ASSURE-08 | P1 | M9 confirmatory report consumes promoted ClaimObject | Report cannot bypass gate | **Done** — `ReportGate._assurance_verdict`; `bestsad report --confirmatory` exits non-zero without a promoted claim |
 | BEST-ASSURE-09 | P2 | Compiler/BSIR assurance annotations | Stale primitive rejected by lowering | **Deferred** — see below |
-| BEST-ASSURE-10 | P2 | External formal/translation-validation adapters | External proof provenance preserved | **Partial** — see below |
+| BEST-ASSURE-10 | P2 | External formal/translation-validation adapters | External proof provenance preserved | **Done** (2026-09-15) — `src/bestsad/verify/external.py` (BEST-VERIF-03): structured ingestion of the BestSad SMT analyzer result, a Kani report, and a generic prover record into `FORMAL` evidence with `is_external=True`; `semantic_equivalence_claim(external_proof=...)`; the promotion predicate refuses an external proof without internal corroboration; acceptance test 11 |
 
-## Why the two P2 items are not built
+## The two P2 items
 
 **BEST-ASSURE-09** annotates a compiler IR that does not exist yet. M11 (equality saturation)
 and M12 (MLIR lowering + translation validation) are deferred behind gates in the implementation
@@ -25,14 +25,35 @@ annotations for a lowering path before the lowering path exists would produce a 
 a guess. The *predicate* it needs is already in place: §14's tenth acceptance test
 (`test_10_stale_semantic_certificates_fail_closed_for_core_use`) proves a stale certificate
 fails closed, so the compiler will inherit fail-closed behaviour rather than needing its own.
+**Still deferred.**
 
-**BEST-ASSURE-10** is partially covered. The warrant model distinguishes external corroboration
-from internal proof, `EvidenceObject.is_external` marks provenance, and `NEVER_SUFFICIENT_ALONE`
-enforces §1.7's "external corroboration is never silently upgraded to internal proof". What is
-absent is an adapter for any *specific* external prover — there is no Lean or Alive2 in the
-dependency set to adapt to. `semantic_equivalence_claim(proof_ref=...)` accepts a reference and
-records it with FORMAL warrant and external provenance; wiring a real prover is a matter of
-producing that reference.
+**BEST-ASSURE-10** was *Partial* until 2026-09-15: the warrant model distinguished external
+corroboration from internal proof, `EvidenceObject.is_external` marked provenance, and
+`NEVER_SUFFICIENT_ALONE` enforced §1.7 for HEURISTIC/ASSERTED warrants — but the only
+external-proof path was an opaque `proof_ref` that earned `FORMAL` and promoted alone, and there
+was no prover to adapt to. **Done** by BEST-VERIF-03 (`BESTSAD_VERIFICATION_PLANE_ENG_v0.1.md`):
+
+- `src/bestsad/verify/external.py` ingests three result shapes — the BestSad SMT analyzer
+  result from the symbolic tier (provenance `internal-solver`, and still external: the engine
+  is Z3), a Kani JSON report of a stated shape (provenance `kani`, for the K0 twin when
+  BEST-VERIF-05 gates in), and a generic `{tool, version, verdict, artifact_sha256, scope,
+  assumptions, kernel_version_hash}` record for Alive2 or Lean when M12/V6 arrive. Each becomes
+  an `EvidenceObject` with `warrant=FORMAL`, `is_external=True`, `method` naming the tool and
+  version, and `content_hash` of the raw artifact.
+- `semantic_equivalence_claim(external_proof=...)` records the proof's provenance, scope and
+  assumptions in the claim's scope, alongside whether the Tier 3 differential result on the
+  same contract is attached as internal corroboration. The opaque `proof_ref` path is held to
+  the same rule.
+- `assurance/promotion.py` — the one predicate — refuses a claim whose proof is external and
+  carries no internal corroboration. `NEVER_SUFFICIENT_ALONE` is unchanged; this is the same
+  §1.7 rule applied to a warrant that *can* promote once corroborated.
+- A result produced against a different K0 records the root id it actually holds for
+  (`roots.k0_root_id`), and the predicate's source-hash check refuses it — the pattern of
+  acceptance test 10.
+
+Acceptance: `tests/assurance/test_acceptance.py::test_11_*` — an external FORMAL result alone
+does not promote; the same result plus the Tier 3 corroboration does; a stale contract fails
+closed. `tests/verify/test_external.py` covers the three ingestion shapes.
 
 ## §15 rollout against M0–M14
 
