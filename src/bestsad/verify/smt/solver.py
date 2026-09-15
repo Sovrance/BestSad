@@ -35,7 +35,7 @@ from ...bsir.equivalence import (
 )
 from ...kernel.interpreter import ExecutionResult, Kernel
 from ...kernel.terms import Program
-from ...kernel.traps import Trap, TrapKind, TrapSignal
+from ...kernel.traps import TrapKind, TrapSignal
 from ...kernel.typecheck import TypeError_, typecheck
 from ...kernel.values import render
 from ...sre.ids import as_content_id

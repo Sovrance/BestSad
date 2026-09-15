@@ -10,7 +10,7 @@ import sys
 
 from bestsad.bsir import equivalent
 from bestsad.bsir.equivalence import SYMBOLIC_OBLIGATION
-from bestsad.kernel import INT, app, const_int, var
+from bestsad.kernel import app, const_int, var
 from bestsad.verify.smt.solver import SOLVER_UNAVAILABLE, probe
 
 from conftest import prog

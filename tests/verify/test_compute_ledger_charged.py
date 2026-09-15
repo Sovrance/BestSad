@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from bestsad.bsir import equivalent
 from bestsad.conditions import ComputeLedger
-from bestsad.kernel import INT, app, const_int, var
+from bestsad.kernel import app, const_int, var
 
 from conftest import prog, requires_solver
 

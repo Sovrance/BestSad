@@ -23,7 +23,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Literal, Mapping
 
 from ..assurance.claims import make_evidence
 from ..assurance.objects import EvidenceObject, Warrant

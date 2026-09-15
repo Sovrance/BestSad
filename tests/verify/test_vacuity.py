@@ -14,7 +14,7 @@ import pytest
 from bestsad import sre
 from bestsad.bsir import EquivalenceContract, equivalent
 from bestsad.bsir.canonicalize import semantic_hash
-from bestsad.kernel import BOOL, INT, Program, TList, app, const_bool, const_int, lam, var
+from bestsad.kernel import BOOL, INT, Program, TList, app, const_int, lam, var
 from bestsad.kernel.typecheck import is_well_typed
 from bestsad.verify.vacuity import (
     REASON_VACUOUS,

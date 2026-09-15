@@ -41,7 +41,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
-from ...kernel.ops import HIGHER_ORDER_OPS, INT_ABS_LIMIT, LIST_LEN_LIMIT, OPS_BY_NAME
+from ...kernel.ops import HIGHER_ORDER_OPS, INT_ABS_LIMIT, OPS_BY_NAME
 from ...kernel.terms import Program, Term
 from ...kernel.traps import Trap, TrapKind
 from ...kernel.types import TBool, TFun, TInt, TList, TOption, TTuple, TVar, Ty

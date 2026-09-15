@@ -1,6 +1,6 @@
 # ADR 0019 — Adopt Z3 as the symbolic-equivalence engine (spec V4)
 
-**Status:** Provisional
+**Status:** Accepted (2026-09-15, on BEST-VERIF-02's acceptance tests passing under Gate G-V)
 **Date:** 2026-09-15
 **Governs:** `src/bestsad/verify/smt/`, `src/bestsad/bsir/equivalence.py` Tier 2, spec §19 V4,
 §19.1
@@ -113,5 +113,11 @@ adapter raises `EncoderDivergence` rather than reporting anything.
 - A claim needs fuel or depth modelled: that is a new encoding decision and a new ADR, not a
   relaxation of the assumption.
 
-Status moves from *Provisional* to *Accepted* when BEST-VERIF-02's acceptance tests pass
-under Gate G-V.
+## Acceptance record
+
+Provisional until BEST-VERIF-02's acceptance tests passed under Gate G-V; accepted the same
+day. `pip install -e ".[dev,verify]"` succeeds; `pip install -e ".[dev]"` succeeds with no Z3
+and the full non-slow suite passes (the solver-backed modules under `tests/verify/` skip with a
+named reason, and `test_solver_unavailable.py` runs). Gate G-V passes with the solver present,
+including the 10⁴-program encoder-versus-reference sweep, and reports `UNAVAILABLE` without it.
+`KERNEL_VERSION_HASH` is unchanged and `src/bestsad/kernel/` has a zero-line diff against `v1`.

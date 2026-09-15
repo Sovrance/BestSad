@@ -46,16 +46,24 @@ notice, assurance protocol, layout — is in `REPOSITORY.md` for exactly this re
 ## Before opening a pull request
 
 ```
-pip install -e ".[dev]"
-pytest -q                     # full suite
-pytest -q -m slow tests/kernel # the 10^5-program K0 differential sweep
-bestsad assure roots           # CLI smoke
+pip install -e ".[dev,verify]"   # `verify` adds the optional Z3 solver (ADR-0019)
+pytest -q                        # full suite
+pytest -q -m slow tests/kernel   # the 10^5-program K0 differential sweep
+bestsad assure roots             # CLI smoke
+python3 scripts/ci_local.py      # every gate, as CI would run them (ADR-0018)
 ```
 
-CI runs five jobs: tests, the trust-boundary suite, the K0 sweep, the assurance acceptance
-suite, and schema validation. The trust-boundary and assurance suites are separate jobs on
-purpose — a regression in either should be visible as a named failing check rather than one line
-inside a long log.
+There are no Actions runners (ADR-0018), so `scripts/ci_local.py` is what executes the gates;
+`--fresh-venv PATH` reproduces CI's clean install. A gate whose tooling is missing reports
+`UNAVAILABLE`, never `OK`, and a claim that gates passed must say where they ran and which
+gates did not run.
+
+`ci.yml` describes seven jobs: tests, the trust-boundary suite (G1), the K0 sweep (G0), the
+assurance acceptance suite, schema validation, the verification plane (G-V), and the evaluator
+image. The trust-boundary, assurance and verification suites are separate jobs on purpose — a
+regression in any of them should be visible as a named failing check rather than one line inside
+a long log. The `tests` job installs no solver and the solver-backed tests skip there; G-V is
+where they run, with a probe that reports `UNAVAILABLE` if Z3 cannot solve.
 
 ## Changes that need an architecture decision record
 

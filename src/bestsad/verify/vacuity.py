@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field, replace
-from typing import Any, Iterator, Sequence
+from typing import Any, Iterator
 
 from ..bsir.canonicalize import semantic_hash
 from ..bsir.equivalence import EquivalenceContract, EquivalenceResult, equivalent
