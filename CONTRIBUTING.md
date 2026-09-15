@@ -50,13 +50,14 @@ pip install -e ".[dev,verify]"   # `verify` adds the optional Z3 solver (ADR-001
 pytest -q                        # full suite
 pytest -q -m slow tests/kernel   # the 10^5-program K0 differential sweep
 bestsad assure roots             # CLI smoke
-python3 scripts/ci_local.py      # every gate, as CI would run them (ADR-0018)
+python3 scripts/ci_local.py      # every gate, as CI runs them, reproduced locally (ADR-0021)
 ```
 
-There are no Actions runners (ADR-0018), so `scripts/ci_local.py` is what executes the gates;
-`--fresh-venv PATH` reproduces CI's clean install. A gate whose tooling is missing reports
-`UNAVAILABLE`, never `OK`, and a claim that gates passed must say where they ran and which
-gates did not run.
+GitHub Actions runs the gates on every pull request (ADR-0021; between 2026-08-24 and
+2026-09-15 there were no runners, ADR-0018). `scripts/ci_local.py` reproduces them locally
+before a push; `--fresh-venv PATH` reproduces CI's clean install. A gate whose tooling is
+missing locally reports `UNAVAILABLE`, never `OK`, and a claim that gates passed must say where
+they ran and which gates did not run.
 
 `ci.yml` describes seven jobs: tests, the trust-boundary suite (G1), the K0 sweep (G0), the
 assurance acceptance suite, schema validation, the verification plane (G-V), and the evaluator

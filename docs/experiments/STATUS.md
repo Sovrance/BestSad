@@ -51,18 +51,18 @@ the **capability claim is INCONCLUSIVE** (certificate FAIL; all three required c
 unbeaten) while the **negative-result claim is PROMOTED** with the search-space constraint it
 implies. `artifacts/assurance_ledger.json`.
 
-## How the gates run (ADR-0018, 2026-08-26)
+## How the gates run (ADR-0021, 2026-09-15; supersedes ADR-0018)
 
-There are no GitHub Actions runners and, by owner decision, there will not be. Every check on
-GitHub has been red since ~2026-08-24 for a reason unrelated to the code, and a permanently red
-check carries no information. `ci.yml` stays as the description of the gates;
-`scripts/ci_local.py` is what executes them, mirroring every job and every `pytest` invocation
-(`tests/integrity/test_local_gates_mirror_ci.py` fails if the two drift). A gate whose tooling
-is missing reports `UNAVAILABLE` and the run `INCOMPLETE`, never `OK`. Any claim that gates
-passed must say **where they ran** and **which gates did not run**. On a machine without a
-Docker daemon the evaluator-image gate does not run, so the spec §27.2 assertion that the built
-image carries no hidden evaluation assets is unverified there — and is reported as such on every
-run rather than dropped.
+GitHub Actions runs the seven `ci.yml` jobs on every push to `v1` and every pull request, and a
+red check on a current head is a finding. Between ~2026-08-24 and 2026-09-15 there were no
+runners (ADR-0018): every run completed in seconds with `runner_id: 0`, no steps and no logs,
+and `scripts/ci_local.py` was the only thing executing the gates. The runs on PR #8 were the
+first genuine ones since #27, and ADR-0018 is superseded by ADR-0021 on its own revisit trigger.
+`scripts/ci_local.py` stays as the local reproduction path
+(`tests/integrity/test_local_gates_mirror_ci.py` fails if it drifts from `ci.yml`); a gate
+whose tooling is missing locally reports `UNAVAILABLE` and the run `INCOMPLETE`, never `OK`, and
+a claim that gates passed still says where they ran. If the runner-starvation signature
+reappears, ADR-0018's decision is back in force.
 
 ## Verification plane (`BESTSAD_VERIFICATION_PLANE_ENG_v0.1`, 2026-09-15)
 
@@ -104,8 +104,8 @@ authoring container (no Docker daemon): `tests`, `integrity` (G1), `kernel-sweep
 (`docker info` cannot reach a daemon), overall INCOMPLETE, exit 2. Separately, the GitHub Actions
 run for PR #8 (run 35007331423, head `78b8a65`) executed all seven `ci.yml` jobs with real
 durations and every job succeeded, including the evaluator-image gate — the first genuine
-Actions run since #27 (2026-08-24). That is ADR-0018's revisit trigger ("if runners return");
-whether to mark ADR-0018 superseded is the owner's call and is not made here.
+Actions run since #27 (2026-08-24). That was ADR-0018's revisit trigger ("if runners return");
+the owner marked ADR-0018 superseded the same day (ADR-0021).
 
 Discrepancies the verification-plane document recorded for the owner (§7), and their state:
 (1) the ADR-0014 fixture path — corrected by amendment, the fixture is

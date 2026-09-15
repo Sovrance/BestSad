@@ -1,6 +1,6 @@
 # ADR 0018 — CI runners are unavailable; gates run locally, and the loss is stated
 
-**Status:** Accepted
+**Status:** Superseded by ADR-0021 (2026-09-15)
 **Date:** 2026-08-26
 **Governs:** `scripts/ci_local.py`, `.github/workflows/ci.yml`
 **Decided by:** repository owner, 2026-08-26 ("There are no runners and I will not be paying
@@ -79,3 +79,10 @@ any machine without Docker.
 If runners return — paid, self-hosted, or otherwise — `ci.yml` resumes working with no change
 and this ADR should be marked superseded. `scripts/ci_local.py` is still worth keeping at that
 point as the way a contributor reproduces a CI failure locally.
+
+## Superseded (2026-09-15)
+
+The revisit trigger fired: the Actions runs on PR #8 (35007331423, 35007657549) executed every
+`ci.yml` job with real durations and all succeeded, the first genuine runs since #27. The owner
+marked this ADR superseded the same day. ADR-0021 records the decision; `scripts/ci_local.py`
+and the mirror test stay as the local reproduction path, as anticipated above.
