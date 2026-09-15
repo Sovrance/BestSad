@@ -187,6 +187,7 @@ def semantic_equivalence_claim(
     differential_cases: int,
     exhaustive: bool = False,
     proof_ref: str | None = None,
+    external_proof: Any | None = None,
 ) -> tuple[ClaimObject, list[EvidenceObject]]:
     """Claim that a primitive is equivalent to its K0 expansion.
 
@@ -194,6 +195,15 @@ def semantic_equivalence_claim(
     FORMAL requires the checked domain to be exhaustive, or an actual proof artifact. Labelling
     sampled testing as a proof is the specific mislabelling §6 warns about, and it would let a
     primitive reach CORE eligibility on evidence that cannot bear it.
+
+    A proof artifact is **external** evidence whether it arrives as an opaque `proof_ref` or as
+    a structured `external_proof` (`verify.external.ExternalResult`, BEST-VERIF-03). The claim
+    records that in its scope, together with whether internal corroboration -- the Tier 3
+    differential result on the same contract, `differential_cases > 0` -- is attached. The
+    promotion predicate refuses an external proof that carries none (§1.7: external
+    corroboration is never silently upgraded to internal proof). A structured result also
+    records the K0 hash it was produced against; one from another kernel gets a stale root, and
+    the predicate's source-hash check refuses it.
     """
     hash_evidence = make_evidence(
         kind="semantic_hash",
@@ -216,8 +226,35 @@ def semantic_equivalence_claim(
         payload={"cases": differential_cases, "exhaustive": exhaustive},
     )
     evidence = [hash_evidence, differential]
+    scope: dict[str, Any] = {
+        "kernel_version": primitive.kernel_version if hasattr(primitive, "kernel_version") else "K0",
+    }
+    k0_source_hash = roots.get(K0_ROOT)
+    corroboration = f"tier3-differential:{differential_cases}" if differential_cases > 0 else None
 
-    if proof_ref:
+    if external_proof is not None:
+        from ..verify.external import to_evidence
+        from .roots import k0_root_id
+
+        if external_proof.verdict != "proved":
+            raise ValueError(
+                f"an external result with verdict {external_proof.verdict!r} cannot back an "
+                "equivalence claim; only a proof can"
+            )
+        evidence.append(to_evidence(external_proof))
+        warrant = Warrant.FORMAL
+        scope.update({
+            "proof_provenance": external_proof.provenance,
+            "proof_tool": f"{external_proof.tool} {external_proof.version}",
+            "proof_scope": dict(external_proof.scope),
+            "proof_assumptions": list(external_proof.assumptions),
+            "internal_corroboration": corroboration,
+        })
+        if external_proof.is_stale:
+            # Record the root the proof actually holds for. The predicate compares it with the
+            # live root and refuses -- the same fail-closed path as acceptance test 10.
+            k0_source_hash = k0_root_id(external_proof.kernel_version_hash)
+    elif proof_ref:
         evidence.append(
             make_evidence(
                 kind="proof_artifact", source=f"external:{proof_ref}",
@@ -226,6 +263,8 @@ def semantic_equivalence_claim(
             )
         )
         warrant = Warrant.FORMAL
+        scope.update({"proof_provenance": "external", "proof_tool": proof_ref,
+                      "internal_corroboration": corroboration})
     elif exhaustive:
         warrant = Warrant.RIGOROUS_COMPUTATION
     else:
@@ -237,11 +276,10 @@ def semantic_equivalence_claim(
         producer=producer,
         warrant=warrant,
         subject_refs=(primitive.primitive_id,),
-        scope={"kernel_version": primitive.kernel_version if hasattr(primitive, "kernel_version")
-               else "K0"},
+        scope=scope,
         evidence=evidence,
         assumptions=(K0_ROOT, BSIR_ROOT),
-        source_hashes={K0_ROOT: roots.get(K0_ROOT), BSIR_ROOT: roots.get(BSIR_ROOT)},
+        source_hashes={K0_ROOT: k0_source_hash, BSIR_ROOT: roots.get(BSIR_ROOT)},
     )
     return claim, evidence
 

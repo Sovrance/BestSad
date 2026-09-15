@@ -401,3 +401,83 @@ def test_10b_a_moved_root_makes_a_claim_fail_closed_even_before_propagation():
     )
     assert not verdict.promotable
     assert any("source/content hashes have moved" in b for b in verdict.blockers)
+
+
+# --- 11 ----------------------------------------------------------------------------------------
+
+
+def test_11_an_external_formal_result_never_promotes_alone():
+    """BEST-VERIF-03 (closes BEST-ASSURE-10): "an external FORMAL result alone does not promote;
+    the same result plus the Tier 3 corroboration on the same contract does; a stale contract
+    (K0 hash mismatch) fails closed." """
+    from bestsad.kernel.spec import kernel_version_hash
+    from bestsad.verify import from_generic
+
+    roots = _roots()
+    primitive = _primitive()
+    proof = from_generic({
+        "tool": "z3", "version": "4.13.0", "verdict": "proved",
+        "artifact_sha256": "ab" * 32, "scope": {"list_bound": 8},
+        "assumptions": ["fuel_and_depth_traps_excluded", "list_length_le_8"],
+        "kernel_version_hash": kernel_version_hash(),
+    })
+
+    # Alone: FORMAL, external, and refused.
+    alone, evidence = semantic_equivalence_claim(
+        primitive, roots=roots, producer="extractor", differential_cases=0, external_proof=proof
+    )
+    assert alone.warrant is Warrant.FORMAL
+    assert any(e.is_external and e.warrant is Warrant.FORMAL for e in evidence)
+    verdict = evaluate(alone, _full_context(alone, roots, gate_actor="policy-gate"))
+    assert not verdict.promotable
+    assert any("external" in b and "corroboration" in b for b in verdict.blockers), verdict.blockers
+
+    # The same result plus the Tier 3 corroboration on the same contract promotes.
+    corroborated, _ = semantic_equivalence_claim(
+        primitive, roots=roots, producer="extractor", differential_cases=512, external_proof=proof
+    )
+    assert corroborated.claim_id != alone.claim_id, "corroboration is part of the claim's identity"
+    verdict = evaluate(corroborated, _full_context(corroborated, roots, gate_actor="policy-gate"))
+    assert verdict.promotable, verdict.blockers
+
+    # A result produced against another K0 fails closed, through the same source-hash check
+    # that acceptance test 10 relies on.
+    stale_proof = from_generic({**proof.to_record(), "kernel_version_hash": "0" * 64})
+    assert stale_proof.is_stale
+    stale, _ = semantic_equivalence_claim(
+        primitive, roots=roots, producer="extractor", differential_cases=512,
+        external_proof=stale_proof,
+    )
+    verdict = evaluate(stale, _full_context(stale, roots, gate_actor="policy-gate"))
+    assert not verdict.promotable
+    assert any("source/content hashes have moved" in b for b in verdict.blockers), verdict.blockers
+
+
+def test_11b_an_opaque_proof_ref_is_held_to_the_same_rule():
+    """The pre-existing `proof_ref` path was the BEST-ASSURE-10 gap: an opaque reference earned
+    FORMAL and promoted alone. It is external too, and now says so."""
+    roots = _roots()
+    primitive = _primitive()
+    alone, _ = semantic_equivalence_claim(
+        primitive, roots=roots, producer="extractor", differential_cases=0, proof_ref="lean:thm42"
+    )
+    assert not evaluate(alone, _full_context(alone, roots, gate_actor="policy-gate")).promotable
+    with_tier3, _ = semantic_equivalence_claim(
+        primitive, roots=roots, producer="extractor", differential_cases=64, proof_ref="lean:thm42"
+    )
+    assert evaluate(with_tier3, _full_context(with_tier3, roots, gate_actor="policy-gate")).promotable
+
+
+def test_11c_a_refutation_cannot_back_an_equivalence_claim():
+    from bestsad.kernel.spec import kernel_version_hash
+    from bestsad.verify import from_generic
+
+    refuted = from_generic({
+        "tool": "z3", "version": "4.13.0", "verdict": "refuted", "artifact_sha256": "cd" * 32,
+        "kernel_version_hash": kernel_version_hash(),
+    })
+    with pytest.raises(ValueError, match="only a proof"):
+        semantic_equivalence_claim(
+            _primitive(), roots=_roots(), producer="extractor", differential_cases=10,
+            external_proof=refuted,
+        )

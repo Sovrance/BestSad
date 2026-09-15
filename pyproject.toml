@@ -18,6 +18,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+# The symbolic equivalence tier (spec V4). Optional on purpose: core dependencies stay
+# `jsonschema` only (ADR-0002), and without a solver Tier 2 returns UNKNOWN with reason
+# `solver_unavailable` while Gate G-V reports UNAVAILABLE, never OK (ADR-0019).
+verify = ["z3-solver>=4.12"]
 
 [project.scripts]
 bestsad = "bestsad.cli:main"
