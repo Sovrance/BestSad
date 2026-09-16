@@ -1,6 +1,6 @@
 # Implementation status against `IMPLEMENTATION_PLAN_v0.2.md`
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16 (PRs #8–#11 merged into `v1`; the merge record is under the verification plane).
 
 ## Complete, with acceptance tests passing
 
@@ -58,14 +58,15 @@ K0 twin jobs) on every push to `v1` and every pull request, and a
 red check on a current head is a finding. Between ~2026-08-24 and 2026-09-15 there were no
 runners (ADR-0018): every run completed in seconds with `runner_id: 0`, no steps and no logs,
 and `scripts/ci_local.py` was the only thing executing the gates. The runs on PR #8 were the
-first genuine ones since #27, and ADR-0018 is superseded by ADR-0021 on its own revisit trigger.
+first genuine ones since #27, and ADR-0018 is superseded by ADR-0021 on its own revisit trigger;
+PRs #9, #10 and #11 each ran the full job set with real durations before merging.
 `scripts/ci_local.py` stays as the local reproduction path
 (`tests/integrity/test_local_gates_mirror_ci.py` fails if it drifts from `ci.yml`); a gate
 whose tooling is missing locally reports `UNAVAILABLE` and the run `INCOMPLETE`, never `OK`, and
 a claim that gates passed still says where they ran. If the runner-starvation signature
 reappears, ADR-0018's decision is back in force.
 
-## Verification plane (`BESTSAD_VERIFICATION_PLANE_ENG_v0.1`, 2026-09-15)
+## Verification plane (`BESTSAD_VERIFICATION_PLANE_ENG_v0.1`, 2026-09-15 to 2026-09-16)
 
 | WO | Deliverable | State |
 |---|---|---|
@@ -111,6 +112,16 @@ run for PR #8 (run 35007331423, head `78b8a65`) executed all seven `ci.yml` jobs
 durations and every job succeeded, including the evaluator-image gate — the first genuine
 Actions run since #27 (2026-08-24). That was ADR-0018's revisit trigger ("if runners return");
 the owner marked ADR-0018 superseded the same day (ADR-0021).
+
+**Merge record.** All of the verification-plane work is on `v1`, in four pull requests merged by
+the owner, each with every `ci.yml` job green on its merged head:
+
+| PR | Content | Merged (UTC) | Head |
+|---|---|---|---|
+| #8 | BEST-VERIF-01, -02, -03, -04, -06; ADR-0019 Accepted; ADR-0020 provisional; the document itself | 2026-09-15 23:52 | `05c5be1` (seven jobs) |
+| #9 | ADR-0021: runners returned, ADR-0018 superseded; CONTRIBUTING and gate-runner docstrings | 2026-09-16 03:18 | `b37212a` (seven jobs) |
+| #10 | BEST-VERIF-05: the `k0rs/` twin, 19 Kani harnesses, 10⁵-program parity, two new jobs, ADR-0020 Accepted with two amendments; workflow token limited to `contents: read` after a CodeQL finding | 2026-09-16 15:39 | `acea207` (nine jobs plus CodeQL; the first Kani run on GitHub-hosted runners, 54 s) |
+| #11 | `ASSURANCE_WORK_ORDERS.md`: the Kani adapter of BEST-ASSURE-10 now has a producer | 2026-09-16 16:02 | `7f7c4bd` (nine jobs plus CodeQL) |
 
 Discrepancies the verification-plane document recorded for the owner (§7), and their state:
 (1) the ADR-0014 fixture path — corrected by amendment, the fixture is
