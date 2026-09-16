@@ -1,7 +1,7 @@
 # Assurance integration — work-order status
 
 Tracks `BESTSAD_ATLAS_ASSURANCE_INTEGRATION_ENG_v0.1.md` §13 against what is built.
-Last updated: 2026-09-15 (BEST-ASSURE-10 closed by BEST-VERIF-03; the gate runner of ADR-0018 is dated 2026-08-26).
+Last updated: 2026-09-16 (the Kani adapter of BEST-ASSURE-10 now has a real producer: the K0 twin of BEST-VERIF-05, merged in PR #10; BEST-ASSURE-10 itself was closed 2026-09-15 by BEST-VERIF-03; the gate runner of ADR-0018 is dated 2026-08-26 and ADR-0021 superseded ADR-0018 on 2026-09-15).
 
 | WO | Pri | Deliverable | Gate | State |
 |---|---|---|---|---|
@@ -14,7 +14,7 @@ Last updated: 2026-09-15 (BEST-ASSURE-10 closed by BEST-VERIF-03; the gate runne
 | BEST-ASSURE-07 | P1 | M6/M8 primitive evidence and causal claim objects | Shortcut concentration quarantine | **Done** — `primitive_effect_claims()`; concentration result feeds the predicate |
 | BEST-ASSURE-08 | P1 | M9 confirmatory report consumes promoted ClaimObject | Report cannot bypass gate | **Done** — `ReportGate._assurance_verdict`; `bestsad report --confirmatory` exits non-zero without a promoted claim |
 | BEST-ASSURE-09 | P2 | Compiler/BSIR assurance annotations | Stale primitive rejected by lowering | **Deferred** — see below |
-| BEST-ASSURE-10 | P2 | External formal/translation-validation adapters | External proof provenance preserved | **Done** (2026-09-15) — `src/bestsad/verify/external.py` (BEST-VERIF-03): structured ingestion of the BestSad SMT analyzer result, a Kani report, and a generic prover record into `FORMAL` evidence with `is_external=True`; `semantic_equivalence_claim(external_proof=...)`; the promotion predicate refuses an external proof without internal corroboration; acceptance test 11 |
+| BEST-ASSURE-10 | P2 | External formal/translation-validation adapters | External proof provenance preserved | **Done** (2026-09-15) — `src/bestsad/verify/external.py` (BEST-VERIF-03): structured ingestion of the BestSad SMT analyzer result, a Kani report, and a generic prover record into `FORMAL` evidence with `is_external=True`; `semantic_equivalence_claim(external_proof=...)`; the promotion predicate refuses an external proof without internal corroboration; acceptance test 11. Since 2026-09-16 the Kani adapter has a real producer: `scripts/kani_gate.py` ingests every `cargo kani` run on the K0 twin (BEST-VERIF-05, ADR-0020) through `from_kani_report` |
 
 ## The two P2 items
 
@@ -35,8 +35,8 @@ was no prover to adapt to. **Done** by BEST-VERIF-03 (`BESTSAD_VERIFICATION_PLAN
 
 - `src/bestsad/verify/external.py` ingests three result shapes — the BestSad SMT analyzer
   result from the symbolic tier (provenance `internal-solver`, and still external: the engine
-  is Z3), a Kani JSON report of a stated shape (provenance `kani`, for the K0 twin when
-  BEST-VERIF-05 gates in), and a generic `{tool, version, verdict, artifact_sha256, scope,
+  is Z3), a Kani report of a stated shape (provenance `kani`; the K0 twin of BEST-VERIF-05
+  gated in on 2026-09-16, see below), and a generic `{tool, version, verdict, artifact_sha256, scope,
   assumptions, kernel_version_hash}` record for Alive2 or Lean when M12/V6 arrive. Each becomes
   an `EvidenceObject` with `warrant=FORMAL`, `is_external=True`, `method` naming the tool and
   version, and `content_hash` of the raw artifact.
@@ -54,6 +54,33 @@ was no prover to adapt to. **Done** by BEST-VERIF-03 (`BESTSAD_VERIFICATION_PLAN
 Acceptance: `tests/assurance/test_acceptance.py::test_11_*` — an external FORMAL result alone
 does not promote; the same result plus the Tier 3 corroboration does; a stale contract fails
 closed. `tests/verify/test_external.py` covers the three ingestion shapes.
+
+**The Kani adapter has a producer (2026-09-16).** BEST-VERIF-05 was gated in on the owner's
+authorisation (ADR-0020, amended twice) and merged in PR #10: `k0rs/` is a Rust twin of K0 whose
+build refuses to compile unless its kernel hash equals the Python `KERNEL_VERSION_HASH`, and
+`k0rs/src/proofs.rs` carries 19 Kani harnesses (all green, slowest 2.3 s of the 60 s budget). What
+this changes for the assurance plane, and what it does not:
+
+- `scripts/kani_gate.py` runs `cargo kani`, converts the text output with
+  `verify/twin.py::kani_report_from_output` (Kani 0.67 has no JSON output format, so the "Kani
+  JSON report" the adapter was written against is now produced by this bridge rather than by
+  Kani), and ingests it through `from_kani_report` on every run of the `K0 twin proofs` CI job.
+  The report carries the bounds as `assumptions`; the evidence is `FORMAL`, `is_external=True`,
+  bounded, exactly as §1.7 and BEST-ASSURE-10 require.
+- The proofs are about the twin's pure step functions (integer bound, arithmetic totality, the
+  zero-divisor trap, `mod`'s sign and magnitude, comparisons, the list bound, fuel accounting,
+  the ADR-0008 cost model). Nothing reaching the evaluator verified within budget; ADR-0020's
+  second amendment lists what was tried and removed. So no K0 *evaluator* claim gains a
+  `FORMAL` warrant from this, in either implementation.
+- Agreement between the twin and the Python reference stays `CORROBORATED`: the full M1 corpus
+  (10⁵ programs, identical `Value | Trap(kind)` and identical step count) in the `K0 twin
+  parity` job, never a proof. The Python reference remains normative (ADR-0002); if the two
+  disagree, the twin is fixed. The promotion rule above is unchanged: a Kani result is external
+  and promotes only with internal corroboration attached.
+
+The standing residual in `docs/experiments/STATUS.md` is restated accordingly: K0 has bounded
+machine-checked proofs of its arithmetic, bounds and fuel accounting in the twin, and no
+machine-checked proof of its evaluator.
 
 ## §15 rollout against M0–M14
 
