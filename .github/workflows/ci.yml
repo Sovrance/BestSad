@@ -159,6 +159,63 @@ jobs:
       - name: Verification plane
         run: pytest -q tests/verify
 
+  k0-twin-parity:
+    name: K0 twin parity (BEST-VERIF-05)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      # The Rust twin of K0 (k0rs/, ADR-0020). build.rs refuses to compile it unless the hash
+      # it computes from its own op table equals the Python KERNEL_VERSION_HASH, so a green
+      # build is already the first half of the parity claim.
+      - name: Build and test the twin
+        run: |
+          cargo clippy --manifest-path k0rs/Cargo.toml --release --all-targets -- -D warnings
+          cargo test --manifest-path k0rs/Cargo.toml --release
+      # The other half: both implementations over the same M1 corpus (the full 10^5, seed
+      # 20260817, fuel 20_000) must produce the identical Value | Trap(kind) and the identical
+      # step count. Agreement is corroborated, not proven; the Python reference is normative.
+      - name: Differential parity with the Python reference
+        run: pytest -q tests/verify/test_k0_twin.py
+
+  k0-twin-proofs:
+    name: K0 twin proofs (Kani, BEST-VERIF-05)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          cargo install --locked kani-verifier
+          cargo kani setup
+      # Every #[kani::proof] harness in k0rs/src/proofs.rs must verify within the 60 s
+      # per-harness budget the design document sets (harnesses over budget are split, never
+      # loosened). The gate parses cargo kani's output into the report shape
+      # bestsad.verify.external.from_kani_report ingests and ingests it, so the artefact is
+      # known to be consumable as bounded, external FORMAL evidence.
+      - name: Kani harnesses within budget
+        run: python scripts/kani_gate.py --budget-s 60
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kani-report
+          path: k0rs/target/kani_report.json
+          if-no-files-found: ignore
+
   schemas:
     name: schema validation
     runs-on: ubuntu-latest

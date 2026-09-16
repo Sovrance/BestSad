@@ -12,3 +12,6 @@ artifacts/checkpoints/
 
 # Scratch worktrees used for A/B benchmarking against another branch.
 base-wt/
+
+# Rust twin of K0 (BEST-VERIF-05): build output
+k0rs/target/

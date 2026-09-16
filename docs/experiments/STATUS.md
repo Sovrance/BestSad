@@ -53,7 +53,8 @@ implies. `artifacts/assurance_ledger.json`.
 
 ## How the gates run (ADR-0021, 2026-09-15; supersedes ADR-0018)
 
-GitHub Actions runs the seven `ci.yml` jobs on every push to `v1` and every pull request, and a
+GitHub Actions runs the `ci.yml` jobs (seven at ADR-0021; nine since BEST-VERIF-05 added the two
+K0 twin jobs) on every push to `v1` and every pull request, and a
 red check on a current head is a finding. Between ~2026-08-24 and 2026-09-15 there were no
 runners (ADR-0018): every run completed in seconds with `runner_id: 0`, no steps and no logs,
 and `scripts/ci_local.py` was the only thing executing the gates. The runs on PR #8 were the
@@ -72,7 +73,7 @@ reappears, ADR-0018's decision is back in force.
 | BEST-VERIF-02 | Symbolic equivalence tier (spec V4): `src/bestsad/verify/smt/`, Tier 2 of `bsir/equivalence.py` | Done — `tests/verify/`, nine acceptance tests |
 | BEST-VERIF-03 | External prover adapter, closes BEST-ASSURE-10 | Done — `verify/external.py`, acceptance test 11 |
 | BEST-VERIF-04 | Non-vacuity of specifications | Done — `verify/vacuity.py`; ADR-0014 fixture path corrected |
-| BEST-VERIF-05 | Rust twin of K0 under Kani | **Gated** — ADR-0020 (provisional) and nothing else, per the work order |
+| BEST-VERIF-05 | Rust twin of K0 under Kani | Done (authorised 2026-09-16) — `k0rs/` crate, hash-pinned at build; 19 Kani harnesses green, slowest 2.3 s of the 60 s budget; 10⁵-program parity with the reference on outcome *and* step count; jobs `K0 twin parity` and `K0 twin proofs`; see ADR-0020's second amendment for what was and was not proved |
 | BEST-VERIF-06 | Gate G-V | Done — job `verification (Gate G-V)` in `ci.yml`; gate `verify` in `scripts/ci_local.py` with a probe that asks Z3 to *solve* |
 
 **Gate G-V** runs `pytest -q tests/verify` with `.[dev,verify]` installed. Without a usable
@@ -91,12 +92,16 @@ reports nothing. In the assurance plane the proof is `FORMAL` with `is_external=
 promotes only with the Tier 3 differential result on the same contract attached, and only if
 the contract has refuted at least one generated mutant of the pair (`verify/vacuity.py`).
 
-**Standing residual (until BEST-VERIF-05 is gated in):** *K0 has no machine-checked proof of
-its own implementation. Its assurance rests on the M1 differential sweep (`CORROBORATED`) and
-on the encoder-versus-reference differential test (BEST-VERIF-02, test 1: every K0 operation
-over the enumerated small domain and 10⁴ random programs, evaluated on the reference and through
-the encoding by solving for the output, identical `Value | Trap(kind)`).* The encoder is a
-second reading of K0 and is checked against the first, not the other way round.
+**Standing residual (restated after BEST-VERIF-05):** *K0 has bounded machine-checked proofs
+of its integer arithmetic and bound, its list bound, its fuel accounting and its per-op cost
+model — in the Rust twin (`k0rs/src/proofs.rs`, Kani, `FORMAL`, external, bounded) — and no
+machine-checked proof of its evaluator in either implementation.* Evaluator-level harnesses
+exceed the proof budget by an order of magnitude (ADR-0020, second amendment). The twin's
+agreement with the Python reference is `CORROBORATED`: the full M1 corpus (10⁵ programs) with
+identical `Value | Trap(kind)` and identical step count, re-run in the `K0 twin parity` job on
+every change; the encoder-versus-reference differential test (BEST-VERIF-02) stands as before.
+The Python reference is normative; the twin and the encoder are second readings checked
+against it, never the other way round.
 
 **Gate record for this work (2026-09-15).** `scripts/ci_local.py --fresh-venv` on the
 authoring container (no Docker daemon): `tests`, `integrity` (G1), `kernel-sweep` (G0),
