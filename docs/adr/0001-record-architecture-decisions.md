@@ -59,6 +59,7 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0015 | SRE wire schemas keep cross-repo conventions, not BestSad-native ones | Accepted |
 | 0016 | Observing K0 inference from outside the kernel; disagreeing node types are recorded as ambiguity | Accepted (amended 2026-08-26) |
 | 0017 | CANONICAL maturity state, added by schema extension rather than by editing the delivered package | Accepted |
-| 0018 | CI runners are unavailable; gates run locally, and the loss is stated | Accepted |
+| 0018 | CI runners are unavailable; gates run locally, and the loss is stated | Superseded by ADR-0021 |
 | 0019 | Adopt Z3 as the symbolic-equivalence engine (spec V4) | Accepted |
 | 0020 | A Rust twin of K0 verified with Kani (gated; not started) | Provisional |
+| 0021 | CI runners returned; `ci.yml` is live again and the local runner stays | Accepted |

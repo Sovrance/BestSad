@@ -7,13 +7,11 @@
 
 Why this exists
 ---------------
-The repository's Actions runners are unavailable and, by owner decision, will not be paid
-for (ADR 0018). Every job in `ci.yml` therefore completes in seconds with no runner assigned,
-no steps executed, and no logs -- a red check that carries no information about the code.
-
-`ci.yml` is deliberately left in place: it is correct, and it will work again if runners ever
-return. But a gate that exists only as configuration for a system nobody invokes is not a
-gate, so the same jobs are exposed here as something a person or an agent can actually run.
+Between ~2026-08-24 and 2026-09-15 the repository had no Actions runners (ADR 0018): every job
+in `ci.yml` completed in seconds with no runner assigned, no steps executed and no logs, and
+this script was the only thing executing the gates. Runners returned on 2026-09-15 (ADR 0021),
+so `ci.yml` is live again; this script stays as the way a person or an agent reproduces a CI
+result locally before pushing, and as the fallback if the runner-starvation signature recurs.
 
 What this is not
 ----------------

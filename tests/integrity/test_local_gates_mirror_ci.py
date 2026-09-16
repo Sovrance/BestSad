@@ -1,9 +1,10 @@
-"""`scripts/ci_local.py` must not drift out of sync with `.github/workflows/ci.yml` (ADR 0018).
+"""`scripts/ci_local.py` must not drift out of sync with `.github/workflows/ci.yml` (ADR 0018,
+kept by ADR 0021).
 
-With no runners, the local script is the only thing that actually executes the gates. If a job
-is added to `ci.yml` and not to the script, that gate silently stops being run by anything at
-all — and unlike a CI outage, nothing goes red to say so. This test is what makes that
-impossible to do quietly.
+While there were no runners, the local script was the only thing that actually executed the
+gates; now it is how a CI result is reproduced locally. Either way, if a job is added to
+`ci.yml` and not to the script, the script reproduces the wrong thing and nothing goes red to
+say so. This test is what makes that impossible to do quietly.
 
 It lives in `tests/integrity` for the same reason the trust-boundary tests do: it protects a
 control rather than a behaviour.
@@ -44,8 +45,8 @@ def _local_pytest_arg_sets() -> list[list[str]]:
 
 class BothFilesExist(unittest.TestCase):
     def test_the_workflow_is_still_present(self):
-        """ADR 0018 keeps ci.yml deliberately: it is the description the local runner mirrors,
-        and it works again unchanged if runners return."""
+        """ADR 0018 kept ci.yml deliberately as the description the local runner mirrors, and
+        ADR 0021 confirmed it works again unchanged now that runners have returned."""
         self.assertTrue(WORKFLOW.exists(), "ci.yml was removed; ADR 0018 says it stays")
 
     def test_the_local_runner_is_present_and_executable(self):
