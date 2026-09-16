@@ -59,12 +59,21 @@ before a push; `--fresh-venv PATH` reproduces CI's clean install. A gate whose t
 missing locally reports `UNAVAILABLE`, never `OK`, and a claim that gates passed must say where
 they ran and which gates did not run.
 
-`ci.yml` describes seven jobs: tests, the trust-boundary suite (G1), the K0 sweep (G0), the
-assurance acceptance suite, schema validation, the verification plane (G-V), and the evaluator
-image. The trust-boundary, assurance and verification suites are separate jobs on purpose — a
-regression in any of them should be visible as a named failing check rather than one line inside
-a long log. The `tests` job installs no solver and the solver-backed tests skip there; G-V is
-where they run, with a probe that reports `UNAVAILABLE` if Z3 cannot solve.
+`ci.yml` describes nine jobs: tests, the trust-boundary suite (G1), the K0 sweep (G0), the
+assurance acceptance suite, schema validation, the verification plane (G-V), the K0 twin parity
+and K0 twin proof jobs (BEST-VERIF-05, ADR-0020), and the evaluator image. The trust-boundary,
+assurance and verification suites are separate jobs on purpose — a regression in any of them
+should be visible as a named failing check rather than one line inside a long log. The `tests`
+job installs no solver and no Rust toolchain, so the solver-backed and twin-backed tests skip
+there; G-V and the twin jobs are where they run, each with a probe that reports `UNAVAILABLE`
+locally if Z3 cannot solve, `cargo` cannot build the twin, or `cargo kani` is not installed.
+
+The K0 twin (`k0rs/`) is a Rust crate outside the Python package. Building it needs a stable
+Rust toolchain; its proofs need Kani (`cargo install --locked kani-verifier && cargo kani
+setup`). `build.rs` refuses to compile a twin whose kernel hash differs from the Python
+`KERNEL_VERSION_HASH`, and if the twin and the reference ever disagree the Python reference is
+normative and the twin is fixed (ADR-0002, ADR-0020). Every Kani harness must verify within
+60 s; a harness over budget is split, never loosened (`scripts/kani_gate.py`).
 
 ## Changes that need an architecture decision record
 

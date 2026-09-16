@@ -1,6 +1,6 @@
 # ADR 0020 — A Rust twin of K0, verified with Kani (gated; not started)
 
-**Status:** Provisional — the gate below has not fired, and no authorisation has been recorded
+**Status:** Accepted (2026-09-16, on the owner's authorisation; see the amendment)
 **Date:** 2026-09-15
 **Governs:** a future crate at `k0rs/` (workspace root, outside `src/`, so the Python package
 layout of ADR-0003 is unchanged); the Kani ingestion path in `src/bestsad/verify/external.py`
@@ -91,3 +91,106 @@ Either gate condition above. When one fires, amend this ADR with the date, the t
 fired, and (for condition 2) the owner's authorisation, then move it to *Accepted* before any
 Rust is written. Verus, Creusot, Prusti and Aeneas are downstream of this ADR and are not
 options until it is accepted (design §5).
+
+## Amendment (2026-09-16) — gate condition 2 fired; the twin is authorised
+
+The repository owner authorised the twin on 2026-09-16 ("Start BEST-VERIF-05, I authorize the
+K0 twin"): gate condition 2 above, explicit authorisation as a verification asset for the machine
+leg, independent of performance. Condition 1 (ADR-0002's compute trigger) has **not** fired and
+is not claimed. This ADR moves to *Accepted* before any Rust is written, as the revisit trigger
+required, and the commitments in "Decision" bind the implementation at `k0rs/`.
+
+Two clarifications the implementation forced:
+
+- Kani function contracts (`#[kani::ensures]`) are an unstable feature. The fuel property is
+  proved with plain `#[kani::proof]` harnesses over the step function's `tick` and `charge`
+  and over the per-op cost function, asserting the ADR-0008 cost model directly, rather than
+  with contract attributes.
+- The differential criterion between twin and reference is identical `Value | Trap(kind)`
+  **and identical step count** on every case of the M1 corpus. The step count is the ADR-0008
+  cost model observed end to end, so agreement on it is stronger than the outcome alone; the
+  execution trace hash is not reproduced by the twin and is not compared.
+
+## Amendment (2026-09-16, later the same day) — the crate exists; what Kani actually proved
+
+`k0rs/` now exists (Rust, edition 2021, outside `src/`; `cargo build`, `cargo test`, `cargo
+clippy -D warnings` and `cargo +nightly miri test` all clean). What follows replaces the
+"Consequences" bullet that said nothing changes in the package, and states the proof surface as
+it turned out, not as the table above hoped.
+
+**Hash.** `k0rs/src/descriptor.rs` rebuilds the canonical descriptor (kernel version, the four
+limits, the 40 operations with their signatures, strictness, attributes and traps) byte for byte
+— 4524 bytes, identical to `json.dumps(kernel_descriptor(), sort_keys=True,
+separators=(",", ":"))` — and `build.rs` refuses to compile the crate unless its SHA-256 equals
+the Python `KERNEL_VERSION_HASH` (`9aa25728…3165`). `k0rs hash` prints it;
+`bestsad.verify.twin.probe()` refuses any binary whose hash differs.
+
+**Agreement with the reference (corroborated, not proven).** `tests/verify/test_k0_twin.py`
+runs both implementations over one program per operation on the enumerated small domain, the
+named edge cases (the 2^64 bound inclusive, `range` at 4096/4097, truncating `div`/`mod`, a
+too-large literal, depth 300, fuel 0–3), and the M1 corpus drawn exactly as
+`tests/kernel/test_differential.py::_sweep` draws it (seed 20260817, `Kernel(fuel=20_000)`):
+the default 3000 everywhere and the full 10⁵ in the `K0 twin parity (BEST-VERIF-05)` job.
+Criterion: identical `Value | Trap(kind)` **and identical step count** on every case. Result
+on the full 10⁵: zero disagreements. Trace hashes are not compared (they are the Python
+evaluator's record order, not K0). The Python reference remains normative.
+
+**What Kani proved** (`k0rs/src/proofs.rs`, 19 harnesses, `cargo kani` 0.67.0 / CBMC, all
+green, slowest 2.3 s against the 60 s budget; `scripts/kani_gate.py` holds the budget in CI and
+ingests the run through `verify/external.py::from_kani_report`):
+
+| Property (ADR-0008) | Harness(es) | Bound |
+|---|---|---|
+| The integer bound is exactly `\|v\| <= 2^64`; beyond it `value_too_large` | `bounded_is_exactly_the_k0_bound` | all of `i128` |
+| `add sub mul neg abs min max` are total on bounded operands: a bounded value or `value_too_large`, never a panic; `neg`/`abs` never trap within the bound; `min`/`max` pick an operand | one harness per op | operands in `[-2^64, 2^64]` |
+| `div`/`mod` trap `division_by_zero` exactly on a zero divisor, and on a nonzero divisor are total and bounded | `div_and_mod_trap_exactly_on_a_zero_divisor`, `div_by_…`, `mod_by_…` | as above |
+| `mod` has the dividend's sign and is smaller in magnitude than the divisor | `mod_result_…` (two) | as above |
+| `lt le gt ge` never trap and are the integer order | `comparisons_…` | as above |
+| The list bound is exactly 4096; `range` traps `list_too_long` beyond it and otherwise charges `max(0, hi - lo)` | `list_length_check_…`, `range_span_…` | all lengths / bounded operands |
+| Fuel never comes back; `tick` adds one and `charge` adds exactly its units; both trap `fuel_exhausted` exactly when the budget is exceeded; zero units is a no-op | `tick_…`, `charge_…` | all `u64` states |
+| The per-op cost model is ADR-0008's: `cons` len, `tail` max(0, len-1), `append` la+lb, `map`/`filter`/`fold` len, nothing else charges | `cost_model_is_adr_0008` | lengths ≤ 4096 |
+| A scalar cell and an empty list cost one unit under `eq` | `scalar_cells_cost_one`, `an_empty_list_costs_one` | — |
+
+Every one of these is a proof about a *pure function* the evaluator calls, over the whole
+stated domain, with Kani's own panic, overflow and unwinding checks on. None of them is a proof
+about the evaluator as a whole.
+
+**What Kani did not prove, and why.** Each of the following was written, run and timed; each
+exceeded the 60 s budget by more than an order of magnitude and was removed rather than
+loosened:
+
+- Anything that reaches `Kernel::eval` or `apply_first_order` — even `add(1, 2)` on concrete
+  inputs. CBMC unwinds the evaluator's recursion at every call site of every arm and models
+  every `Vec<Value>` and `Box<Value>` (and their drop glue) on a symbolic heap.
+- "`div` truncates toward zero" stated as a relation between quotient and operands
+  (`a - q*b` has the dividend's sign and is smaller than `b`; or `q == a / b`). It needs a
+  second 128-bit divider or a 128-bit multiplier; cadical, kissat and z3 all timed out, and so
+  did a 20-bit-operand restatement. The rounding direction of `div` is therefore Rust's `/`
+  by construction and is pinned by `tests/semantics.rs` and the sweep, not by Kani.
+- `eq`'s cost on compound values (`Just`, `Pair`, a two-element list), recursively or with an
+  explicit worklist.
+
+So the "per-op totality" row of the table above holds for the integer, comparison, length
+and fuel functions; totality of the evaluator on *values* (type dispatch, closures,
+higher-order operations) rests on `tests/semantics.rs`, Miri, and the 10⁵ differential sweep
+with step-count parity. The assurance residual in `docs/experiments/STATUS.md` is restated
+accordingly: K0 now has bounded machine-checked proofs of its arithmetic, bounds and fuel
+accounting *in the twin*; it still has no machine-checked proof of its evaluator, in either
+implementation.
+
+**Unchecked by Kani, as the table above already said:** aliasing and provenance UB (Miri runs
+the Rust test loop: clean), concurrency (none in K0), and anything outside the stated bounds.
+Kani's checks are bounded model checking; a green run is evidence within its `unwind` and
+`assume` bounds and nothing beyond them, and `from_kani_report` records those bounds in the
+evidence's `assumptions`.
+
+**One thing the harnesses found in themselves:** the first version of
+`bounded_is_exactly_the_k0_bound` used `v.abs()`, which overflows on `i128::MIN`; Kani failed
+it. A harness must not contain the arithmetic it exists to check the kernel avoids.
+
+**Consequences, revised.** `cargo` is now a build dependency of two CI jobs and two local
+gates (`k0-twin-parity`, `k0-twin-proofs`), never of the Python package: `tests/verify/
+test_k0_twin.py` skips when no twin can be found or built, and the local gates report
+`UNAVAILABLE` (ADR-0021 semantics). The Python reference does not move; the twin is the
+executor of choice for the machine leg only with its agreement re-established by the parity
+job on every change.

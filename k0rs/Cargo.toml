@@ -1,0 +1,32 @@
+[package]
+name = "k0rs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Rust twin of the BestSad K0 v1.0.0 reference interpreter (BEST-VERIF-05, ADR-0020). The Python reference in src/bestsad/kernel/ is normative; this crate must agree with it, never the other way round."
+license = "LicenseRef-Proprietary"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["unbounded_depth"] }
+sha2 = "0.10"
+
+[build-dependencies]
+sha2 = "0.10"
+
+[[bin]]
+name = "k0rs"
+path = "src/bin/k0rs.rs"
+
+[profile.release]
+debug = 1
+overflow-checks = true
+
+# Kani proof harnesses live in src/proofs.rs under cfg(kani). Each harness declares its own
+# unwind bound; the budget per harness is 60 s (ADR-0020), and a harness that exceeds it is
+# split, never loosened.
+[package.metadata.kani]
+flags = { default-unwind = "8" }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(kani)"] }

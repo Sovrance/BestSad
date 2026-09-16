@@ -100,6 +100,32 @@ GATES: tuple[Gate, ...] = (
         ),
     ),
     Gate(
+        "k0-twin-parity",
+        "K0 twin parity (BEST-VERIF-05)",
+        [sys.executable, "-m", "pytest", "-q", "tests/verify/test_k0_twin.py"],
+        probe=("cargo", ["cargo", "test", "--manifest-path", str(REPO / "k0rs" / "Cargo.toml"),
+                         "--release", "--quiet"]),
+        note=(
+            "the Rust twin of K0 (k0rs/, ADR-0020) against the Python reference over the full "
+            "M1 corpus: identical Value | Trap(kind) and identical step count. The probe builds "
+            "and tests the crate (build.rs refuses a twin whose kernel hash differs from the "
+            "Python constant), so without cargo the gate is UNAVAILABLE, never a run of tests "
+            "that all skipped"
+        ),
+    ),
+    Gate(
+        "k0-twin-proofs",
+        "K0 twin proofs (Kani, BEST-VERIF-05)",
+        [sys.executable, str(REPO / "scripts" / "kani_gate.py"), "--budget-s", "60"],
+        probe=("cargo kani", ["cargo", "kani", "--version"]),
+        note=(
+            "every Kani harness on the twin green within the 60 s per-harness budget, and the "
+            "run ingested as external FORMAL evidence. Kani is a separate install "
+            "(`cargo install --locked kani-verifier && cargo kani setup`); without it the gate "
+            "is UNAVAILABLE"
+        ),
+    ),
+    Gate(
         "evaluator-image",
         "evaluator image (spec §27.1 deployment half)",
         ["bash", str(REPO / "scripts" / "evaluator_image_gate.sh")],
