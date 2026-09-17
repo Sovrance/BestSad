@@ -20,6 +20,14 @@ The commits already on `v1` predate this convention — the research package, mi
 the licence, and the assurance integration were pushed directly while `v1` was still a working
 branch rather than the trunk. They are not a precedent.
 
+Everything since has landed this way. PRs #8–#12 (2026-09-15 to 2026-09-16: the verification
+plane, ADR-0021, the K0 twin, and the two status updates that recorded them) were each opened
+as a draft by a coding agent, ran every `ci.yml` job to green on their merged head, and were
+marked ready and merged by the owner. The merge record, with heads and job counts, is in
+`docs/experiments/STATUS.md`; work-order status is in
+`docs/architecture/ASSURANCE_WORK_ORDERS.md`. A pull request that changes what those files say
+is done updates them in the same pull request or the next one, not never.
+
 ## Do not modify the delivered v0.2 package
 
 These files arrived as a unit and their hashes are pinned in `MANIFEST_SHA256.txt`:
@@ -49,19 +57,25 @@ notice, assurance protocol, layout — is in `REPOSITORY.md` for exactly this re
 pip install -e ".[dev,verify]"   # `verify` adds the optional Z3 solver (ADR-0019)
 pytest -q                        # full suite
 pytest -q -m slow tests/kernel   # the 10^5-program K0 differential sweep
+pytest -q tests/verify/test_k0_twin.py   # twin parity, incl. the same 10^5 corpus (needs cargo)
+python3 scripts/kani_gate.py     # every Kani harness on the twin within budget (needs cargo kani)
 bestsad assure roots             # CLI smoke
 python3 scripts/ci_local.py      # every gate, as CI runs them, reproduced locally (ADR-0021)
 ```
 
 GitHub Actions runs the gates on every pull request (ADR-0021; between 2026-08-24 and
-2026-09-15 there were no runners, ADR-0018). `scripts/ci_local.py` reproduces them locally
-before a push; `--fresh-venv PATH` reproduces CI's clean install. A gate whose tooling is
-missing locally reports `UNAVAILABLE`, never `OK`, and a claim that gates passed must say where
-they ran and which gates did not run.
+2026-09-15 there were no runners, ADR-0018). Every run since PR #8 has been genuine, with
+real durations and logs; a red check on a current head is a finding, not runner noise.
+`scripts/ci_local.py` reproduces the gates locally before a push; `--fresh-venv PATH`
+reproduces CI's clean install. A gate whose tooling is missing locally reports `UNAVAILABLE`,
+never `OK`, and a claim that gates passed must say where they ran and which gates did not run.
 
-`ci.yml` describes nine jobs: tests, the trust-boundary suite (G1), the K0 sweep (G0), the
-assurance acceptance suite, schema validation, the verification plane (G-V), the K0 twin parity
-and K0 twin proof jobs (BEST-VERIF-05, ADR-0020), and the evaluator image. The trust-boundary,
+`ci.yml` describes nine jobs, and CodeQL runs alongside them for Python, Rust and the
+workflow itself: tests, the trust-boundary suite (G1), the K0 sweep (G0), the assurance
+acceptance suite, schema validation, the verification plane (G-V), the K0 twin parity and K0
+twin proof jobs (BEST-VERIF-05, ADR-0020), and the evaluator image. The workflow token is
+limited to `contents: read`; a new job that needs more says so in its own `permissions` block
+rather than widening the default. The trust-boundary,
 assurance and verification suites are separate jobs on purpose — a regression in any of them
 should be visible as a named failing check rather than one line inside a long log. The `tests`
 job installs no solver and no Rust toolchain, so the solver-backed and twin-backed tests skip
