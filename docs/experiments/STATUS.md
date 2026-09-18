@@ -1,6 +1,6 @@
 # Implementation status against `IMPLEMENTATION_PLAN_v0.2.md`
 
-Last updated: 2026-09-18 (PRs #8–#15 merged into `v1`; the merge record is under the verification plane).
+Last updated: 2026-09-18 (PRs #8–#18 merged into `v1`; the merge record is under the verification plane).
 
 ## Complete, with acceptance tests passing
 
@@ -116,7 +116,7 @@ the owner marked ADR-0018 superseded the same day (ADR-0021).
 **Merge record.** All of the verification-plane work is on `v1`, in four pull requests merged by
 the owner, each with every `ci.yml` job green on its merged head. Four documentation pull
 requests followed, recording that work in this file, `CONTRIBUTING.md`, `REPOSITORY.md` and
-`ASSURANCE_WORK_ORDERS.md`; each merged the same way:
+`ASSURANCE_WORK_ORDERS.md`, and three more recorded those; each merged the same way:
 
 | PR | Content | Merged (UTC) | Head |
 |---|---|---|---|
@@ -128,6 +128,9 @@ requests followed, recording that work in this file, `CONTRIBUTING.md`, `REPOSIT
 | #13 | `CONTRIBUTING.md`: the draft-PR workflow since #8, the twin checks in the pre-push list, CodeQL and the `contents: read` token | 2026-09-17 14:10 | `0aa37f2` (nine jobs plus CodeQL) |
 | #14 | `REPOSITORY.md`: agent guidance for the K0 twin under invariant 1 (`AGENTS.md` is manifest-pinned and untouched) | 2026-09-17 15:41 | `76ec5e4` (nine jobs plus CodeQL) |
 | #15 | `ASSURANCE_WORK_ORDERS.md`: where PRs #11–#14 are recorded | 2026-09-18 01:01 | `ca30270` (nine jobs plus CodeQL) |
+| #16 | This file: the merge record extended to #12–#15 | 2026-09-18 01:08 | `670256e` (nine jobs plus CodeQL) |
+| #17 | `CONTRIBUTING.md`: PRs #13–#16 as further instances of the draft-PR convention | 2026-09-18 01:26 | `43eba75` (nine jobs plus CodeQL) |
+| #18 | `ASSURANCE_WORK_ORDERS.md`: its record extended to PRs #15–#17 | 2026-09-18 01:30 | `b6d0993` (nine jobs plus CodeQL) |
 
 Discrepancies the verification-plane document recorded for the owner (§7), and their state:
 (1) the ADR-0014 fixture path — corrected by amendment, the fixture is
