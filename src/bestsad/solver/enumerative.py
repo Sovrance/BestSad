@@ -99,6 +99,16 @@ class SearchResult:
     emitted_size: int = 0
     candidates_considered: int = 0
     vocabulary_size: int = 0
+    #: Model-side accounting, zero for the enumerative synthesizer and filled in by a language
+    #: model adapter (`bestsad.models`). Real token counts, not the surface-token proxy the
+    #: ledger falls back to when these are zero (ADR-0007's disclosed residual).
+    model_input_tokens: int = 0
+    model_output_tokens: int = 0
+    samples: int = 0
+    parse_failures: int = 0
+    #: Compute spent up to the sample that solved the visible examples, in the model's own
+    #: units (tokens); what pass@C at a fixed budget is computed from (`conditions/flops.py`).
+    tokens_at_solve: int | None = None
 
     @property
     def found(self) -> bool:

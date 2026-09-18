@@ -36,11 +36,14 @@ from ..abstraction import (
 )
 from ..bsir import get_projection, token_count
 from ..conditions import (
+    DEFAULT_FLOPS_POLICY,
     ComputeLedger,
     Condition,
     ScaffoldingMatcher,
+    TaskAttempt,
     build_conditions,
     check_condition_f,
+    matched_flops,
     reconcile_search_only,
 )
 from ..evaluator import (
@@ -53,12 +56,23 @@ from ..evaluator import (
     detect_hardcoding,
     manifest_for,
     run_isolated,
+    transcript_leak_findings,
 )
 from ..genomes import Genome, Primitive
 from ..kernel import INT, KERNEL_VERSION, Kernel, TList, app, const_int, lam, var
 from ..kernel.ops import OPS_BY_NAME
 from ..mdl import CodingScheme, PairedOutcome, compression_ratio
-from ..solver import EnumerativeSynthesizer, SearchBudget
+from ..models import (
+    DEFAULT_MODEL_SPEC,
+    RecordingBackend,
+    Transcript,
+    build_adapter,
+    scaffolding_policy,
+    spec_identity,
+    spec_requires_network,
+)
+from ..models.llm import build_backend
+from ..solver import SearchBudget
 from ..solver.enumerative import SYNTHESIZER_VERSION
 from ..stats import bootstrap_ci, mean, power_analysis, variance
 from ..tasks import (
@@ -78,6 +92,8 @@ BASE_VOCABULARY: tuple[str, ...] = tuple(
     if op not in ("lam", "var", "const_int", "const_bool", "nil", "none")
 )
 
+#: The model id of ADR-0007's stand-in. The ledger cites `ModelIdentity.hash()`, not this
+#: string; it is kept as the name the dry-run pre-registration recorded.
 MODEL_IDENTITY = "enumerative-search-v1"
 
 
@@ -100,6 +116,14 @@ class ConditionOutcome:
     cross_family_reuse: dict = field(default_factory=dict)
     ledger: dict = field(default_factory=dict)
     hardcoding_incidents: int = 0
+    #: Model-role provenance and FLOP accounting (ADR-0022). `attempts` carries one record per
+    #: held-out task with the compute it took, so pass@C at a fixed FLOP budget can be read
+    #: off the record rather than re-run.
+    model_identity_hash: str = ""
+    model_contract: dict = field(default_factory=dict)
+    flops: float = 0.0
+    attempts: list = field(default_factory=list)
+    twin_gap: dict = field(default_factory=dict)
 
     def to_record(self) -> dict:
         data = asdict(self)
@@ -179,6 +203,7 @@ def _discovery_job(payload: tuple) -> tuple:
             {
                 "selection": SELECTION_VERSION,
                 "synthesizer": SYNTHESIZER_VERSION,
+                "model": spec_identity(kwargs.get("model_spec")).hash(),
                 "per_family": kwargs.get("per_family"),
                 "abstraction_count": kwargs.get("abstraction_count"),
                 "budget": asdict(kwargs["budget"]),
@@ -226,7 +251,13 @@ class JobIsolation:
             cpu_seconds=self.cpu_seconds, address_space_bytes=self.address_space_bytes
         )
 
-    def to_record(self) -> dict:
+    def to_record(self, *, model_proposal_outside: bool = False) -> dict:
+        unisolated = ["abstraction_discovery"]
+        if model_proposal_outside:
+            # A model that needs the network is called outside the boundary and replayed
+            # inside it from a recorded, leak-checked transcript (ADR-0022). The proposal
+            # stage therefore ran unisolated, and the record says so.
+            unisolated.append("model_proposal")
         return {
             "enabled": self.enabled,
             "isolated_stages": ["condition_jobs"] if self.enabled else [],
@@ -234,7 +265,7 @@ class JobIsolation:
             # objects whose expansions are K0 terms, and the boundary carries JSON only.
             # Serialising terms would need the round-tripping parser `_discovery_job` warns
             # about, whose silent mismatch would change what condition D is.
-            "unisolated_stages": ["abstraction_discovery"],
+            "unisolated_stages": unisolated,
             "cpu_seconds": self.cpu_seconds,
             "address_space_bytes": self.address_space_bytes,
             "timeout_seconds": self.timeout_seconds,
@@ -309,9 +340,16 @@ def _job(payload: tuple) -> dict:
                 # a checkpoint written by an older synthesizer is served silently to a newer
                 # one, which is the same defect the genome/budget fields above exist to prevent.
                 "synthesizer": SYNTHESIZER_VERSION,
+                # Which model filled the model role, and — for a replayed transcript — which
+                # transcript. Two models are two experiments; a record produced under one must
+                # never be served to the other (ADR-0022).
+                "model": spec_identity(kwargs.get("model_spec")).hash(),
+                "transcript": _transcript_hash(kwargs.get("model_spec")),
+                "scaffolding": condition.scaffolding,
                 "genome": condition.genome.content_hash(),
                 "node_budget": condition.node_budget,
                 "depth_bonus": condition.search_depth_bonus,
+                "sample_bonus": condition.sample_bonus,
                 "budget": asdict(kwargs["budget"]),
                 "per_family": kwargs.get("per_family"),
                 "in_family": kwargs.get("in_family_per_family"),
@@ -334,8 +372,21 @@ def _job(payload: tuple) -> dict:
     return record
 
 
+def _transcript_hash(spec: Mapping | None) -> str | None:
+    backend = (spec or {}).get("backend") or {}
+    if backend.get("kind") != "replay":
+        return None
+    return Transcript.load(Path(backend["transcript"])).content_hash()
+
+
 class Exp001Runner:
-    """Runs EXP-001's staged gates end to end."""
+    """Runs EXP-001's staged gates end to end.
+
+    The model role is whatever `model_spec` names (`bestsad.models`): ADR-0007's enumerative
+    synthesizer by default, or a fixed-weights language model for EXP-002. Every scientific
+    quantity is a pure function of `(condition, seed, sizing, model)`, and for a model reached
+    over the network, of the recorded transcript.
+    """
 
     def __init__(
         self,
@@ -351,9 +402,12 @@ class Exp001Runner:
         workers: int = 1,
         checkpoint_dir: Path | None = None,
         isolation: JobIsolation | None = None,
+        model_spec: Mapping | None = None,
     ) -> None:
         self.run_id = run_id
         self.seeds = tuple(seeds)
+        self.model_spec = dict(model_spec or DEFAULT_MODEL_SPEC)
+        self.flops_policy = DEFAULT_FLOPS_POLICY
         # `per_family` sizes the curriculum and the held-out set, which carries the primary
         # endpoint. The secondary sets can be sized independently: they inform secondary
         # endpoints only, and every task in them costs the full node budget when unsolved.
@@ -403,7 +457,97 @@ class Exp001Runner:
             "adversarial_per_family": self.adversarial_per_family,
             "budget": self.budget,
             "abstraction_count": self.abstraction_count,
+            "model_spec": self.model_spec,
+            # A worker writes a discovery transcript under the run's artifacts, not under a
+            # default path of its own.
+            "artifacts_dir": self.artifacts_dir,
         }
+
+    @property
+    def model_identity_hash(self) -> str:
+        return spec_identity(self.model_spec).hash()
+
+    def _worked_examples(self, curriculum: TaskSet, count: int = 3) -> list:
+        """Few-shot material for a model in the model role: one curriculum task per family,
+        with its reference program. Curriculum references are what search already mines, so
+        showing them in-context widens nothing (spec §24.3)."""
+        examples = []
+        for family_tasks in curriculum.by_family().values():
+            task = family_tasks[0]
+            examples.append((task, task.reference))
+            if len(examples) >= count:
+                break
+        return examples
+
+    def _adapter(self, condition: Condition, seed: int, budget: SearchBudget,
+                 curriculum: TaskSet, *, backend=None):
+        genome = condition.genome
+        kernel = genome.kernel(fuel=self.budget.kernel_fuel)
+        spec = dict(self.model_spec)
+        if condition.sample_bonus and spec.get("kind") == "fixed_weights_llm":
+            sample_budget = dict(spec.get("budget") or {})
+            sample_budget["max_samples"] = (
+                int(sample_budget.get("max_samples", 8)) + condition.sample_bonus
+            )
+            spec["budget"] = sample_budget
+        adapter = build_adapter(
+            spec,
+            kernel=kernel,
+            vocabulary=genome.vocabulary(BASE_VOCABULARY),
+            primitive_sigs=genome.signatures(),
+            budget=budget,
+            seed=seed,
+            projection_name=genome.projection_name,
+            scaffolding=condition.scaffolding,
+            worked_examples=self._worked_examples(curriculum),
+        )
+        if backend is not None:
+            adapter.backend = backend
+        return adapter, kernel
+
+    def _propose(self, condition: Condition, seed: int, task_sets: Mapping[str, TaskSet]) -> Path:
+        """Proposal pass for a model that needs the network (ADR-0022).
+
+        Runs *outside* the candidate boundary, records every prompt and completion, checks the
+        transcript for the canary and for sealed hidden inputs, and writes it under the run's
+        artifacts. The condition job then replays it inside the boundary. A transcript already
+        on disk for this model, condition and seed is reused rather than re-queried: the
+        proposals are the expensive part and a replay is a pure function of them.
+        """
+        path = self.artifacts_dir / "transcripts" / f"{condition.condition_id}_seed{seed}.json"
+        identity_hash = self.model_identity_hash
+        if path.exists():
+            existing = Transcript.load(path)
+            if existing.model_identity_hash == identity_hash:
+                self._say(f"proposal({condition.condition_id}, seed={seed}): reusing {path.name}")
+                return path
+        transcript = Transcript(identity_hash)
+        live = RecordingBackend(build_backend(self.model_spec.get("backend")), transcript)
+        budget = self._search_budget(condition)
+        adapter, _ = self._adapter(condition, seed, budget, task_sets["curriculum"], backend=live)
+        tasks = [t for name in ("held_out", "in_family_ood", "adversarial") for t in task_sets[name]]
+        for task in tasks:
+            adapter.solve(task)
+        findings = transcript_leak_findings(transcript.visible_text(), tasks,
+                                            surface=f"transcript {path.name}")
+        if findings:
+            raise IntegrityViolation(
+                f"model transcript for {condition.condition_id} seed {seed} carries hidden "
+                f"material: {findings}"
+            )
+        transcript.save(path)
+        self._say(
+            f"proposal({condition.condition_id}, seed={seed}): {len(transcript.exchanges)} "
+            f"exchanges recorded to {path.name}, leak check clean"
+        )
+        return path
+
+    def _search_budget(self, condition: Condition) -> SearchBudget:
+        return SearchBudget(**{
+            **asdict(self.budget),
+            "max_nodes": condition.node_budget or self.budget.max_nodes,
+            "max_size": self.budget.max_size + condition.search_depth_bonus,
+        })
 
     def _map_jobs(self, jobs: Sequence[tuple[Condition, int]]) -> list[dict]:
         """Run `(condition, seed)` jobs, in parallel when `workers > 1`.
@@ -415,10 +559,17 @@ class Exp001Runner:
         containment, and they are not substitutes for each other.
         """
         checkpoint = str(self.checkpoint_dir) if self.checkpoint_dir else None
-        payloads = [
-            (condition, seed, self._sizing(), self.run_id, checkpoint)
-            for condition, seed in jobs
-        ]
+        payloads = []
+        for condition, seed in jobs:
+            sizing = self._sizing()
+            if spec_requires_network(self.model_spec):
+                path = self._propose(condition, seed, self._task_sets(seed))
+                sizing["model_spec"] = {
+                    **self.model_spec,
+                    "backend": {"kind": "replay", "transcript": str(path)},
+                    "recorded_from": self.model_spec.get("backend"),
+                }
+            payloads.append((condition, seed, sizing, self.run_id, checkpoint))
         target, work = _job, payloads
         if self.isolation.enabled:
             if not ISOLATION_AVAILABLE:
@@ -446,35 +597,33 @@ class Exp001Runner:
         task_sets: Mapping[str, TaskSet],
     ) -> ConditionOutcome:
         genome = condition.genome
-        kernel = genome.kernel(fuel=self.budget.kernel_fuel)
         projection = get_projection(genome.projection_name)
-        budget = SearchBudget(**{
-            **asdict(self.budget),
-            "max_nodes": condition.node_budget or self.budget.max_nodes,
-            "max_size": self.budget.max_size + condition.search_depth_bonus,
-        })
-        synthesizer = EnumerativeSynthesizer(
-            kernel, genome.vocabulary(BASE_VOCABULARY), genome.signatures(),
-            budget=budget, seed=seed,
-        )
+        budget = self._search_budget(condition)
+        adapter, kernel = self._adapter(condition, seed, budget, task_sets["curriculum"])
+        identity = adapter.identity
         evaluator = Evaluator(
             "bm-exp001", genome.signatures(), genome.expansions(),
         )
         ledger = ComputeLedger(self.run_id, condition.condition_id, seed,
-                               model_identity_hash=MODEL_IDENTITY)
+                               model_identity_hash=identity.hash())
+        per_token = self.flops_policy.model_token_flops(identity.parameter_count)
 
         reports: dict[str, ScoreReport] = {}
+        attempts: list[TaskAttempt] = []
         hardcoding = 0
         started = time.time()
 
         for name in ("held_out", "in_family_ood", "adversarial"):
             report = ScoreReport(condition.condition_id, seed, "bm-exp001")
             for task in task_sets[name]:
-                result = synthesizer.solve(task)
+                result = adapter.solve(task)
+                # The surface-token proxy (ADR-0007) stands in only when the model reported
+                # nothing; a language model's real counts take precedence.
                 tokens = (
                     token_count(projection.render(result.program.body))
                     if result.program is not None else 0
                 )
+                output_tokens = result.model_output_tokens or tokens
                 score = evaluator.score_task(
                     task, result.program,
                     solved_train=result.solved_train,
@@ -487,8 +636,23 @@ class Exp001Runner:
                     search_nodes=result.nodes_expanded,
                     kernel_steps=result.kernel_steps,
                     candidate_evaluations=result.evaluations,
-                    model_output_tokens=tokens,
+                    model_input_tokens=result.model_input_tokens,
+                    model_output_tokens=output_tokens,
                 )
+                if name == "held_out":
+                    spent = (
+                        per_token * (result.model_input_tokens + result.model_output_tokens)
+                        + self.flops_policy.search_node_flops * result.nodes_expanded
+                        + self.flops_policy.kernel_step_flops * result.kernel_steps
+                    )
+                    at_solve = None
+                    if score.verified:
+                        at_solve = (
+                            spent if result.tokens_at_solve is None
+                            else per_token * result.tokens_at_solve
+                            + self.flops_policy.kernel_step_flops * result.kernel_steps
+                        )
+                    attempts.append(TaskAttempt(task.task_id, score.verified, spent, at_solve))
                 if result.program is not None and not score.verified and result.solved_train:
                     if detect_hardcoding(result.program, task, kernel, seed=seed).hardcoded:
                         hardcoding += 1
@@ -519,6 +683,11 @@ class Exp001Runner:
             },
             ledger=ledger.to_record(compression_ratio=0.0, capability_delta=0.0),
             hardcoding_incidents=hardcoding,
+            model_identity_hash=identity.hash(),
+            model_contract=adapter.contract(),
+            flops=self.flops_policy.flops(ledger, parameter_count=identity.parameter_count),
+            attempts=[a.to_record() for a in attempts],
+            twin_gap=held.twin_gap().to_record(),
         )
 
     # -- S1: baseline and variance ---------------------------------------------------------
@@ -575,20 +744,36 @@ class Exp001Runner:
         condition I must be given.
         """
         baseline = Genome("G-A", 0, KERNEL_VERSION, (), "sexpr")
-        kernel = baseline.kernel(fuel=self.budget.kernel_fuel)
-        synthesizer = EnumerativeSynthesizer(
-            kernel, BASE_VOCABULARY, {}, budget=self.budget, seed=seed
-        )
+        condition = Condition("A", "reference", baseline, "K0 baseline",
+                              node_budget=self.budget.max_nodes)
+        curriculum = curriculum_set(seed, self.per_family)
+        backend = None
+        if spec_requires_network(self.model_spec):
+            # Discovery is not isolated (see `JobIsolation`), so the live backend is usable
+            # here; its transcript is still recorded and leak-checked like any other.
+            transcript = Transcript(self.model_identity_hash)
+            backend = RecordingBackend(build_backend(self.model_spec.get("backend")), transcript)
+        adapter, _ = self._adapter(condition, seed, self.budget, curriculum, backend=backend)
         corpus = Corpus()
         evolution_nodes = 0
+        evolution_samples = 0
+        evolution_tokens = 0
         solved = 0
 
-        for task in curriculum_set(seed, self.per_family):
-            result = synthesizer.solve(task)
+        for task in curriculum:
+            result = adapter.solve(task)
             evolution_nodes += result.nodes_expanded
+            evolution_samples += result.samples
+            evolution_tokens += result.model_input_tokens + result.model_output_tokens
             if result.program is not None:
                 corpus.add(result.program, task.family)
                 solved += 1
+        if backend is not None:
+            findings = transcript_leak_findings(backend.transcript.visible_text(),
+                                                list(curriculum), surface="discovery transcript")
+            if findings:
+                raise IntegrityViolation(f"discovery transcript carries hidden material: {findings}")
+            backend.transcript.save(self.artifacts_dir / "transcripts" / f"discovery_seed{seed}.json")
 
         candidates = mine_candidates(corpus)
         utility = to_primitives(
@@ -609,7 +794,7 @@ class Exp001Runner:
             f"discovery(seed={seed}): {solved}/{len(corpus.entries) or 1} curriculum solutions, "
             f"{len(candidates)} candidate abstractions, "
             f"selected {len(utility)} utility / {len(mdl)} MDL / {len(random_macros)} random; "
-            f"evolution compute {evolution_nodes} nodes"
+            f"evolution compute {evolution_nodes} nodes, {evolution_samples} model samples"
         )
         return (
             {"utility": utility, "mdl": mdl, "random": random_macros},
@@ -619,6 +804,9 @@ class Exp001Runner:
                 "corpus_size": len(corpus),
                 "candidates_mined": len(candidates),
                 "families_in_corpus": sorted(corpus.families()),
+                "evolution_samples": evolution_samples,
+                "evolution_tokens": evolution_tokens,
+                "model_identity_hash": adapter.identity.hash(),
             },
         )
 
@@ -633,6 +821,8 @@ class Exp001Runner:
         discovery_notes: list[dict] = []
         scaffolding_reports = []
         reconciliations = []
+        flops_reconciliations = []
+        evolution_tokens_by_seed: dict[int, int] = {}
 
         checkpoint = str(self.checkpoint_dir) if self.checkpoint_dir else None
         payloads = [(seed, self._sizing(), self.run_id, checkpoint) for seed in self.seeds]
@@ -657,13 +847,19 @@ class Exp001Runner:
                 baseline_node_budget=self.budget.max_nodes,
                 evolution_nodes=evolution_nodes,
                 tasks_per_seed=self.tasks_per_seed(),
+                evolution_samples=int(notes.get("evolution_samples", 0)),
             )
             check_condition_f(plane["F"], plane["A"])
 
-            matcher = ScaffoldingMatcher()
+            matcher = ScaffoldingMatcher(**scaffolding_policy(self.model_spec))
             scaffolding = matcher.equalize(
                 {cid: c.genome.description_length_tokens() for cid, c in plane.items()}
             )
+            # Deliver the matched scaffolding to each condition, so a model in the model role
+            # is shown exactly the budget the matcher logged. The enumerator ignores it, which
+            # is why condition H could be constructed but not interpreted before (ADR-0007).
+            for cid, delivered in scaffolding.delivered.items():
+                plane[cid].scaffolding = delivered.to_record()
             scaffolding_reports.append(
                 {
                     "seed": seed,
@@ -676,6 +872,7 @@ class Exp001Runner:
             for cid in ("A", "B", "C", "D", "E", "F", "H", "I"):
                 jobs.append((plane[cid], seed))
             evolution_by_seed[seed] = evolution_nodes
+            evolution_tokens_by_seed[seed] = int(notes.get("evolution_tokens", 0))
 
         records = self._map_jobs(jobs)
         for record in records:
@@ -699,6 +896,25 @@ class Exp001Runner:
                 )
             )
 
+            def flops_of(cid: str) -> float:
+                return float(next(r["flops"] for r in per_condition[cid] if r["seed"] == seed))
+
+            # The same identity in FLOPs, which is the unit a model arm can be matched in
+            # (roadmap §3, OSCA's caveat): compute(I) == compute(A) + compute(evolution).
+            evolution_flops = (
+                self.flops_policy.evolution_node_flops * evolution_by_seed[seed]
+                + self.flops_policy.model_token_flops(
+                    spec_identity(self.model_spec).parameter_count
+                ) * evolution_tokens_by_seed.get(seed, 0)
+            )
+            flops_reconciliations.append({
+                "seed": seed,
+                **matched_flops(
+                    {"expected": flops_of("A") + evolution_flops, "I": flops_of("I")},
+                    reference="expected",
+                ).to_record(),
+            })
+
         return StageResult(
             stage="S2",
             passed=True,
@@ -708,11 +924,16 @@ class Exp001Runner:
                 "discovery": discovery_notes,
                 "scaffolding": scaffolding_reports,
                 "compute_reconciliation": reconciliations,
+                "flops_reconciliation": flops_reconciliations,
+                "flops_policy": self.flops_policy.to_record(),
+                "model_identity": spec_identity(self.model_spec).to_record(),
                 # Travels with the result: which stages ran behind the candidate boundary and
                 # under what limits. A limit nobody can read is a confound nobody can check
                 # for, and "discovery was not isolated" is exactly the kind of thing that must
                 # be stated rather than inferred from source (spec §40.3).
-                "job_isolation": self.isolation.to_record(),
+                "job_isolation": self.isolation.to_record(
+                    model_proposal_outside=spec_requires_network(self.model_spec)
+                ),
             },
         )
 
@@ -728,6 +949,14 @@ class Exp001Runner:
             baseline_node_budget=self.budget.max_nodes,
             evolution_nodes=0,
         )
+        # G is scaffolding-matched to the S2 target where one was recorded, so the reference
+        # class is not handed a shorter grammar than the treatments were.
+        recorded = s2.payload.get("scaffolding", []) if s2 is not None else []
+        target = max((entry["target_tokens"] for entry in recorded), default=0)
+        matcher = ScaffoldingMatcher(**scaffolding_policy(self.model_spec))
+        natural = plane["G"].genome.description_length_tokens()
+        delivered = matcher.equalize({"G": max(natural, target)}).delivered["G"]
+        plane["G"].scaffolding = delivered.to_record()
         records = self._map_jobs([(plane["G"], seed) for seed in self.seeds])
         return StageResult(
             stage="S3",

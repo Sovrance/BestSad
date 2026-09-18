@@ -12,6 +12,14 @@ from .contract import (
     TaskScore,
     manifest_for,
 )
+from .holdout import (
+    DEFAULT_HOLDOUT,
+    HoldoutPolicy,
+    TwinGap,
+    contamination_probe,
+    transcript_leak_findings,
+    twin_gap,
+)
 from .integrity import (
     HardcodingReport,
     Quarantine,
@@ -41,6 +49,12 @@ __all__ = [
     "DEFAULT_ADDRESS_SPACE",
     "DEFAULT_CPU_SECONDS",
     "DEFAULT_FILE_SIZE",
+    "DEFAULT_HOLDOUT",
+    "HoldoutPolicy",
+    "TwinGap",
+    "contamination_probe",
+    "transcript_leak_findings",
+    "twin_gap",
     "ISOLATION_AVAILABLE",
     "IsolatedResult",
     "ResourceLimits",

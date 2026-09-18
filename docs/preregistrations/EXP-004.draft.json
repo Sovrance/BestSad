@@ -1,0 +1,169 @@
+{
+  "amendments": [],
+  "analysis_code_revision": "<<FILL>>: see run manifest code_revision",
+  "conditions": [
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "A",
+      "controls_confound": null,
+      "description": "K0 baseline, no library",
+      "genome_id": "G-A",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "reference"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "B",
+      "controls_confound": null,
+      "description": "K0 + random macros, count/size matched to M1",
+      "genome_id": "G-B",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "lower_bound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "M1",
+      "controls_confound": null,
+      "description": "evolutionary search over BSLD descriptors scored by verified OOD solve rate at fixed compute",
+      "genome_id": "G-M1",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "treatment"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "M2",
+      "controls_confound": null,
+      "description": "LLM-proposed primitives (REGAL/LILO-style)",
+      "genome_id": "G-M2",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "treatment"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "M3",
+      "controls_confound": null,
+      "description": "e-graph / equality-saturation-derived abstractions (babble/Stitch-style; adopt egg or egglog, M11)",
+      "genome_id": "G-M3",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "treatment"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "F",
+      "controls_confound": "C2_compression",
+      "description": "compression-matched, no new semantics",
+      "genome_id": "G-F",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "H",
+      "controls_confound": "C3_scaffolding",
+      "description": "scaffolding-matched variant of the best mechanism arm",
+      "genome_id": "G-H",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "I",
+      "controls_confound": "C1_compute",
+      "description": "A plus all compute the best mechanism arm's discovery consumed, spent on sampling",
+      "genome_id": "G-I",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "confound_control"
+    }
+  ],
+  "declared_outcome_interpretations": {
+    "efficiency_only": "a mechanism improves library description length without a transfer delta -> reported as compression, never as discovery",
+    "h0_consistent": "any of F, H, I matches or beats every mechanism arm -> consistent with H0",
+    "null_result": "no arm meets both thresholds -> the discovery loop produces single-use abstractions; the most damaging and most informative outcome, recorded with the search-space constraint it implies",
+    "positive": "at least one mechanism arm meets both thresholds, FDR-corrected, F/H/I beaten, concentration test passed -> that mechanism's abstractions are transferable; explanation D (extractor bottleneck) is confirmed if only M3 wins"
+  },
+  "evaluator_image_digest": "<<FILL>>: the image digest the run executes under (ADR-0005)",
+  "exclusion_criteria": [
+    "sandbox crash",
+    "evaluator image mismatch",
+    "ledger corruption",
+    "a fatal transcript leak finding (canary or sealed input on a model-visible surface): the run is aborted and the finding recorded, never a silent exclusion",
+    "Exclusion for unfavourable results is prohibited; all exclusions listed with cause."
+  ],
+  "experiment_id": "EXP-004",
+  "exploratory_endpoints": [
+    "primitive_reuse",
+    "per_compute_curve",
+    "egraph_saturation_cost"
+  ],
+  "kernel_version": "K0-1.0.0",
+  "minimum_interesting_effect": {
+    "direct_reuse_rate_minimum": 0.05,
+    "note": "A mechanism wins only if BOTH hold: transfer delta >= +0.05 AND direct-reuse rate materially > 0 (pre-registered floor 0.05 of held-out solutions reusing a library item verbatim). The second condition exists because LLM-prompted libraries are single-use (TroVE 3/3,201; LEGO-Prover one reuse in ~20,000 lemmas, arXiv 2410.20274) and a single-use artefact is not a discovered abstraction.",
+    "transfer_delta_minimum": 0.05
+  },
+  "model_identity": {
+    "claim_limitation": "the model role is a fixed-weights language model (ADR-0022); results are Claim Level 1 at most until the evaluator is containerised and the assets relocated (ADR-0005)",
+    "constrained_decoding": false,
+    "context_budget_tokens": "<<FILL>>",
+    "kind": "fixed_weights_llm",
+    "logprob_access": "<<FILL>>",
+    "mode": "fixed-weights",
+    "model_id": "<<FILL>>",
+    "model_identity_hash": "<<FILL>>: ModelIdentity.hash() of the record above",
+    "parameter_count": "<<FILL>>",
+    "provider": "<<FILL>>",
+    "sampling": {
+      "max_output_tokens": "<<FILL>>",
+      "seed_policy": "per (seed, task, sample) hash",
+      "temperature": "<<FILL>>"
+    },
+    "supported_projections": [
+      "sexpr",
+      "compact"
+    ],
+    "tokenizer_id": "<<FILL>>",
+    "tool_interface": "none",
+    "weights_digest": "<<FILL>>: sha256 of the weights, or the provider's immutable snapshot id"
+  },
+  "multiple_comparison_control": {
+    "family": [
+      "direct_reuse_rate",
+      "cross_family_reuse",
+      "library_description_length",
+      "adversarial_rate",
+      "twin_gap"
+    ],
+    "level": 0.05,
+    "method": "benjamini_hochberg"
+  },
+  "power_analysis": {
+    "achieved_power": "<<FILL>>",
+    "alpha": 0.05,
+    "framing": "superiority",
+    "powered": false,
+    "required_seeds": "<<FILL>>",
+    "target_power": 0.8,
+    "variance_estimate": "<<FILL>>",
+    "variance_source_run": "<<FILL>>: E0 re-measured under the model (Exp001Runner.stage_s1 with the model spec)"
+  },
+  "preregistration_hash": "",
+  "primary_endpoint": "held_out_transfer_delta: verified OOD solve rate with the discovered library minus the matched no-library baseline, at fixed FLOPs, per mechanism arm",
+  "secondary_endpoints": [
+    "direct_reuse_rate",
+    "cross_family_reuse",
+    "library_description_length",
+    "adversarial_rate",
+    "twin_gap"
+  ],
+  "seeds_per_condition": 1,
+  "stopping_rule": "Fixed: <<FILL>> seeds per condition (from the power analysis), all conditions run to completion. No interim analysis, no data-dependent stopping. Aborted runs are recorded with their cause, never silently discarded.",
+  "timestamp_utc": ""
+}

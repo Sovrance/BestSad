@@ -1,6 +1,6 @@
 # Implementation status against `IMPLEMENTATION_PLAN_v0.2.md`
 
-Last updated: 2026-09-18 (PRs #8–#18 merged into `v1`; the merge record is under the verification plane).
+Last updated: 2026-09-18 (PRs #8–#18 merged into `v1`; the merge record is under the verification plane; EXP-002 readiness added under ADR-0022).
 
 ## Complete, with acceptance tests passing
 
@@ -50,6 +50,31 @@ Run against the real EXP-001-DR results, the protocol produced the asymmetry it 
 the **capability claim is INCONCLUSIVE** (certificate FAIL; all three required controls
 unbeaten) while the **negative-result claim is PROMOTED** with the search-space constraint it
 implies. `artifacts/assurance_ledger.json`.
+
+## EXP-002 readiness (ADR-0022, 2026-09-18)
+
+The owner's roadmap (`docs/research/2026-09-18-roadmap-agentic-first-thesis.md`) adjudicated
+the literature against the thesis and concluded that the next lineage is not a language but a
+**fixed-weights language model in the model role**, run under the existing F/H/I controls with
+the evaluator hardened first. What is built, with work-order status in
+`docs/architecture/EXP002_READINESS_WORK_ORDERS.md`:
+
+- `src/bestsad/models/` — the model role behind one interface: hashed `ModelIdentity`,
+  `EnumerativeAdapter` (ADR-0007's stand-in, byte-for-byte), `LLMAdapter` with scripted, HTTP,
+  recording and replay backends over a content-hashed transcript. A networked model is proposed
+  outside the candidate boundary and replayed inside it; the isolation record says so.
+- `src/bestsad/conditions/flops.py` — compute matching in FLOPs (`flops-1.0.0`), pass@C at a
+  fixed budget, condition I funded in samples for a model arm.
+- `src/bestsad/evaluator/holdout.py` — a sealed 30% tier of hidden inputs, the transcript
+  leak check, the twin-gap probe, the canary-completion probe. Correctness is unchanged.
+- `docs/preregistrations/EXP-00{2,3,4,5}.draft.*` — thresholds fixed, `<<FILL>>` where a
+  model is needed; the gate refuses a draft.
+
+**No run has been made.** Every number in this file is still Claim Level 0/E with respect to
+H2, H13, H14 and H15. Starting EXP-002 (BEST-EXP2-08) needs a model identity, an endpoint and
+a compute budget, and is the owner's call. **M13** is reinterpreted, not started: its S4 gate
+was written for the *adapted* model of spec §17.3; the fixed-weights adapter is the model role
+of S1–S3 that ADR-0007 stood in for. M11 waits for EXP-004; M12 and M14 stay deferred.
 
 ## How the gates run (ADR-0021, 2026-09-15; supersedes ADR-0018)
 
