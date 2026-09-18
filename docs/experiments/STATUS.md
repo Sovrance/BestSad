@@ -1,6 +1,6 @@
 # Implementation status against `IMPLEMENTATION_PLAN_v0.2.md`
 
-Last updated: 2026-09-16 (PRs #8–#11 merged into `v1`; the merge record is under the verification plane).
+Last updated: 2026-09-18 (PRs #8–#15 merged into `v1`; the merge record is under the verification plane).
 
 ## Complete, with acceptance tests passing
 
@@ -114,7 +114,9 @@ Actions run since #27 (2026-08-24). That was ADR-0018's revisit trigger ("if run
 the owner marked ADR-0018 superseded the same day (ADR-0021).
 
 **Merge record.** All of the verification-plane work is on `v1`, in four pull requests merged by
-the owner, each with every `ci.yml` job green on its merged head:
+the owner, each with every `ci.yml` job green on its merged head. Four documentation pull
+requests followed, recording that work in this file, `CONTRIBUTING.md`, `REPOSITORY.md` and
+`ASSURANCE_WORK_ORDERS.md`; each merged the same way:
 
 | PR | Content | Merged (UTC) | Head |
 |---|---|---|---|
@@ -122,6 +124,10 @@ the owner, each with every `ci.yml` job green on its merged head:
 | #9 | ADR-0021: runners returned, ADR-0018 superseded; CONTRIBUTING and gate-runner docstrings | 2026-09-16 03:18 | `b37212a` (seven jobs) |
 | #10 | BEST-VERIF-05: the `k0rs/` twin, 19 Kani harnesses, 10⁵-program parity, two new jobs, ADR-0020 Accepted with two amendments; workflow token limited to `contents: read` after a CodeQL finding | 2026-09-16 15:39 | `acea207` (nine jobs plus CodeQL; the first Kani run on GitHub-hosted runners, 54 s) |
 | #11 | `ASSURANCE_WORK_ORDERS.md`: the Kani adapter of BEST-ASSURE-10 now has a producer | 2026-09-16 16:02 | `7f7c4bd` (nine jobs plus CodeQL) |
+| #12 | This file: the merge record for #8–#11 | 2026-09-16 22:53 | `1fe341b` (nine jobs plus CodeQL) |
+| #13 | `CONTRIBUTING.md`: the draft-PR workflow since #8, the twin checks in the pre-push list, CodeQL and the `contents: read` token | 2026-09-17 14:10 | `0aa37f2` (nine jobs plus CodeQL) |
+| #14 | `REPOSITORY.md`: agent guidance for the K0 twin under invariant 1 (`AGENTS.md` is manifest-pinned and untouched) | 2026-09-17 15:41 | `76ec5e4` (nine jobs plus CodeQL) |
+| #15 | `ASSURANCE_WORK_ORDERS.md`: where PRs #11–#14 are recorded | 2026-09-18 01:01 | `ca30270` (nine jobs plus CodeQL) |
 
 Discrepancies the verification-plane document recorded for the owner (§7), and their state:
 (1) the ADR-0014 fixture path — corrected by amendment, the fixture is
