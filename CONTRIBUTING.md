@@ -23,8 +23,11 @@ branch rather than the trunk. They are not a precedent.
 Everything since has landed this way. PRs #8–#12 (2026-09-15 to 2026-09-16: the verification
 plane, ADR-0021, the K0 twin, and the two status updates that recorded them) were each opened
 as a draft by a coding agent, ran every `ci.yml` job to green on their merged head, and were
-marked ready and merged by the owner. The merge record, with heads and job counts, is in
-`docs/experiments/STATUS.md`; work-order status is in
+marked ready and merged by the owner. PRs #13–#16 (2026-09-17 to 2026-09-18) followed the same
+path, one file each: this file (#13, `0aa37f2`), `REPOSITORY.md` with the agent guidance for
+the twin (#14, `76ec5e4`; `AGENTS.md` is manifest-pinned, so the guidance could not go there),
+`ASSURANCE_WORK_ORDERS.md` (#15, `ca30270`) and `STATUS.md` (#16, `670256e`). The merge
+record, with heads and job counts, is in `docs/experiments/STATUS.md`; work-order status is in
 `docs/architecture/ASSURANCE_WORK_ORDERS.md`. A pull request that changes what those files say
 is done updates them in the same pull request or the next one, not never.
 
