@@ -1,0 +1,165 @@
+{
+  "amendments": [],
+  "analysis_code_revision": "<<FILL>>: see run manifest code_revision",
+  "conditions": [
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "A",
+      "controls_confound": null,
+      "description": "K0 baseline language, default scaffolding",
+      "genome_id": "G-A",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "reference"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "D",
+      "controls_confound": null,
+      "description": "K0 + utility-selected abstractions, default scaffolding",
+      "genome_id": "G-D",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "treatment"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "S0",
+      "controls_confound": "C3_scaffolding",
+      "description": "D under zero-shot scaffolding (no worked examples)",
+      "genome_id": "G-S0",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "S1",
+      "controls_confound": "C3_scaffolding",
+      "description": "D under k-shot scaffolding (k = 3 worked examples)",
+      "genome_id": "G-S1",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "S2",
+      "controls_confound": "C3_scaffolding",
+      "description": "D under k-shot scaffolding plus AutoDoc-style natural-language primitive descriptions (LILO)",
+      "genome_id": "G-S2",
+      "human_authored": false,
+      "introduces_new_semantics": true,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "A0",
+      "controls_confound": "C3_scaffolding",
+      "description": "A under zero-shot scaffolding",
+      "genome_id": "G-A0",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "A1",
+      "controls_confound": "C3_scaffolding",
+      "description": "A under k-shot scaffolding",
+      "genome_id": "G-A1",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "confound_control"
+    },
+    {
+      "author_blind_to_genomes": null,
+      "condition_id": "A2",
+      "controls_confound": "C3_scaffolding",
+      "description": "A under k-shot plus descriptions",
+      "genome_id": "G-A2",
+      "human_authored": false,
+      "introduces_new_semantics": false,
+      "role": "confound_control"
+    }
+  ],
+  "declared_outcome_interpretations": {
+    "efficiency_only": "not applicable: no compression arm in this design",
+    "h0_consistent": "the scaffolding main effect matches or exceeds the representation effect -> consistent with H0 for H14",
+    "null_result": "mediation share < 0.5 -> any EXP-002 gain is re-described as scaffolding-sensitive; recorded in the negative-result ledger",
+    "positive": "mediation share >= 0.5 with the representation main effect FDR-corrected -> H14 supported; downstream claims are immune to the scaffolding critique"
+  },
+  "evaluator_image_digest": "<<FILL>>: the image digest the run executes under (ADR-0005)",
+  "exclusion_criteria": [
+    "sandbox crash",
+    "evaluator image mismatch",
+    "ledger corruption",
+    "a fatal transcript leak finding (canary or sealed input on a model-visible surface): the run is aborted and the finding recorded, never a silent exclusion",
+    "Exclusion for unfavourable results is prohibited; all exclusions listed with cause."
+  ],
+  "experiment_id": "EXP-003",
+  "exploratory_endpoints": [
+    "parse_failure_rate",
+    "per_compute_curve"
+  ],
+  "kernel_version": "K0-1.0.0",
+  "minimum_interesting_effect": {
+    "mediation_share_minimum": 0.5,
+    "note": "H14: the representation effect must survive after partialling out scaffolding. A null rules out that an observed representation gain is a scaffolding artefact - the DSPy critique that gains are prompt optimisation. F and I are held fixed; H is the manipulated variable."
+  },
+  "model_identity": {
+    "claim_limitation": "the model role is a fixed-weights language model (ADR-0022); results are Claim Level 1 at most until the evaluator is containerised and the assets relocated (ADR-0005)",
+    "constrained_decoding": false,
+    "context_budget_tokens": "<<FILL>>",
+    "kind": "fixed_weights_llm",
+    "logprob_access": "<<FILL>>",
+    "mode": "fixed-weights",
+    "model_id": "<<FILL>>",
+    "model_identity_hash": "<<FILL>>: ModelIdentity.hash() of the record above",
+    "parameter_count": "<<FILL>>",
+    "provider": "<<FILL>>",
+    "sampling": {
+      "max_output_tokens": "<<FILL>>",
+      "seed_policy": "per (seed, task, sample) hash",
+      "temperature": "<<FILL>>"
+    },
+    "supported_projections": [
+      "sexpr",
+      "compact"
+    ],
+    "tokenizer_id": "<<FILL>>",
+    "tool_interface": "none",
+    "weights_digest": "<<FILL>>: sha256 of the weights, or the provider's immutable snapshot id"
+  },
+  "multiple_comparison_control": {
+    "family": [
+      "scaffolding_main_effect",
+      "interaction_representation_x_scaffolding",
+      "generation_tokens",
+      "twin_gap"
+    ],
+    "level": 0.05,
+    "method": "benjamini_hochberg"
+  },
+  "power_analysis": {
+    "achieved_power": "<<FILL>>",
+    "alpha": 0.05,
+    "framing": "superiority",
+    "powered": false,
+    "required_seeds": "<<FILL>>",
+    "target_power": 0.8,
+    "variance_estimate": "<<FILL>>",
+    "variance_source_run": "<<FILL>>: E0 re-measured under the model (Exp001Runner.stage_s1 with the model spec)"
+  },
+  "preregistration_hash": "",
+  "primary_endpoint": "representation_main_effect_after_partialling_out_scaffolding: the share of the D-versus-A held-out solve-rate delta (at fixed FLOPs) attributable to the representation once scaffolding is entered as a factor (per-primitive causal mediation, spec \u00a742)",
+  "secondary_endpoints": [
+    "scaffolding_main_effect",
+    "interaction_representation_x_scaffolding",
+    "generation_tokens",
+    "twin_gap"
+  ],
+  "seeds_per_condition": 1,
+  "stopping_rule": "Fixed: <<FILL>> seeds per condition (from the power analysis), all conditions run to completion. No interim analysis, no data-dependent stopping. Aborted runs are recorded with their cause, never silently discarded.",
+  "timestamp_utc": ""
+}
