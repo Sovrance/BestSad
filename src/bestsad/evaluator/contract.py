@@ -22,6 +22,7 @@ from ..kernel.ops import OpSig
 from ..bsir.graph import verify as bsir_verify
 from ..tasks.families import Task
 from ..tasks.generator import TaskSet
+from .holdout import DEFAULT_HOLDOUT, HoldoutPolicy, TwinGap, twin_gap
 
 SCORING_CONTRACT_VERSION = "scoring-1.0.0"
 
@@ -41,6 +42,13 @@ class TaskScore:
     search_nodes: int = 0
     kernel_steps: int = 0
     primitives_used: tuple[str, ...] = ()
+    #: Sealed-tier accounting (`holdout.py`). `verified` still requires every hidden input;
+    #: these split the same hidden set into the tier a feedback loop may surface and the tier
+    #: nothing may, so a gap between them can be measured.
+    feedback_passed: int = 0
+    feedback_total: int = 0
+    sealed_passed: int = 0
+    sealed_total: int = 0
 
 
 @dataclass(slots=True)
@@ -81,6 +89,15 @@ class ScoreReport:
     @property
     def total_kernel_steps(self) -> int:
         return sum(s.kernel_steps for s in self.scores)
+
+    def twin_gap(self, policy: HoldoutPolicy = DEFAULT_HOLDOUT) -> TwinGap:
+        """The public-versus-held-out probe over every attempted task (roadmap §6)."""
+        attempted = [s for s in self.scores if s.attempted]
+        return twin_gap(
+            sum(s.feedback_passed for s in attempted), sum(s.feedback_total for s in attempted),
+            sum(s.sealed_passed for s in attempted), sum(s.sealed_total for s in attempted),
+            tasks=len(attempted), policy=policy,
+        )
 
     def primitive_use_counts(self) -> dict[str, int]:
         counts: dict[str, int] = {}
@@ -134,8 +151,10 @@ class Evaluator:
         expansions: Mapping[str, tuple[tuple[str, ...], object]] | None = None,
         *,
         fuel: int = 20_000,
+        holdout: HoldoutPolicy = DEFAULT_HOLDOUT,
     ) -> None:
         self.benchmark_manifest_id = benchmark_manifest_id
+        self.holdout = holdout
         self.primitives = dict(primitives or {})
         # The evaluator expands primitives itself rather than trusting a candidate-supplied
         # expansion: a primitive is a macro over K0, and the evaluator checks the K0 meaning.
@@ -170,11 +189,17 @@ class Evaluator:
                              **base)
 
         passed = 0
-        for inputs in task.hidden_inputs:
+        sealed = self.holdout.sealed_indices(task)
+        sealed_passed = feedback_passed = 0
+        for index, inputs in enumerate(task.hidden_inputs):
             expected = self.kernel.execute(task.reference, list(inputs))
             actual = self.kernel.execute(candidate, list(inputs))
             if expected.same_outcome(actual):
                 passed += 1
+                if index in sealed:
+                    sealed_passed += 1
+                else:
+                    feedback_passed += 1
 
         primitives_used = tuple(
             sorted({t.op for t in candidate.body.walk() if t.op.startswith("prim:")})
@@ -186,6 +211,10 @@ class Evaluator:
             hidden_passed=passed,
             emitted_size=candidate.body.size(),
             primitives_used=primitives_used,
+            feedback_passed=feedback_passed,
+            feedback_total=len(task.hidden_inputs) - len(sealed),
+            sealed_passed=sealed_passed,
+            sealed_total=len(sealed),
             **base,
         )
 

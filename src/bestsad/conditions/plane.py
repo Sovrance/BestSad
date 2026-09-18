@@ -62,6 +62,10 @@ class Condition:
     #: budget it cannot absorb. For an enumerative searcher, "more search" means deeper search,
     #: which is the faithful analogue of more sampling for a model.
     search_depth_bonus: int = 0
+    #: Extra model samples per task, the language-model analogue of `search_depth_bonus`: for
+    #: a model, "more search" is more sampling, and condition I's inherited evolution compute is
+    #: spent as additional samples in the baseline language (`bestsad.models.LLMAdapter`).
+    sample_bonus: int = 0
     scaffolding: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -142,6 +146,7 @@ def build_conditions(
     baseline_node_budget: int,
     evolution_nodes: int,
     tasks_per_seed: int = 1,
+    evolution_samples: int = 0,
 ) -> dict[str, Condition]:
     """Assemble the full condition set A–I.
 
@@ -248,6 +253,11 @@ def build_conditions(
         # inherited total is therefore spread across the tasks it has to cover.
         node_budget=baseline_node_budget + max(1, evolution_nodes // max(1, tasks_per_seed)),
         search_depth_bonus=1,
+        # The same spreading, in samples, for a model in the model role: the samples discovery
+        # consumed are a total across the seed and are handed to condition I per task.
+        sample_bonus=(
+            -(-evolution_samples // max(1, tasks_per_seed)) if evolution_samples else 0
+        ),
         inherited_evolution_compute_from="D",
         matched_to_condition="D",
     )

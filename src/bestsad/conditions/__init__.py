@@ -8,6 +8,15 @@ from .compute import (
     matched_budget,
     reconcile_search_only,
 )
+from .flops import (
+    DEFAULT_POLICY as DEFAULT_FLOPS_POLICY,
+    FlopsPolicy,
+    MatchReport,
+    TaskAttempt,
+    matched_flops,
+    pass_at_c_curve,
+    solve_rate_at_fixed_flops,
+)
 from .plane import (
     CONFOUNDS,
     REQUIRED_CONTROLS,
@@ -35,6 +44,13 @@ __all__ = [
     "ComputeLedger",
     "ComputeMatchError",
     "Condition",
+    "DEFAULT_FLOPS_POLICY",
+    "FlopsPolicy",
+    "MatchReport",
+    "TaskAttempt",
+    "matched_flops",
+    "pass_at_c_curve",
+    "solve_rate_at_fixed_flops",
     "ConditionPlaneError",
     "ResidualConfound",
     "Scaffolding",
