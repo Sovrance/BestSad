@@ -26,8 +26,11 @@ as a draft by a coding agent, ran every `ci.yml` job to green on their merged he
 marked ready and merged by the owner. PRs #13–#16 (2026-09-17 to 2026-09-18) followed the same
 path, one file each: this file (#13, `0aa37f2`), `REPOSITORY.md` with the agent guidance for
 the twin (#14, `76ec5e4`; `AGENTS.md` is manifest-pinned, so the guidance could not go there),
-`ASSURANCE_WORK_ORDERS.md` (#15, `ca30270`) and `STATUS.md` (#16, `670256e`). The merge
-record, with heads and job counts, is in `docs/experiments/STATUS.md`; work-order status is in
+`ASSURANCE_WORK_ORDERS.md` (#15, `ca30270`) and `STATUS.md` (#16, `670256e`). PRs #17–#19
+(2026-09-18) recorded those in turn: this file (#17, `43eba75`), `ASSURANCE_WORK_ORDERS.md`
+(#18, `b6d0993`) and `STATUS.md` (#19, `71253cf`; merged with three jobs still running, all of
+which finished green on that head). The merge record, with heads and job counts, is in
+`docs/experiments/STATUS.md`; work-order status is in
 `docs/architecture/ASSURANCE_WORK_ORDERS.md`. A pull request that changes what those files say
 is done updates them in the same pull request or the next one, not never.
 
