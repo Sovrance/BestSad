@@ -64,3 +64,4 @@ rewritten, for the same reason negative results are never deleted (P7, spec §44
 | 0020 | A Rust twin of K0 verified with Kani (authorised 2026-09-16) | Accepted |
 | 0021 | CI runners returned; `ci.yml` is live again and the local runner stays | Accepted |
 | 0022 | "Agentic-first" is a measured property set, not a target; a fixed-weights model in the model role is the next lineage (EXP-002) | Accepted |
+| 0023 | EXP-002 runs a pinned, self-hosted `Qwen2.5-Coder-7B-Instruct`; the model server sits on the candidate side of the boundary; device-seconds on the pinned hardware is the compute currency | Accepted |

@@ -87,8 +87,8 @@ semantics; the solver and the model checker underneath them are not.
 | `*_v0.2.md`, `*_v0.2.csv`, `*_v0.2.bib`, `schemas/` | The delivered package. Read-only; hashes pinned. |
 | `src/bestsad/` | The instrument. `src/bestsad/kernel/` is K0 and is frozen (invariant 1). |
 | `k0rs/` | The Rust twin of K0 (ADR-0020): hash-pinned at build, checked against the reference on every change, 19 Kani harnesses. Under invariant 1 as above. |
-| `src/bestsad/models/` | The model role behind one interface (ADR-0022): ADR-0007's enumerative stand-in and a fixed-weights language-model adapter, each with a hashed identity the ledger cites. A networked model is proposed outside the candidate boundary and replayed inside it from a recorded transcript. |
-| `scripts/` | `ci_local.py` reproduces every CI gate locally (ADR-0021); `kani_gate.py` holds the twin's proofs to budget and ingests them as evidence. |
+| `src/bestsad/models/` | The model role behind one interface (ADR-0022): ADR-0007's enumerative stand-in and a fixed-weights language-model adapter, each with a hashed identity the ledger cites. A networked model is proposed outside the candidate boundary — behind `OutboundGuard`, which refuses any prompt carrying hidden material or a task identifier (ADR-0023) — and replayed inside it from a recorded transcript. |
+| `scripts/` | `ci_local.py` reproduces every CI gate locally (ADR-0021); `kani_gate.py` holds the twin's proofs to budget and ingests them as evidence; `draft_preregistration.py` emits the EXP-002..005 drafts; `exp002_pilot.py` is the E0 pilot that calibrates the device-second currency and fills the EXP-002 pre-registration (ADR-0023). |
 | `tests/` | Acceptance tests, named after the milestone or invariant they discharge. |
 | `docs/adr/` | Architecture decisions, including every disclosed residual. Append-only: amend, never rewrite. |
 | `docs/architecture/` | Engineering documents and work-order status (assurance integration, verification plane). |

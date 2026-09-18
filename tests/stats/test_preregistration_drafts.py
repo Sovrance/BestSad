@@ -87,12 +87,51 @@ def test_exp_002_is_exp_001_with_a_model_and_the_roadmaps_thresholds():
     dry_run = json.loads((DRAFTS / "EXP-001-DR.json").read_text())
     assert list(draft.conditions) == dry_run["conditions"]
     assert draft.minimum_interesting_effect["absolute_solve_rate_points"] == 0.05
-    assert "fixed_flops" in draft.primary_endpoint
+    assert "fixed_device_seconds" in draft.primary_endpoint
+    assert "flops-1.0.0" in draft.primary_endpoint
     assert {"direct_reuse_rate", "twin_gap"} <= set(draft.secondary_endpoints)
     assert draft.model_identity["kind"] == "fixed_weights_llm"
     assert draft.model_identity["tool_interface"] == "none"
     assert "EXP-004" in draft.declared_outcome_interpretations["positive"]
     assert "transcript leak" in " ".join(draft.exclusion_criteria)
+
+
+def test_exp_002_names_the_model_endpoint_and_currency_adr_0023_decided():
+    """ADR-0023: a pinned, self-hosted Qwen2.5-Coder-7B-Instruct; device-seconds on the pinned
+    hardware as the currency; the sealed tier; the 1.5B sanity arm. What needs the weights on
+    disk or the pilot is `<<FILL>>`, and `is_pinned()` names exactly those."""
+    from bestsad.models import ModelIdentity
+
+    draft = _load("EXP-002")
+    record = draft.model_identity
+    assert record["model_id"] == "Qwen/Qwen2.5-Coder-7B-Instruct"
+    assert record["parameter_count"] == 7_615_616_512
+    assert (record["dtype"], record["quantization"], record["provider"]) == (
+        "bfloat16", "none", "self-hosted")
+    assert record["serving"]["engine"] == "vllm" and record["serving"]["api"] == "openai-chat-completions"
+    assert record["sampling"]["temperature"] == 0.2 and record["constrained_decoding"] is False
+    assert "batching" in " ".join(record["serving"]["nondeterminism_sources"])
+    identity = ModelIdentity.from_record(record)
+    pinned, missing = identity.is_pinned()
+    assert not pinned
+    assert set(missing) == {"revision", "weights_digest", "serving.version", "serving.hardware"}
+
+    mie = draft.minimum_interesting_effect
+    assert "device-seconds-1.0.0" in mie["compute_budget"]["currency"]
+    assert "flops-1.0.0" in mie["compute_budget"]["currency"]
+    assert "<<FILL>>" in mie["compute_budget"]["per_task_budget_C_device_seconds"]
+    assert "pre-registered assumption" in mie["compute_budget"]["condition_I_conversion"]
+    assert mie["sealed_holdout"] == {
+        "policy": "holdout-1.0.0", "sealed_fraction": 0.3, "twin_gap_flag_threshold": 0.10,
+        "note": mie["sealed_holdout"]["note"],
+    }
+    arm = mie["compute_matching_sanity_arm"]
+    assert arm["model_id"] == "Qwen/Qwen2.5-Coder-1.5B-Instruct"
+    assert arm["parameter_count"] == 1_543_714_304
+    # The later experiments still carry the generic placeholder: they inherit EXP-002's model
+    # only once it has reported.
+    for later in ("EXP-003", "EXP-004", "EXP-005"):
+        assert _load(later).model_identity["model_id"] == "<<FILL>>"
 
 
 def test_exp_003_pre_registers_the_mediation_share():

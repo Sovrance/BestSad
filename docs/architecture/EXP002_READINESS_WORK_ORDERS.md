@@ -1,8 +1,9 @@
 # EXP-002 readiness — work-order status
 
 Tracks the roadmap `docs/research/2026-09-18-roadmap-agentic-first-thesis.md` (its
-recommendations §1–§6) against what is built, as adjudicated in ADR-0022.
-Last updated: 2026-09-18.
+recommendations §1–§6) against what is built, as adjudicated in ADR-0022, and the owner's
+decision on the model, the endpoint and the compute currency, recorded in ADR-0023.
+Last updated: 2026-09-18 (ADR-0023).
 
 The roadmap's one-line verdict: BestSad's highest-value next move is not to build an
 "agentic-first" language; it is to put a real fixed-weights language model in the model role and
@@ -18,9 +19,13 @@ work order below serves that, and none of them is a run.
 | BEST-EXP2-05 | P0 | Evaluator hardening before the first sample: sealed 30% tier, transcript leak check, twin-gap probe (flag at 0.10), canary-completion probe; correctness unchanged | Every vector attempted and caught (Gate G1 extended) | **Done** — `src/bestsad/evaluator/holdout.py`; `TaskScore`/`ScoreReport` tier fields; `tests/integrity/test_model_boundary.py` |
 | BEST-EXP2-06 | P0 | `Exp001Runner(model_spec=...)`: adapter built per condition, scaffolding delivered through `Condition.scaffolding`, matcher describes the model's retry/decoding policy, discovery metered in samples and tokens, proposal pass outside the boundary with replay inside, isolation record names `model_proposal` | A scripted model is scored through the same path as the enumerator; records reproducible by digest; a hosted model's transcript is recorded once and replayed; every EXP-001-DR pipeline test unchanged | **Done** — `src/bestsad/experiments/exp001.py`; `tests/experiments/test_model_role.py`; `tests/experiments/test_exp001_pipeline.py` (unchanged, passing) |
 | BEST-EXP2-07 | P1 | Pre-registration drafts for EXP-002, EXP-003, EXP-004, EXP-005 with the roadmap's thresholds fixed and `<<FILL>>` for what needs a model | Drafts incomplete for exactly the declared reasons; the gate refuses them; files match the generator | **Done** — `scripts/draft_preregistration.py`; `docs/preregistrations/EXP-00{2,3,4,5}.draft.{json,md}`; `tests/stats/test_preregistration_drafts.py` |
-| BEST-EXP2-08 | P1 | **Run EXP-002.** Choose a model and endpoint; measure E0 under it (`stage_s1` with the model spec); fill and commit `EXP-002`; run S2/S3 with transcripts recorded; analyse at fixed FLOPs | Pre-registration committed before the first evaluation run; every job green; residuals disclosed | **Not started — the owner's call.** Needs a model identity, an endpoint or local server, a compute budget (roadmap: ~10²–10³ samples per task; ~10¹⁸–10¹⁹ FLOPs, a planning estimate), and the containerised evaluator of ADR-0005 for anything above Claim Level 1 |
+| BEST-EXP2-08 | P1 | **Run EXP-002.** Fill and commit `EXP-002`; run S2/S3 with transcripts recorded; analyse at fixed device-seconds with FLOPs alongside | Pre-registration committed before the first evaluation run; every job green; residuals disclosed | **Decided, not started.** ADR-0023 chose the model (`Qwen/Qwen2.5-Coder-7B-Instruct`, bf16, pinned; 1.5B sanity arm), the endpoint (self-hosted vLLM on one H100-class device, on the candidate side of the boundary) and the currency (device-seconds on that hardware, C set by the pilot). Blocked on BEST-EXP2-11 and BEST-EXP2-14, which need the weights and the machine |
 | BEST-EXP2-09 | P2 | M11: adopt egg or egglog for EXP-004's e-graph arm (never build) | EXP-002 positive, or EXP-004 authorised | **Deferred** — behind EXP-002 |
-| BEST-EXP2-10 | P2 | Measured FLOP calibration replacing the declared CPU-side constants; policy id bumped | Constants measured on the run's hardware and recorded in the ledger | **Deferred** — measured during BEST-EXP2-08's E0 |
+| BEST-EXP2-10 | P2 | Measured FLOP calibration replacing the declared CPU-side constants; policy id bumped | Constants measured on the run's hardware and recorded in the ledger | **Folded into BEST-EXP2-14** — the pilot measures the CPU-side rates in seconds; the FLOP constants stay declared and the FLOP figure is reported alongside, never instead (ADR-0023 §3) |
+| BEST-EXP2-11 | P0 | **Pin the model** (ADR-0023 §1): fetch `Qwen/Qwen2.5-Coder-7B-Instruct` and `-1.5B-Instruct` at a named revision commit; SHA-256 over the loaded shards; verify the parameter counts against the loaded weights; fill `revision`, `weights_digest`, `serving.version`, `serving.hardware`; the identity hash | `ModelIdentity.is_pinned()` returns `(True, [])` for both; the hash is in the spec and the draft | **Not started — needs the weights on disk.** `ModelIdentity` carries the fields (`revision`, `dtype`, `quantization`, `serving`) and `is_pinned()` names what is missing; `tests/models/test_adapter.py` |
+| BEST-EXP2-12 | P0 | **The endpoint on the candidate side** (ADR-0023 §2): `OutboundGuard` leak-checks every prompt before it is sent; task identifiers and hidden-asset paths are fatal findings; G1 gains the vector that drives the proposal pass against a recording server and audits what crossed | Every vector attempted and caught; the transcript names the guard | **Done** — `src/bestsad/evaluator/holdout.py`; `Exp001Runner._live_backend`; `tests/integrity/test_model_boundary.py` ("the model server, on the candidate side") |
+| BEST-EXP2-13 | P0 | **Device-seconds as the currency** (ADR-0023 §3): `DeviceSecondsPolicy` (`device-seconds-1.0.0`) with pilot-measured rates or a refusal; per-task device-seconds on `TaskAttempt`; pass@C in device-seconds; the S2 payload carries the policy record | An uncalibrated policy converts nothing; an enumerator and a model are priced in one unit | **Done** — `src/bestsad/conditions/flops.py`; `Exp001Runner(compute_currency=...)`; `tests/conditions/test_flops.py` |
+| BEST-EXP2-14 | P0 | **The E0 pilot** (ADR-0023 §3): two seeds under the pinned model on the pinned hardware; variance and power; tokens per sample; the token-rate fit and the CPU-side rates; the ceiling check; the `preregistration_fill` block | Report written; C and the seed count read from it, not from the planning estimate | **Script done, run not made** — `scripts/exp002_pilot.py`; `tests/experiments/test_exp002_pilot.py`. The run needs the machine |
 
 ## What is built, in one paragraph
 
@@ -40,7 +45,8 @@ that needs a model left as `<<FILL>>`.
 
 - **No run.** Nothing here is evidence about any model; ADR-0007's claim limitation stands
   until EXP-002's pre-registration is committed and the run is done (ADR-0022, "What this ADR
-  does not license").
+  does not license"). The model, endpoint and currency are decided (ADR-0023); the weights are
+  not pinned and the pilot has not run, because both need the machine.
 - **No "agentic-first language."** The roadmap's adjudication is that the phrase is a marketing
   frame; the target stays spec §2.1, and the property table in ADR-0022 §1 is the only sense in
   which the phrase is admitted.
@@ -52,28 +58,56 @@ that needs a model left as `<<FILL>>`.
 
 ## How to start BEST-EXP2-08
 
+The order is fixed by what each step needs (ADR-0023 §4):
+
 ```
-# 1. Name the model, hashed. Fill every field; the hash is what the ledger cites.
-#    (ModelIdentity in src/bestsad/models/identity.py)
-# 2. Point the adapter at an OpenAI-compatible endpoint; the key is read from the environment.
+# 1. BEST-EXP2-11 — pin the model, on the machine that will serve it.
+#    Fetch both Qwen2.5-Coder checkpoints at a named revision; sha256 the loaded shards;
+#    fill revision, weights_digest, serving.version, serving.hardware in the spec below and in
+#    docs/preregistrations/EXP-002.draft.json; ModelIdentity.is_pinned() must return (True, []).
+# 2. Serve it: a pinned vLLM behind its OpenAI-compatible API, bf16, no quantization, the
+#    sampling parameters of the draft. The key, if any, is read from the environment.
 export BESTSAD_MODEL_API_KEY=...
-# 3. Measure E0 under the model, then fill and commit docs/preregistrations/EXP-002.draft.json
-#    as EXP-002.json (Preregistration.commit()) BEFORE any S2/S3 job runs.
-# 4. Run S2/S3 with the spec; transcripts land under artifacts/<run>/transcripts/ and the
-#    S2 payload carries flops_reconciliation, model_identity and job_isolation.
+# 3. BEST-EXP2-14 — the pilot, on the pinned hardware. Two seeds, E0 under the model.
+python scripts/exp002_pilot.py --spec spec.json --seeds 1 2 \
+    --hardware "1x NVIDIA H100 80GB SXM, vLLM <version>" --out artifacts/exp002-pilot/pilot.json
+#    Read preregistration_fill from the report: the seed count, the stopping rule, the
+#    variance, the calibrated currency, the per-task budget C. If ceiling_check.saturating,
+#    switch the primary to the 1.5B and re-run the pilot.
+# 4. Fill and commit EXP-002 (Preregistration.commit()) as EXP-002.json BEFORE any S2/S3 job.
+# 5. Run S2/S3 with the spec and the calibrated DeviceSecondsPolicy; transcripts land under
+#    artifacts/<run>/transcripts/ and the S2 payload carries compute_currency,
+#    flops_reconciliation, model_identity and job_isolation.
 ```
 
-A spec, for reference:
+A spec, for reference (the identity record is the draft's, with its placeholders filled):
 
 ```json
 {
   "kind": "fixed_weights_llm",
-  "identity": { "...": "ModelIdentity.to_record(), including model_identity_hash" },
+  "identity": {
+    "model_id": "Qwen/Qwen2.5-Coder-7B-Instruct", "kind": "fixed_weights_llm",
+    "revision": "<hf commit>", "weights_digest": "sha256:<shards>",
+    "tokenizer_id": "Qwen/Qwen2.5-Coder-7B-Instruct (tokenizer at the same revision)",
+    "parameter_count": 7615616512, "provider": "self-hosted", "mode": "fixed-weights",
+    "dtype": "bfloat16", "quantization": "none",
+    "supported_projections": ["sexpr", "compact"], "context_budget_tokens": 32768,
+    "constrained_decoding": false, "logprob_access": true, "tool_interface": "none",
+    "sampling": {"temperature": 0.2, "top_p": 1.0, "max_output_tokens": 256,
+                 "seed_policy": "per (seed, task, sample) hash",
+                 "max_samples_per_task": 32, "repair_rounds": 2},
+    "serving": {"engine": "vllm", "version": "<pinned>", "api": "openai-chat-completions",
+                "hardware": "1x NVIDIA H100 80GB SXM (...)",
+                "nondeterminism_sources": ["vLLM continuous batching ..."],
+                "trust_boundary": "candidate side ..."},
+    "model_identity_hash": "<ModelIdentity.hash()>"
+  },
   "backend": { "kind": "http", "endpoint": "http://127.0.0.1:8000", "model": "<served name>" },
-  "budget": { "max_samples": 8, "repair_rounds": 2, "max_output_tokens": 256, "temperature": 0.2 }
+  "budget": { "max_samples": 32, "repair_rounds": 2, "max_output_tokens": 256, "temperature": 0.2 }
 }
 ```
 
 Roadmap recommendation 1's threshold, restated so it cannot drift: if the model arm beats the K0
-baseline by ≥ +0.05 held-out at fixed FLOPs, escalate to EXP-004; if it stays inside
-EXP-001-DR's interval, explanation B weakens and A/C/D come forward.
+baseline by ≥ +0.05 held-out at fixed compute (device-seconds on the pinned hardware, FLOPs
+alongside), escalate to EXP-004; if it stays inside EXP-001-DR's interval, explanation B weakens
+and A/C/D come forward.

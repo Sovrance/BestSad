@@ -9,12 +9,16 @@ from .compute import (
     reconcile_search_only,
 )
 from .flops import (
+    CURRENCY_ID,
+    DEFAULT_CURRENCY,
     DEFAULT_POLICY as DEFAULT_FLOPS_POLICY,
+    DeviceSecondsPolicy,
     FlopsPolicy,
     MatchReport,
     TaskAttempt,
     matched_flops,
     pass_at_c_curve,
+    solve_rate_at_fixed_device_seconds,
     solve_rate_at_fixed_flops,
 )
 from .plane import (
@@ -45,11 +49,15 @@ __all__ = [
     "ComputeMatchError",
     "Condition",
     "DEFAULT_FLOPS_POLICY",
+    "CURRENCY_ID",
+    "DEFAULT_CURRENCY",
+    "DeviceSecondsPolicy",
     "FlopsPolicy",
     "MatchReport",
     "TaskAttempt",
     "matched_flops",
     "pass_at_c_curve",
+    "solve_rate_at_fixed_device_seconds",
     "solve_rate_at_fixed_flops",
     "ConditionPlaneError",
     "ResidualConfound",

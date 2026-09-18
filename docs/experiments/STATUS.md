@@ -1,6 +1,6 @@
 # Implementation status against `IMPLEMENTATION_PLAN_v0.2.md`
 
-Last updated: 2026-09-18 (PRs #8–#18 merged into `v1`; the merge record is under the verification plane; EXP-002 readiness added under ADR-0022).
+Last updated: 2026-09-18 (PRs #8–#18 merged into `v1`; the merge record is under the verification plane; EXP-002 readiness added under ADR-0022; the EXP-002 model, endpoint and compute currency decided under ADR-0023).
 
 ## Complete, with acceptance tests passing
 
@@ -70,9 +70,25 @@ the evaluator hardened first. What is built, with work-order status in
 - `docs/preregistrations/EXP-00{2,3,4,5}.draft.*` — thresholds fixed, `<<FILL>>` where a
   model is needed; the gate refuses a draft.
 
+**The owner's call on the model, the endpoint and the budget is recorded in ADR-0023
+(2026-09-18):** `Qwen/Qwen2.5-Coder-7B-Instruct`, bf16, unquantized, pinned to a revision
+commit and a weights SHA-256 (a `-1.5B-Instruct` arm for compute-matching sanity); a pinned,
+self-hosted vLLM on one H100-class device, treated as a process on the candidate side of the
+boundary; and device-seconds on that hardware as the compute currency, with C set by a two-seed
+E0 pilot rather than a planning estimate. What that added: pinning fields and `is_pinned()` on
+`ModelIdentity`; `OutboundGuard`, which refuses to send a prompt carrying a task identifier, a
+sealed input, the canary or a hidden-asset path, and the G1 vector that audits what a recording
+server received; `DeviceSecondsPolicy` (`device-seconds-1.0.0`) with pilot-measured rates or a
+refusal, per-task device-seconds on every held-out attempt, and pass@C in that unit;
+`scripts/exp002_pilot.py`, which measures the variance, the power, tokens per sample, the
+token-rate fit and the CPU-side rates, runs the ceiling check, and writes the block to copy into
+the pre-registration. The EXP-002 draft now names the model and fixes the sampling parameters,
+the sealed 30% tier, the named nondeterminism source and the condition-I conversion assumption;
+`<<FILL>>` remains only where the weights on disk or the pilot are needed.
+
 **No run has been made.** Every number in this file is still Claim Level 0/E with respect to
-H2, H13, H14 and H15. Starting EXP-002 (BEST-EXP2-08) needs a model identity, an endpoint and
-a compute budget, and is the owner's call. **M13** is reinterpreted, not started: its S4 gate
+H2, H13, H14 and H15. Starting EXP-002 (BEST-EXP2-08) now waits on pinning the weights
+(BEST-EXP2-11) and the pilot (BEST-EXP2-14), both of which need the machine. **M13** is reinterpreted, not started: its S4 gate
 was written for the *adapted* model of spec §17.3; the fixed-weights adapter is the model role
 of S1–S3 that ADR-0007 stood in for. M11 waits for EXP-004; M12 and M14 stay deferred.
 

@@ -12,8 +12,12 @@ very inputs it is scored on. Three defences, each small:
   is unchanged: a task is solved when **every** hidden input agrees (`contract.py`, invariant
   1); the tiers are a diagnostic, not a relaxation.
 * **Transcript leak check.** `transcript_leak_findings` scans everything the model saw for the
-  canary and for sealed inputs. The candidate sandbox stops a *process* reaching the hidden
-  assets; this stops a *prompt* carrying them, which the sandbox cannot see.
+  canary, for sealed inputs, and (ADR-0023) for benchmark task identifiers and hidden-asset
+  paths. The candidate sandbox stops a *process* reaching the hidden assets; this stops a
+  *prompt* carrying them, which the sandbox cannot see. `OutboundGuard` runs the same check on
+  every prompt *before* it leaves for a model server, so a server on the candidate side of the
+  boundary can never receive a hidden-benchmark task or its identifiers, not merely be found
+  to have received one afterwards.
 * **Twin-gap probe.** `twin_gap` compares pass rates on the feedback tier against the sealed
   tier. A model that has seen (or memorised) what it is scored on scores higher on the tier it
   could see; the gap is the standing public-versus-held-out probe the roadmap asks for, and it
@@ -36,6 +40,9 @@ from ..tasks.families import Task
 from ..tasks.generator import CANARY
 
 POLICY_ID = "holdout-1.0.0"
+#: Strings whose presence on a model-visible surface means the surface was built from, or is
+#: pointing at, the frozen hidden assets rather than the public task description.
+HIDDEN_ASSET_MARKERS = ("hidden_evaluator", "hidden_inputs")
 #: The roadmap's figure: "reserve ~30% of tests, capped, as inaccessible holdout" (EvilGenie).
 DEFAULT_SEALED_FRACTION = 0.3
 #: A feedback-minus-sealed pass-rate gap at or above this is flagged. Declared here so the
@@ -94,14 +101,35 @@ def transcript_leak_findings(
 ) -> list[dict]:
     """Integrity findings for a candidate-visible surface (spec §40.1, C4).
 
-    Fatal: the canary, or a sealed hidden input, appears verbatim. The check is by rendering,
-    so it catches an input pasted into a prompt or echoed by the model; it cannot catch a
-    paraphrase, and does not claim to.
+    Fatal: the canary, a sealed hidden input, a benchmark task identifier, or a hidden-asset
+    path appears verbatim. The check is by rendering, so it catches an input pasted into a
+    prompt or echoed by the model; it cannot catch a paraphrase, and does not claim to.
+
+    A task identifier is fatal because it is the join key to the hidden benchmark: a model
+    server that receives `F9-4009719e2c1c` has been told which frozen task it is solving, which
+    is more than the visible examples say and exactly what ADR-0023 forbids the endpoint to be
+    told. A prompt built by `LLMAdapter` carries the task's type signature and visible examples
+    only, so an identifier on a model-visible surface is always a construction error or an
+    exfiltration attempt, never a legitimate coincidence.
     """
     findings: list[dict] = []
     if CANARY in text:
         findings.append({"kind": "canary_leak", "detail": f"{surface} contains the canary",
                          "fatal": True})
+    for marker in HIDDEN_ASSET_MARKERS:
+        if marker in text:
+            findings.append({
+                "kind": "hidden_asset_reference",
+                "detail": f"{surface} names the hidden assets ({marker!r})",
+                "fatal": True,
+            })
+    for task in tasks:
+        if task.task_id in text:
+            findings.append({
+                "kind": "identifier_leak",
+                "detail": f"{surface} contains the identifier of task {task.task_id}",
+                "fatal": True,
+            })
     # A sealed input that happens to coincide with some task's *visible* example is legitimately
     # on the surface; flagging it would abort an honest run on a sampling coincidence.
     visible = {render_inputs(inputs) for task in tasks for inputs in task.train_inputs}
@@ -161,3 +189,47 @@ def contamination_probe(
         "reproduced_canary": reproduced,
         "fatal": reproduced,
     }
+
+
+class OutboundGuard:
+    """A backend wrapper that leak-checks every prompt *before* it is sent (ADR-0023).
+
+    The model server lives on the candidate side of the trust boundary: it is a process this
+    repository does not control, so it must never receive a hidden-benchmark task, a sealed
+    input, the canary, or a task identifier. `transcript_leak_findings` after the fact tells
+    you a leak happened; this refuses to let it happen, raising `IntegrityViolation` with the
+    prompt unsent. It wraps any `bestsad.models` backend and is transparent otherwise.
+    """
+
+    def __init__(
+        self,
+        inner: Any,
+        tasks: Sequence[Task],
+        *,
+        policy: HoldoutPolicy = DEFAULT_HOLDOUT,
+        surface: str = "outbound prompt",
+    ) -> None:
+        self.inner = inner
+        self.tasks = list(tasks)
+        self.policy = policy
+        self.surface = surface
+        self.name = f"guarded({getattr(inner, 'name', type(inner).__name__)})"
+        self.requires_network = bool(getattr(inner, "requires_network", False))
+        self.refused = 0
+
+    def complete(self, prompt: str, *, max_tokens: int, temperature: float, seed: int,
+                 context: Mapping[str, Any] | None = None):
+        from .sandbox import IntegrityViolation
+
+        findings = transcript_leak_findings(
+            prompt, self.tasks, policy=self.policy, surface=self.surface
+        )
+        if findings:
+            self.refused += 1
+            raise IntegrityViolation(
+                f"refusing to send a prompt carrying hidden material to the model server: "
+                f"{findings}"
+            )
+        return self.inner.complete(
+            prompt, max_tokens=max_tokens, temperature=temperature, seed=seed, context=context
+        )

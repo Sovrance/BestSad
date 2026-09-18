@@ -11,7 +11,10 @@ The fields are the adapter contract spec §17.1 lists — supported projections,
 tokenizer identity, constrained-decoding capability, log-probability access, training mode,
 deterministic generation controls, tool interface — plus the two the roadmap adds: a weights
 digest (or the vendor's immutable snapshot id) and the parameter count the FLOP accounting policy
-needs (`conditions/flops.py`).
+needs (`conditions/flops.py`) — and, since ADR-0023, the pinning a self-hosted model needs: the
+source revision the weights were fetched at, the serving precision and quantization, and the
+serving stack (engine, version, hardware), because a different kernel library on different
+silicon is a different set of numerics even when the weights file is the same.
 """
 
 from __future__ import annotations
@@ -27,6 +30,9 @@ from typing import Any, Mapping
 #: spec §17.3 keeps its results separate from fixed-weight results.
 KINDS = ("enumerative_search", "fixed_weights_llm")
 MODES = ("fixed-weights", "fine-tuned")
+#: Keys a `model_identity` record may carry that are *about* the identity rather than part of
+#: it: the hash itself, and the claim limitation a pre-registration states next to it.
+ANNOTATION_KEYS = ("model_identity_hash", "claim_limitation")
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +60,16 @@ class ModelIdentity:
     #: Deterministic generation controls (spec §17.1): temperature, top_p, seed policy, max
     #: output tokens. Part of the identity because two temperatures are two experiments.
     sampling: Mapping[str, Any] = field(default_factory=dict)
+    #: Pinning for a self-hosted model (ADR-0023). `revision` is the immutable source revision
+    #: the weights were fetched at (a Hugging Face commit id); `weights_digest` above is the
+    #: SHA-256 of what was actually loaded. `dtype` and `quantization` say what precision the
+    #: forward pass ran in. `serving` names the engine, its pinned version, the hardware it ran
+    #: on, and the nondeterminism it is known to introduce (vLLM batching is not bit-
+    #: reproducible; verdicts are compared, never logits). Empty for the enumerative stand-in.
+    revision: str = ""
+    dtype: str = ""
+    quantization: str = "none"
+    serving: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.kind not in KINDS:
@@ -71,6 +87,7 @@ class ModelIdentity:
         data = asdict(self)
         data["supported_projections"] = list(self.supported_projections)
         data["sampling"] = dict(self.sampling)
+        data["serving"] = dict(self.serving)
         return json.dumps(data, sort_keys=True, separators=(",", ":"), default=str)
 
     def hash(self) -> str:
@@ -81,6 +98,31 @@ class ModelIdentity:
     def is_language_model(self) -> bool:
         return self.kind == "fixed_weights_llm"
 
+    def is_pinned(self) -> tuple[bool, list[str]]:
+        """Whether a language model is pinned well enough to be cited by a pre-registration.
+
+        ADR-0023: a hosted model that a vendor can silently update is not a fixed prior. A
+        pinned identity names its source revision, the digest of the weights that were loaded,
+        the precision, and the serving engine with its version and hardware. The enumerative
+        stand-in is pinned by its synthesizer version alone.
+        """
+        if not self.is_language_model:
+            return True, []
+        missing = []
+        if not self.revision or "<<FILL" in self.revision:
+            missing.append("revision")
+        if "<<FILL" in self.weights_digest:
+            missing.append("weights_digest")
+        if not self.dtype:
+            missing.append("dtype")
+        for key in ("engine", "version", "hardware"):
+            value = str(self.serving.get(key, ""))
+            if not value or "<<FILL" in value:
+                missing.append(f"serving.{key}")
+        if self.parameter_count <= 0:
+            missing.append("parameter_count")
+        return (not missing), missing
+
     def to_record(self) -> dict:
         """The `model_identity` object a pre-registration or experiment manifest carries."""
         data = json.loads(self.canonical())
@@ -89,12 +131,14 @@ class ModelIdentity:
 
     @classmethod
     def from_record(cls, data: Mapping[str, Any]) -> "ModelIdentity":
-        fields = {k: v for k, v in data.items() if k != "model_identity_hash"}
+        fields = {k: v for k, v in data.items() if k not in ANNOTATION_KEYS}
         if "supported_projections" in fields:
             fields["supported_projections"] = tuple(fields["supported_projections"])
         identity = cls(**fields)
         expected = data.get("model_identity_hash")
-        if expected and expected != identity.hash():
+        # A `<<FILL>>` placeholder is not a claim about the hash; a draft pre-registration's
+        # identity record must still construct so `is_pinned()` can say what is missing.
+        if expected and "<<FILL" not in expected and expected != identity.hash():
             raise ValueError(
                 "model identity record does not hash to the value it carries: the record was "
                 "edited, or the identity fields changed"
