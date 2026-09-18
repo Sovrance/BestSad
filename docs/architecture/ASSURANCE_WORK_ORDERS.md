@@ -1,7 +1,7 @@
 # Assurance integration — work-order status
 
 Tracks `BESTSAD_ATLAS_ASSURANCE_INTEGRATION_ENG_v0.1.md` §13 against what is built.
-Last updated: 2026-09-18 (the status documents that record the verification plane and the twin are all on `v1`, PRs #11–#17, see the record under the P2 items; the Kani adapter of BEST-ASSURE-10 has a real producer: the K0 twin of BEST-VERIF-05, merged in PR #10; BEST-ASSURE-10 itself was closed 2026-09-15 by BEST-VERIF-03; the gate runner of ADR-0018 is dated 2026-08-26 and ADR-0021 superseded ADR-0018 on 2026-09-15).
+Last updated: 2026-09-18 (the status documents that record the verification plane and the twin are all on `v1`, PRs #11–#20, see the record under the P2 items; the Kani adapter of BEST-ASSURE-10 has a real producer: the K0 twin of BEST-VERIF-05, merged in PR #10; BEST-ASSURE-10 itself was closed 2026-09-15 by BEST-VERIF-03; the gate runner of ADR-0018 is dated 2026-08-26 and ADR-0021 superseded ADR-0018 on 2026-09-15).
 
 | WO | Pri | Deliverable | Gate | State |
 |---|---|---|---|---|
@@ -82,7 +82,7 @@ The standing residual in `docs/experiments/STATUS.md` is restated accordingly: K
 machine-checked proofs of its arithmetic, bounds and fuel accounting in the twin, and no
 machine-checked proof of its evaluator.
 
-**Where this is recorded (PRs #11–#17, all merged into `v1` by the owner with every `ci.yml`
+**Where this is recorded (PRs #11–#20, all merged into `v1` by the owner with every `ci.yml`
 job green).** The verification plane and the twin changed what four status documents say, and
 each was updated in its own pull request rather than left to drift; each later update that
 recorded those pull requests went the same way:
@@ -96,8 +96,11 @@ recorded those pull requests went the same way:
 | #15 | this file | this record, for PRs #11–#14 | 2026-09-18 01:01 | `ca30270` |
 | #16 | `docs/experiments/STATUS.md` | the merge record extended to PRs #12–#15 | 2026-09-18 01:08 | `670256e` |
 | #17 | `CONTRIBUTING.md` | PRs #13–#16 as further instances of the draft-PR convention, one file each | 2026-09-18 01:26 | `43eba75` |
+| #18 | this file | this record, extended to PRs #15–#17 | 2026-09-18 01:30 | `b6d0993` |
+| #19 | `docs/experiments/STATUS.md` | the merge record extended to PRs #16–#18 (merged with three jobs still running; all finished green on that head) | 2026-09-18 01:32 | `71253cf` |
+| #20 | `CONTRIBUTING.md` | PRs #17–#19 as further instances of the draft-PR convention (merged with two jobs still running; all finished green on that head) | 2026-09-18 01:38 | `f1fce2c` |
 
-The pattern these seven follow is the one BEST-ASSURE-10 itself insists on: a status file that
+The pattern these ten follow is the one BEST-ASSURE-10 itself insists on: a status file that
 says something is done points at the evidence (the PR, the head, the jobs that ran), so the claim
 can be checked without trusting the file.
 
