@@ -120,3 +120,36 @@ def test_spec_identity_names_a_model_without_building_a_client():
     assert spec_requires_network(spec)
     assert not spec_requires_network({**spec, "backend": {"kind": "scripted", "script": "m:f"}})
     assert not spec_requires_network(None)
+
+
+# --- pinning (ADR-0023) ----------------------------------------------------------------------------
+
+
+def test_a_language_model_is_pinned_only_with_revision_digest_precision_and_serving_stack():
+    from bestsad.models.identity import ANNOTATION_KEYS
+
+    loose = ModelIdentity(model_id="Qwen/Qwen2.5-Coder-7B-Instruct", kind="fixed_weights_llm",
+                          weights_digest="<<FILL>>", tokenizer_id="t", parameter_count=7_615_616_512)
+    pinned_ok, missing = loose.is_pinned()
+    assert not pinned_ok
+    assert {"revision", "weights_digest", "dtype", "serving.engine", "serving.version",
+            "serving.hardware"} == set(missing)
+    pinned = ModelIdentity(
+        model_id="Qwen/Qwen2.5-Coder-7B-Instruct", kind="fixed_weights_llm",
+        weights_digest="sha256:" + "0" * 64, tokenizer_id="t", parameter_count=7_615_616_512,
+        revision="0" * 40, dtype="bfloat16",
+        serving={"engine": "vllm", "version": "0.0.0", "hardware": "1x H100 80GB"},
+    )
+    assert pinned.is_pinned() == (True, [])
+    # The pinning fields are identity: changing any of them is a different model.
+    assert pinned.hash() != dataclasses.replace(pinned, revision="1" * 40).hash()
+    assert pinned.hash() != dataclasses.replace(pinned, dtype="float16").hash()
+    assert pinned.hash() != dataclasses.replace(
+        pinned, serving={**pinned.serving, "version": "0.0.1"}).hash()
+    # The enumerative stand-in is pinned by its synthesizer version alone.
+    assert enumerative_identity("v1").is_pinned() == (True, [])
+    # A record may carry annotations and a placeholder hash and still construct.
+    record = {**pinned.to_record(), "model_identity_hash": "<<FILL>>: later",
+              "claim_limitation": "Claim Level 1 at most"}
+    assert ModelIdentity.from_record(record) == pinned
+    assert set(ANNOTATION_KEYS) == {"model_identity_hash", "claim_limitation"}

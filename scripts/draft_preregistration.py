@@ -6,7 +6,10 @@ A pre-registration is committed — timestamped and hashed — *before the first
 conditions, the endpoints, the minimum interesting effects, the outcome interpretations, the
 exclusion rules), and everything that cannot exist until a model is chosen is a `<<FILL>>`
 placeholder — the model identity and its hash, the evaluator image digest, the analysis code
-revision, and the power analysis from an E0 variance measured *under that model*.
+revision, and the power analysis from an E0 variance measured *under that model*. ADR-0023 chose
+EXP-002's model, endpoint and compute currency, so its draft now names
+`Qwen/Qwen2.5-Coder-7B-Instruct` with `<<FILL>>` only where the weights on disk or the pilot
+are needed (revision, digest, vLLM version, hardware, the per-task budget C, the seed count).
 `Preregistration.is_complete()` names every placeholder, and `ReportGate` refuses confirmatory
 certification against a draft, so a draft cannot be mistaken for a commitment.
 
@@ -34,7 +37,8 @@ from bestsad.stats import Preregistration  # noqa: E402
 OUT_DIR = REPO / "docs" / "preregistrations"
 FILL = "<<FILL>>"
 
-#: Placeholders every draft shares. Each one exists only once a model is chosen.
+#: Placeholders EXP-003..005 share. ADR-0023 chose EXP-002's model; the later experiments
+#: inherit that identity by default and fill it when each is committed, after EXP-002 reports.
 MODEL_IDENTITY_FILL = {
     "model_id": FILL,
     "kind": "fixed_weights_llm",
@@ -75,6 +79,107 @@ COMMON_EXCLUSIONS = (
     "run is aborted and the finding recorded, never a silent exclusion",
     "Exclusion for unfavourable results is prohibited; all exclusions listed with cause.",
 )
+#: ADR-0023: EXP-002's model, pinned. What needs the weights on disk or the pilot stays `<<FILL>>`;
+#: everything the decision fixes is fixed here, and `ModelIdentity.is_pinned()` names the rest.
+EXP002_SERVING = {
+    "engine": "vllm",
+    "version": f"{FILL}: the pinned vLLM version, as `pip freeze` prints it",
+    "api": "openai-chat-completions",
+    "hardware": (
+        f"{FILL}: one H100-class device, e.g. '1x NVIDIA H100 80GB SXM (Azure NC-H100 or "
+        "equivalent)', with driver and CUDA versions"
+    ),
+    "nondeterminism_sources": [
+        "vLLM continuous batching is not bit-reproducible across batch compositions; "
+        "transcripts are recorded once and replayed, and verdicts are compared, never logits"
+    ],
+    "trust_boundary": (
+        "candidate side: the server receives the grammar description and a task's visible "
+        "examples only; OutboundGuard refuses any prompt carrying a task identifier, a sealed "
+        "input, the canary or a hidden-asset path before it is sent "
+        "(tests/integrity/test_model_boundary.py)"
+    ),
+}
+EXP002_MODEL_IDENTITY = {
+    "model_id": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "kind": "fixed_weights_llm",
+    "revision": f"{FILL}: the Hugging Face commit id the weights were fetched at",
+    "weights_digest": f"{FILL}: sha256 over the safetensors shards at that revision, in index order",
+    "tokenizer_id": "Qwen/Qwen2.5-Coder-7B-Instruct (tokenizer at the same revision)",
+    # Total parameters from the configuration at the pinned revision (ADR-0023 gives the
+    # derivation); verified against the loaded weights at pin time.
+    "parameter_count": 7_615_616_512,
+    "provider": "self-hosted",
+    "mode": "fixed-weights",
+    "dtype": "bfloat16",
+    "quantization": "none",
+    "supported_projections": ["sexpr", "compact"],
+    "context_budget_tokens": 32768,
+    "constrained_decoding": False,
+    "logprob_access": True,
+    "tool_interface": "none",
+    "sampling": {
+        "temperature": 0.2, "top_p": 1.0, "max_output_tokens": 256,
+        "seed_policy": "per (seed, task, sample) hash",
+        "max_samples_per_task": f"{FILL}: from the pilot (planning figure 32)",
+        "repair_rounds": 2,
+    },
+    "serving": EXP002_SERVING,
+    "model_identity_hash": (
+        f"{FILL}: ModelIdentity.hash() of the record above once revision, weights_digest, "
+        "serving.version and serving.hardware are filled"
+    ),
+    "claim_limitation": (
+        "the model role is a pinned, self-hosted fixed-weights language model (ADR-0023); "
+        "results are Claim Level 1 at most until the evaluator is containerised and the assets "
+        "relocated (ADR-0005)"
+    ),
+}
+EXP002_COMPUTE_BUDGET = {
+    "currency": (
+        "device-seconds on the pinned hardware (device-seconds-1.0.0), reported alongside a "
+        "FLOP estimate under flops-1.0.0; never the FLOP estimate alone"
+    ),
+    "hardware": f"{FILL}: the same string as model_identity.serving.hardware",
+    "per_task_budget_C_device_seconds": (
+        f"{FILL}: set from the two-seed E0 pilot (scripts/exp002_pilot.py), never from the "
+        "planning estimate"
+    ),
+    "planning_estimate": (
+        "for orientation only: 9 conditions x 32 seeds x ~96 tasks x 32 samples x ~1.7k tokens "
+        "~= 2e19 FLOPs, one to three H100-days (ADR-0023); replaced by the pilot"
+    ),
+    "rates": f"{FILL}: the calibrated DeviceSecondsPolicy record the pilot wrote",
+    "condition_I_conversion": (
+        "pre-registered assumption: condition I's inherited discovery compute (kernel steps, "
+        "search nodes, tokens) is converted to device-seconds through the pilot-measured rates "
+        "on the same pinned hardware. There is no principled FLOP equivalence between an "
+        "enumerator step and a decoded token; the identity compute(I) == compute(A) + "
+        "compute(evolution) is reported in device-seconds, FLOPs and nodes side by side"
+    ),
+    "nondeterminism": "vLLM batching (named in model_identity.serving); verdicts, never logits",
+}
+EXP002_SEALED_HOLDOUT = {
+    "policy": "holdout-1.0.0",
+    "sealed_fraction": 0.3,
+    "twin_gap_flag_threshold": 0.10,
+    "note": "the reserved held-out fraction no feedback surface may carry (ADR-0022 §5)",
+}
+EXP002_SANITY_ARM = {
+    "model_id": "Qwen/Qwen2.5-Coder-1.5B-Instruct",
+    "parameter_count": 1_543_714_304,
+    "pinning": "as the primary: revision commit, weights sha256, bf16, same vLLM version and hardware",
+    "design": (
+        "condition A re-run under the 1.5B at the same per-task device-second budget C. It is "
+        "a compute-matching sanity check, not a treatment: a smaller model at the same budget "
+        "must not beat the 7B by the primary effect size, or the matching is measuring size, "
+        "not representation"
+    ),
+    "fallbacks": (
+        "ADR-0023: becomes the primary if the pilot shows the 7B near ceiling under K0 alone, "
+        "or if the run must fit a 24 GB local GPU"
+    ),
+}
 STOPPING_FILL = (
     f"Fixed: {FILL} seeds per condition (from the power analysis), all conditions run to "
     "completion. No interim analysis, no data-dependent stopping. Aborted runs are recorded "
@@ -106,15 +211,22 @@ def exp_002() -> Preregistration:
     return Preregistration(
         experiment_id="EXP-002",
         primary_endpoint=(
-            "verified_ood_solve_rate_at_fixed_flops on held-out compositional families F9-F12 "
-            "(pass@C with C in FLOPs under accounting policy flops-1.0.0; generator plus "
-            "verifier FLOPs matched across arms)"
+            "verified_ood_solve_rate_at_fixed_device_seconds on held-out compositional families "
+            "F9-F12 (pass@C with C in device-seconds on the pinned hardware under "
+            "device-seconds-1.0.0, reported alongside the FLOP estimate under flops-1.0.0; "
+            "generator plus verifier time matched across arms)"
         ),
         conditions=tuple(exp001_conditions()),
         seeds_per_condition=1,   # schema minimum; is_complete() still demands >= 2
         minimum_interesting_effect={
             "absolute_solve_rate_points": 0.05,
-            "at": "fixed FLOPs (pass@C), not fixed sample count (OSCA caveat, arXiv 2410.22480)",
+            "at": (
+                "fixed compute (pass@C in device-seconds, FLOPs alongside), not fixed sample "
+                "count (OSCA caveat, arXiv 2410.22480)"
+            ),
+            "compute_budget": EXP002_COMPUTE_BUDGET,
+            "sealed_holdout": EXP002_SEALED_HOLDOUT,
+            "compute_matching_sanity_arm": EXP002_SANITY_ARM,
             "reference_class": "condition G (human-expert DSL) retained as a ceiling; D/E must not be dwarfed by it (spec S3 gate)",
             "note": (
                 "Same threshold as EXP-001-DR, retained rather than relaxed. What a null rules "
@@ -165,7 +277,7 @@ def exp_002() -> Preregistration:
         ),
         exclusion_criteria=COMMON_EXCLUSIONS,
         kernel_version=KERNEL_VERSION,
-        model_identity=dict(MODEL_IDENTITY_FILL),
+        model_identity=json.loads(json.dumps(EXP002_MODEL_IDENTITY)),
         evaluator_image_digest=f"{FILL}: the image digest the run executes under (ADR-0005)",
         analysis_code_revision=f"{FILL}: see run manifest code_revision",
         power_analysis=dict(POWER_FILL),
@@ -349,7 +461,7 @@ def exp_005() -> Preregistration:
 DRAFTS = {"EXP-002": exp_002, "EXP-003": exp_003, "EXP-004": exp_004, "EXP-005": exp_005}
 
 QUESTIONS = {
-    "EXP-002": "Does replacing the enumerative synthesizer with a fixed-weights language model change the sign or magnitude of the representation effect on held-out solve rate at fixed FLOPs? (H2, the unblocking experiment; roadmap §3)",
+    "EXP-002": "Does replacing the enumerative synthesizer with a fixed-weights language model change the sign or magnitude of the representation effect on held-out solve rate at fixed compute? (H2, the unblocking experiment; roadmap §3; model, endpoint and currency per ADR-0023)",
     "EXP-003": "Is the representation effect invariant to prompt and few-shot scaffolding? (H14; roadmap §3)",
     "EXP-004": "Do discovery mechanisms yield abstractions with different held-out transfer, and do equality-saturation-derived abstractions transfer at least as well as LLM-proposed ones at matched compute? (roadmap §3)",
     "EXP-005": "Does a more compressive representation raise capability once verifier feedback is held constant? (H13; roadmap §3)",
@@ -362,12 +474,27 @@ ORDER_NOTE = (
 )
 
 
+def _render_items(mapping: dict, indent: int = 0) -> str:
+    """Bulleted rendering of a possibly nested mapping (the budget, the holdout, the sanity arm)."""
+    lines = []
+    pad = "  " * indent
+    for key, value in mapping.items():
+        if isinstance(value, dict):
+            lines.append(f"{pad}- **{key}:**")
+            lines.append(_render_items(value, indent + 1))
+        elif isinstance(value, list):
+            lines.append(f"{pad}- **{key}:** " + "; ".join(str(v) for v in value))
+        else:
+            lines.append(f"{pad}- **{key}:** {value}")
+    return "\n".join(lines)
+
+
 def render_markdown(prereg: Preregistration) -> str:
     rows = "\n".join(
         f"| {c['condition_id']} | {c['role']} | {c.get('controls_confound') or '—'} | {c['description']} |"
         for c in prereg.conditions
     )
-    mie = "\n".join(f"- **{k}:** {v}" for k, v in prereg.minimum_interesting_effect.items())
+    mie = _render_items(prereg.minimum_interesting_effect)
     outcomes = "\n".join(
         f"- **{k}:** {v}" for k, v in prereg.declared_outcome_interpretations.items()
     )
@@ -408,9 +535,10 @@ and let `tests/stats/test_preregistration_drafts.py` confirm the files match. Th
 |---|---|---|---|
 {rows}
 
-Model weights identical across all conditions (spec §17.2). Compute matched in **FLOPs** under
-accounting policy `flops-1.0.0` (`src/bestsad/conditions/flops.py`), reported as solve rate at
-fixed C, never by sample count.
+Model weights identical across all conditions (spec §17.2). Compute matched in
+**device-seconds on the pinned hardware** (`device-seconds-1.0.0`, rates pilot-measured; ADR-0023)
+with the FLOP estimate under `flops-1.0.0` reported alongside (`src/bestsad/conditions/flops.py`),
+as solve rate at fixed C, never by sample count.
 
 ## Endpoints
 

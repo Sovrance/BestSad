@@ -27,6 +27,7 @@ import importlib
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 from collections import deque
@@ -104,11 +105,18 @@ class Transcript:
     model_identity_hash: str
     backend: str = ""
     exchanges: list[dict] = field(default_factory=list)
+    #: Wall-clock latency of each exchange in seconds, parallel to `exchanges`, for the
+    #: device-second rate fit in `scripts/exp002_pilot.py` (ADR-0023). Deliberately outside
+    #: `content_hash`: two recordings of the same deterministic model must hash the same.
+    timings: list[float] = field(default_factory=list)
 
     def record(
-        self, *, prompt: str, completion: Completion, context: Mapping[str, Any] | None
+        self, *, prompt: str, completion: Completion, context: Mapping[str, Any] | None,
+        latency_s: float | None = None,
     ) -> None:
         context = dict(context or {})
+        if latency_s is not None:
+            self.timings.append(float(latency_s))
         self.exchanges.append({
             "task_id": context.get("task_id"),
             "sample_index": context.get("sample_index"),
@@ -134,6 +142,7 @@ class Transcript:
             "model_identity_hash": self.model_identity_hash,
             "backend": self.backend,
             "exchanges": list(self.exchanges),
+            "timings": list(self.timings),
             "content_hash": self.content_hash(),
         }
 
@@ -146,7 +155,7 @@ class Transcript:
     def load(cls, path: Path) -> "Transcript":
         data = json.loads(Path(path).read_text())
         transcript = cls(data["model_identity_hash"], data.get("backend", ""),
-                         list(data["exchanges"]))
+                         list(data["exchanges"]), list(data.get("timings", [])))
         expected = data.get("content_hash")
         if expected and expected != transcript.content_hash():
             raise ValueError(f"transcript {path} does not hash to the value it carries")
@@ -193,10 +202,12 @@ class RecordingBackend:
         transcript.backend = inner.name
 
     def complete(self, prompt, *, max_tokens, temperature, seed, context=None) -> Completion:
+        started = time.perf_counter()
         completion = self.inner.complete(
             prompt, max_tokens=max_tokens, temperature=temperature, seed=seed, context=context
         )
-        self.transcript.record(prompt=prompt, completion=completion, context=context)
+        self.transcript.record(prompt=prompt, completion=completion, context=context,
+                               latency_s=time.perf_counter() - started)
         return completion
 
 

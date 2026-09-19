@@ -8,7 +8,10 @@ still close: the network. Each test attempts the vector and requires it to fail 
 from __future__ import annotations
 
 import dataclasses
+import json
 import math
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
 
@@ -28,6 +31,8 @@ from bestsad.kernel import Kernel
 from bestsad.models import HTTPBackend, LLMAdapter, ModelIdentity, SampleBudget, ScriptedBackend
 from bestsad.models.llm import projection_for, render_inputs
 from bestsad.tasks import CANARY, generate_task, held_out_set
+
+from tests.models import scripts
 
 IDENTITY = ModelIdentity(model_id="m", kind="fixed_weights_llm", weights_digest="d",
                          tokenizer_id="t", parameter_count=1)
@@ -123,3 +128,127 @@ def test_twin_gap_flags_a_model_that_does_better_on_what_it_could_see():
 def test_contamination_probe_catches_a_model_that_can_complete_the_canary():
     assert contamination_probe(lambda prompt: CANARY)["fatal"]
     assert not contamination_probe(lambda prompt: "I cannot continue that.")["fatal"]
+
+
+# --- vector: the model server, on the candidate side of the boundary (ADR-0023) --------------------
+#
+# A self-hosted endpoint is a process this repository does not control. It may receive the
+# grammar and a task's visible examples — nothing else. These vectors try to send it more.
+
+
+def test_a_task_identifier_or_a_hidden_asset_path_on_a_visible_surface_is_fatal():
+    tasks = list(held_out_set(4242, 1))
+    findings = transcript_leak_findings(f"Task {tasks[0].task_id}:\nProgram:", tasks,
+                                        surface="prompt")
+    assert [f["kind"] for f in findings] == ["identifier_leak"] and findings[0]["fatal"]
+    findings = transcript_leak_findings("see hidden_evaluator/benchmark.json", tasks)
+    assert findings[0]["kind"] == "hidden_asset_reference" and findings[0]["fatal"]
+    # The adapter's own prompts carry neither: identifiers are never a legitimate coincidence.
+    adapter = LLMAdapter(kernel=Kernel(), projection=projection_for("sexpr", {}),
+                         vocabulary=BASE_VOCABULARY, primitive_sigs={}, identity=IDENTITY,
+                         backend=ScriptedBackend(lambda p, s: "(length xs)"),
+                         budget=SampleBudget(max_samples=1), kernel_fuel=4000, seed=1)
+    for task in tasks:
+        expected = [Kernel().execute(task.reference, list(i)) for i in task.train_inputs]
+        assert transcript_leak_findings(
+            adapter.prompt_header() + adapter.task_prompt(task, expected, []), tasks) == []
+
+
+def test_the_outbound_guard_refuses_before_the_send_not_after():
+    from bestsad.evaluator import OutboundGuard
+
+    tasks = list(held_out_set(4242, 1))
+    sent = []
+    inner = ScriptedBackend(lambda p, s: sent.append(p) or "(length xs)")
+    guard = OutboundGuard(inner, tasks)
+    assert guard.name == "guarded(scripted)" and not guard.requires_network
+    ok = guard.complete("Task ((xs: List[Int]) -> Int):\n  [1, 2] -> 2\nProgram:",
+                        max_tokens=8, temperature=0.0, seed=0)
+    assert ok.text == "(length xs)" and len(sent) == 1
+    _, sealed = DEFAULT_HOLDOUT.split(tasks[0])
+    for planted in (f"note {tasks[0].task_id}\nProgram:", f"{render_inputs(sealed[0])} -> 1",
+                    CANARY, "hidden_inputs"):
+        with pytest.raises(IntegrityViolation, match="refusing to send"):
+            guard.complete(planted, max_tokens=8, temperature=0.0, seed=0)
+    assert len(sent) == 1 and guard.refused == 4
+
+
+class _RecordingHandler(BaseHTTPRequestHandler):
+    """An OpenAI-compatible server that keeps everything it was sent."""
+
+    requests: list[dict] = []
+
+    def do_POST(self):
+        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        type(self).requests.append({"path": self.path, "headers": dict(self.headers), "body": body})
+        text = scripts.oracle(body["messages"][0]["content"], int(body.get("seed", 0)))
+        reply = {"choices": [{"message": {"content": text}, "finish_reason": "stop"}],
+                 "usage": {"prompt_tokens": 50, "completion_tokens": 8}}
+        payload = json.dumps(reply).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def log_message(self, *args):  # pragma: no cover - quiet
+        pass
+
+
+def test_the_model_server_receives_visible_examples_and_the_grammar_and_nothing_else(tmp_path, monkeypatch):
+    """Run the runner's proposal pass against a server that records every request, then audit
+    what crossed the boundary: no task identifier, no sealed input, no canary, no hidden-asset
+    path, no field beyond the chat-completions call, and no secret in the payload."""
+    from bestsad.conditions import Condition
+    from bestsad.experiments import Exp001Runner
+    from bestsad.genomes import Genome
+    from bestsad.kernel import KERNEL_VERSION
+    from bestsad.solver import SearchBudget
+
+    monkeypatch.setenv("BESTSAD_MODEL_API_KEY", "not-a-real-key")
+    _RecordingHandler.requests = []
+    httpd = HTTPServer(("127.0.0.1", 0), _RecordingHandler)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    try:
+        endpoint = f"http://127.0.0.1:{httpd.server_address[1]}"
+        spec = {
+            "kind": "fixed_weights_llm", "identity": IDENTITY.to_record(),
+            "backend": {"kind": "http", "endpoint": endpoint, "model": "scripted-coder"},
+            "budget": {"max_samples": 2, "repair_rounds": 1},
+        }
+        runner = Exp001Runner(
+            run_id="boundary", seeds=[1], model_spec=spec, artifacts_dir=tmp_path,
+            per_family=1, in_family_per_family=1, adversarial_per_family=1,
+            budget=SearchBudget(max_nodes=500, max_size=4, lam_max_size=2, lam_bank_cap=20,
+                                bank_cap=30),
+        )
+        task_sets = runner._task_sets(1)
+        for task_set in task_sets.values():
+            for task in task_set:
+                scripts.register(task)
+        condition = Condition("A", "reference", Genome("G-A", 0, KERNEL_VERSION, (), "sexpr"),
+                              "baseline", node_budget=500)
+        path = runner._propose(condition, 1, task_sets)
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+    assert path.exists() and _RecordingHandler.requests
+    benchmark = runner._benchmark_tasks(task_sets)
+    visible = {render_inputs(i) for t in benchmark for i in t.train_inputs}
+    for request in _RecordingHandler.requests:
+        assert request["path"] == "/v1/chat/completions"
+        assert set(request["body"]) == {"model", "messages", "temperature", "max_tokens", "seed"}
+        assert request["body"]["model"] == "scripted-coder"
+        content = request["body"]["messages"][0]["content"]
+        assert transcript_leak_findings(content, benchmark, surface="wire") == []
+        for task in benchmark:
+            assert task.task_id not in content
+            for inputs in task.hidden_inputs:
+                rendered = render_inputs(inputs)
+                if rendered not in visible and len(rendered) >= 6:
+                    assert rendered not in content
+        assert "not-a-real-key" not in json.dumps(request["body"])
+        assert "not-a-real-key" not in request["path"]
+    # The guard sat in front of the wire, and the transcript says so.
+    assert "guarded(http)" in json.loads(path.read_text())["backend"]

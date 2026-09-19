@@ -83,6 +83,10 @@ class TaskAttempt:
     solved: bool
     flops_spent: float
     flops_at_solve: float | None = None
+    #: The same two quantities in the common currency of ADR-0023, filled only when the run's
+    #: `DeviceSecondsPolicy` was calibrated; None otherwise, and never estimated.
+    device_seconds_spent: float | None = None
+    device_seconds_at_solve: float | None = None
 
     def solved_within(self, budget_flops: float) -> bool:
         return self.solved and self.flops_at_solve is not None and self.flops_at_solve <= budget_flops
@@ -150,3 +154,131 @@ def matched_flops(
             "matched": residual <= tolerance,
         }
     return report
+
+
+# --- device-seconds: the common currency across an enumerator and a model (ADR-0023) ------------
+
+CURRENCY_ID = "device-seconds-1.0.0"
+
+
+@dataclass(frozen=True, slots=True)
+class DeviceSecondsPolicy:
+    """Compute as device-seconds on one pinned piece of hardware.
+
+    There is no principled FLOP equivalence between an enumerator step and a decoded token: the
+    2N-per-token figure is a model of a dense forward pass, and the CPU-side constants in
+    `FlopsPolicy` are declared. What *is* commensurable is time on the same machine. ADR-0023
+    therefore declares device-seconds on the pinned hardware as the common currency for an
+    experiment with a model in the model role, reported alongside the FLOP estimate, and makes
+    the conversion of condition I's kernel-step budget into that currency a pre-registered
+    assumption rather than a silent one.
+
+    Every rate here is **measured**, in the E0 pilot on the pinned hardware, or it is `None`.
+    An uncalibrated policy refuses to convert rather than guess, and its record says which
+    rates are missing. Changing a rate changes what "matched" means, so the policy is versioned
+    and the rates travel with every result that used them.
+    """
+
+    policy_id: str = CURRENCY_ID
+    #: The pinned hardware every rate was measured on, e.g. "1x NVIDIA H100 80GB SXM, vLLM
+    #: <version>". Rates from one machine are not the currency on another.
+    hardware: str = "unpinned"
+    #: Seconds per unit on `hardware`, from the pilot. Input (prefill) and output (decode)
+    #: tokens are priced separately: prefill is batched and cheap, decode is sequential.
+    seconds_per_input_token: float | None = None
+    seconds_per_output_token: float | None = None
+    seconds_per_search_node: float | None = None
+    seconds_per_kernel_step: float | None = None
+    seconds_per_verifier_step: float | None = None
+    seconds_per_evolution_node: float | None = None
+    #: For the FLOP estimate reported alongside: the sustained dense-bf16 throughput the pilot
+    #: observed (tokens per second times FLOPs per token), not a vendor peak.
+    flops_per_device_second: float | None = None
+    calibration: str = (
+        "rates are pilot-measured on the pinned hardware or absent; an absent rate makes the "
+        "policy refuse to convert (ADR-0023)"
+    )
+
+    _RATES = (
+        ("seconds_per_input_token", "model_input_tokens"),
+        ("seconds_per_output_token", "model_output_tokens"),
+        ("seconds_per_search_node", "search_nodes"),
+        ("seconds_per_kernel_step", "kernel_steps"),
+        ("seconds_per_verifier_step", "verifier_steps"),
+        ("seconds_per_evolution_node", "evolution_nodes"),
+    )
+
+    def missing_rates(self, ledger: ComputeLedger | None = None) -> list[str]:
+        """Rates the policy needs and does not have. With a ledger, only the rates for
+        quantities the ledger actually spent count as needed."""
+        missing = []
+        for rate, quantity in self._RATES:
+            if getattr(self, rate) is None and (
+                ledger is None or getattr(ledger, quantity) > 0
+            ):
+                missing.append(rate)
+        return missing
+
+    @property
+    def calibrated(self) -> bool:
+        return self.hardware != "unpinned" and not self.missing_rates()
+
+    def device_seconds(self, ledger: ComputeLedger) -> float:
+        """Device-seconds for one `(condition, seed)` ledger entry, or a refusal."""
+        missing = self.missing_rates(ledger)
+        if missing or self.hardware == "unpinned":
+            raise ValueError(
+                "device-seconds policy is not calibrated for this ledger: "
+                + (f"hardware unpinned; " if self.hardware == "unpinned" else "")
+                + f"unmeasured rates {missing}"
+            )
+        return sum(
+            float(getattr(self, rate)) * getattr(ledger, quantity)
+            for rate, quantity in self._RATES
+            if getattr(ledger, quantity) > 0
+        )
+
+    def components(
+        self, *, input_tokens: int = 0, output_tokens: int = 0, search_nodes: int = 0,
+        kernel_steps: int = 0, verifier_steps: int = 0, evolution_nodes: int = 0,
+    ) -> float:
+        """Device-seconds for a bundle of component quantities (one task attempt)."""
+        return self.device_seconds(ComputeLedger(
+            "-", "-", 0, model_input_tokens=input_tokens, model_output_tokens=output_tokens,
+            search_nodes=search_nodes, kernel_steps=kernel_steps, verifier_steps=verifier_steps,
+            evolution_nodes=evolution_nodes,
+        ))
+
+    def flops_estimate(self, device_seconds: float) -> float | None:
+        """The FLOP figure reported *alongside* a device-second budget, never instead of it."""
+        if self.flops_per_device_second is None:
+            return None
+        return device_seconds * self.flops_per_device_second
+
+    def to_record(self) -> dict:
+        data = asdict(self)
+        data["calibrated"] = self.calibrated
+        data["missing_rates"] = self.missing_rates()
+        return data
+
+
+DEFAULT_CURRENCY = DeviceSecondsPolicy()
+
+
+def solve_rate_at_fixed_device_seconds(
+    attempts: Sequence["TaskAttempt"], budget_device_seconds: float
+) -> float:
+    """pass@C with C in device-seconds: the fraction of tasks solved within the budget each.
+
+    Attempts that carry no device-second accounting (an uncalibrated run) count as unsolved
+    at every budget, so an uncalibrated run cannot report a device-second solve rate by
+    accident.
+    """
+    if not attempts:
+        return 0.0
+    solved = sum(
+        1 for a in attempts
+        if a.solved and a.device_seconds_at_solve is not None
+        and a.device_seconds_at_solve <= budget_device_seconds
+    )
+    return solved / len(attempts)

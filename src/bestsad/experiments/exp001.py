@@ -36,7 +36,9 @@ from ..abstraction import (
 )
 from ..bsir import get_projection, token_count
 from ..conditions import (
+    DEFAULT_CURRENCY,
     DEFAULT_FLOPS_POLICY,
+    DeviceSecondsPolicy,
     ComputeLedger,
     Condition,
     ScaffoldingMatcher,
@@ -72,6 +74,7 @@ from ..models import (
     spec_requires_network,
 )
 from ..models.llm import build_backend
+from ..evaluator import OutboundGuard
 from ..solver import SearchBudget
 from ..solver.enumerative import SYNTHESIZER_VERSION
 from ..stats import bootstrap_ci, mean, power_analysis, variance
@@ -124,6 +127,12 @@ class ConditionOutcome:
     flops: float = 0.0
     attempts: list = field(default_factory=list)
     twin_gap: dict = field(default_factory=dict)
+    #: The same spend in the common currency of ADR-0023 (device-seconds on the pinned
+    #: hardware), or None when the run's currency policy was not calibrated.
+    device_seconds: float | None = None
+    #: Model samples drawn across every scored task (zero for the enumerator): what the pilot
+    #: divides token totals by to get tokens per sample.
+    model_samples: int = 0
 
     def to_record(self) -> dict:
         data = asdict(self)
@@ -351,6 +360,12 @@ def _job(payload: tuple) -> dict:
                 "depth_bonus": condition.search_depth_bonus,
                 "sample_bonus": condition.sample_bonus,
                 "budget": asdict(kwargs["budget"]),
+                # A calibrated currency puts device-second figures in the record; a record
+                # produced without them must not be served to a run that expects them.
+                "currency": (
+                    kwargs["compute_currency"].to_record()
+                    if kwargs.get("compute_currency") is not None else None
+                ),
                 "per_family": kwargs.get("per_family"),
                 "in_family": kwargs.get("in_family_per_family"),
                 "adversarial": kwargs.get("adversarial_per_family"),
@@ -403,11 +418,15 @@ class Exp001Runner:
         checkpoint_dir: Path | None = None,
         isolation: JobIsolation | None = None,
         model_spec: Mapping | None = None,
+        compute_currency: DeviceSecondsPolicy | None = None,
     ) -> None:
         self.run_id = run_id
         self.seeds = tuple(seeds)
         self.model_spec = dict(model_spec or DEFAULT_MODEL_SPEC)
         self.flops_policy = DEFAULT_FLOPS_POLICY
+        # Device-seconds on the pinned hardware (ADR-0023). Uncalibrated by default, in which
+        # case every record says so and no device-second figure is reported.
+        self.compute_currency = compute_currency or DEFAULT_CURRENCY
         # `per_family` sizes the curriculum and the held-out set, which carries the primary
         # endpoint. The secondary sets can be sized independently: they inform secondary
         # endpoints only, and every task in them costs the full node budget when unsolved.
@@ -458,6 +477,7 @@ class Exp001Runner:
             "budget": self.budget,
             "abstraction_count": self.abstraction_count,
             "model_spec": self.model_spec,
+            "compute_currency": self.compute_currency,
             # A worker writes a discovery transcript under the run's artifacts, not under a
             # default path of its own.
             "artifacts_dir": self.artifacts_dir,
@@ -505,6 +525,24 @@ class Exp001Runner:
             adapter.backend = backend
         return adapter, kernel
 
+    @staticmethod
+    def _benchmark_tasks(task_sets: Mapping[str, TaskSet]) -> list:
+        """The frozen tasks whose identifiers and sealed inputs must never leave the boundary."""
+        return [t for name in ("held_out", "in_family_ood", "adversarial") for t in task_sets[name]]
+
+    def _live_backend(self, task_sets: Mapping[str, TaskSet], transcript: Transcript):
+        """The networked backend, guarded and recorded (ADR-0023).
+
+        The model server is on the candidate side of the trust boundary. `OutboundGuard`
+        refuses to send any prompt that carries a task identifier, a sealed input, the canary
+        or a hidden-asset path — before the send, not after — and `RecordingBackend` writes what
+        was sent and returned into the transcript the condition job replays.
+        """
+        guarded = OutboundGuard(
+            build_backend(self.model_spec.get("backend")), self._benchmark_tasks(task_sets)
+        )
+        return RecordingBackend(guarded, transcript)
+
     def _propose(self, condition: Condition, seed: int, task_sets: Mapping[str, TaskSet]) -> Path:
         """Proposal pass for a model that needs the network (ADR-0022).
 
@@ -522,10 +560,10 @@ class Exp001Runner:
                 self._say(f"proposal({condition.condition_id}, seed={seed}): reusing {path.name}")
                 return path
         transcript = Transcript(identity_hash)
-        live = RecordingBackend(build_backend(self.model_spec.get("backend")), transcript)
+        live = self._live_backend(task_sets, transcript)
         budget = self._search_budget(condition)
         adapter, _ = self._adapter(condition, seed, budget, task_sets["curriculum"], backend=live)
-        tasks = [t for name in ("held_out", "in_family_ood", "adversarial") for t in task_sets[name]]
+        tasks = self._benchmark_tasks(task_sets)
         for task in tasks:
             adapter.solve(task)
         findings = transcript_leak_findings(transcript.visible_text(), tasks,
@@ -611,12 +649,14 @@ class Exp001Runner:
         reports: dict[str, ScoreReport] = {}
         attempts: list[TaskAttempt] = []
         hardcoding = 0
+        samples = 0
         started = time.time()
 
         for name in ("held_out", "in_family_ood", "adversarial"):
             report = ScoreReport(condition.condition_id, seed, "bm-exp001")
             for task in task_sets[name]:
                 result = adapter.solve(task)
+                samples += result.samples
                 # The surface-token proxy (ADR-0007) stands in only when the model reported
                 # nothing; a language model's real counts take precedence.
                 tokens = (
@@ -652,13 +692,20 @@ class Exp001Runner:
                             else per_token * result.tokens_at_solve
                             + self.flops_policy.kernel_step_flops * result.kernel_steps
                         )
-                    attempts.append(TaskAttempt(task.task_id, score.verified, spent, at_solve))
+                    attempts.append(TaskAttempt(
+                        task.task_id, score.verified, spent, at_solve,
+                        *self._device_seconds_for(result, score.verified),
+                    ))
                 if result.program is not None and not score.verified and result.solved_train:
                     if detect_hardcoding(result.program, task, kernel, seed=seed).hardcoded:
                         hardcoding += 1
             reports[name] = report
 
         ledger.wall_clock_s = time.time() - started
+        device_seconds = (
+            self.compute_currency.device_seconds(ledger)
+            if self.compute_currency.calibrated else None
+        )
         if condition.inherited_evolution_compute_from:
             # Condition I's inherited evolution compute is real spend, recorded as such.
             ledger.add(evolution_nodes=0)
@@ -688,7 +735,32 @@ class Exp001Runner:
             flops=self.flops_policy.flops(ledger, parameter_count=identity.parameter_count),
             attempts=[a.to_record() for a in attempts],
             twin_gap=held.twin_gap().to_record(),
+            device_seconds=device_seconds,
+            model_samples=samples,
         )
+
+    def _device_seconds_for(self, result, verified: bool) -> tuple[float | None, float | None]:
+        """One task attempt's spend and spend-at-solve in device-seconds, or (None, None) when
+        the currency is uncalibrated. Spend-at-solve prices the tokens up to the solving
+        sample, exactly as the FLOP figure does."""
+        currency = self.compute_currency
+        if not currency.calibrated:
+            return None, None
+        token_part = currency.components(
+            input_tokens=result.model_input_tokens, output_tokens=result.model_output_tokens,
+        )
+        cpu_part = currency.components(
+            search_nodes=result.nodes_expanded, kernel_steps=result.kernel_steps,
+        )
+        spent = token_part + cpu_part
+        if not verified:
+            return spent, None
+        if result.tokens_at_solve is None:
+            return spent, spent
+        # `tokens_at_solve` is input plus output up to the solving sample; the token time is
+        # scaled by that share rather than re-priced, since the split is not recorded per sample.
+        share = result.tokens_at_solve / max(1, result.model_input_tokens + result.model_output_tokens)
+        return spent, token_part * share + cpu_part
 
     # -- S1: baseline and variance ---------------------------------------------------------
 
@@ -752,7 +824,7 @@ class Exp001Runner:
             # Discovery is not isolated (see `JobIsolation`), so the live backend is usable
             # here; its transcript is still recorded and leak-checked like any other.
             transcript = Transcript(self.model_identity_hash)
-            backend = RecordingBackend(build_backend(self.model_spec.get("backend")), transcript)
+            backend = self._live_backend(self._task_sets(seed), transcript)
         adapter, _ = self._adapter(condition, seed, self.budget, curriculum, backend=backend)
         corpus = Corpus()
         evolution_nodes = 0
@@ -926,6 +998,7 @@ class Exp001Runner:
                 "compute_reconciliation": reconciliations,
                 "flops_reconciliation": flops_reconciliations,
                 "flops_policy": self.flops_policy.to_record(),
+                "compute_currency": self.compute_currency.to_record(),
                 "model_identity": spec_identity(self.model_spec).to_record(),
                 # Travels with the result: which stages ran behind the candidate boundary and
                 # under what limits. A limit nobody can read is a confound nobody can check

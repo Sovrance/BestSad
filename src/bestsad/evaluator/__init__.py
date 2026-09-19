@@ -14,7 +14,9 @@ from .contract import (
 )
 from .holdout import (
     DEFAULT_HOLDOUT,
+    HIDDEN_ASSET_MARKERS,
     HoldoutPolicy,
+    OutboundGuard,
     TwinGap,
     contamination_probe,
     transcript_leak_findings,
@@ -50,6 +52,7 @@ __all__ = [
     "DEFAULT_CPU_SECONDS",
     "DEFAULT_FILE_SIZE",
     "DEFAULT_HOLDOUT",
+    "HIDDEN_ASSET_MARKERS",
     "HoldoutPolicy",
     "TwinGap",
     "contamination_probe",
@@ -57,6 +60,7 @@ __all__ = [
     "twin_gap",
     "ISOLATION_AVAILABLE",
     "IsolatedResult",
+    "OutboundGuard",
     "ResourceLimits",
     "SCORING_CONTRACT_VERSION",
     "BenchmarkManifest",
